@@ -1,4 +1,4 @@
-# CTF Backend example
+# CTF Backend
 
 ## Tech Stack:
 - Framework: **FastAPI**
