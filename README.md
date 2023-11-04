@@ -24,7 +24,7 @@ python -m uvicorn app:app --reload
 
 Take a look at `tests/login.py` as an example on writing tests.
 
-Running the tests:
+A Github Workflow is set to run all the tests under `tests/` using pytest. Regardless, you might want to run the tests on your machine locally before pushing:
 ```sh
 pytest tests/login.py               # Tests defined in test/login.py
 ```
