@@ -1,6 +1,6 @@
 # Overview
 
-## Functionality:
+Rough functionality:
 - User
 	- (id) -> profile
 	- signup
