@@ -20,6 +20,15 @@ pip instal -r requirements.txt      # Install the dependencies
 python -m uvicorn app:app --reload
 ```
 
+## Testing:
+
+Take a look at `tests/login.py` as an example on writing tests.
+
+Running the tests:
+```sh
+pytest tests/login.py               # Tests defined in test/login.py
+```
+
 ## Structure:
 
 To make the API routes clear without having to check each file, we organise the routes in separate python files.
