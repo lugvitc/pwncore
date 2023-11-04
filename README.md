@@ -20,6 +20,15 @@ pip instal -r requirements.txt      # Install the dependencies
 python -m uvicorn app:app --reload
 ```
 
+## Testing:
+
+Take a look at `tests/test_login.py` as an example on writing tests.
+
+A Github Workflow is set to automatically run pytest on all filenames beginning with `test` under tox. Regardless, you might want to run the tests on your machine locally before pushing:
+```sh
+tox
+```
+
 ## Structure:
 
 To make the API routes clear without having to check each file, we organise the routes in separate python files.
