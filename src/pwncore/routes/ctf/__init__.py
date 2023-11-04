@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Metadata at the top for instant accessibility
 metadata = {
     "name": "ctf",

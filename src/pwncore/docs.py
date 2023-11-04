@@ -1,4 +1,4 @@
-from routes import ctf, team
+from pwncore.routes import ctf, team
 
 tags_metadata = [
     ctf.metadata,

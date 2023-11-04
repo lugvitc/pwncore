@@ -1,6 +1,6 @@
-# Both work, but routes.ctf is more clear to indicate that the router is from ctf
-# from . import router
-from routes.ctf import router
+from __future__ import annotations
+
+from pwncore.routes.ctf import router
 
 
 @router.get("/start/{ctf_id}")

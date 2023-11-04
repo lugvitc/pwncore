@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app import app
+from pwncore import app
 client = TestClient(app)
 
 
