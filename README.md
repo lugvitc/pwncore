@@ -22,11 +22,11 @@ python -m uvicorn app:app --reload
 
 ## Testing:
 
-Take a look at `tests/login.py` as an example on writing tests.
+Take a look at `tests/test_login.py` as an example on writing tests.
 
-A Github Workflow is set to run all the tests under `tests/` using pytest. Regardless, you might want to run the tests on your machine locally before pushing:
+A Github Workflow is set to automatically run pytest on all filenames beginning with `test` under tox. Regardless, you might want to run the tests on your machine locally before pushing:
 ```sh
-pytest tests/login.py               # Tests defined in test/login.py
+tox
 ```
 
 ## Structure:
