@@ -7,16 +7,16 @@ __all__ = (
     "BaseConfig",
 )
 
+
 class Config(t.Protocol):
     development: bool
+
 
 class BaseConfig(Config):
     __slots__ = ("development",)
 
-    def __init__(
-            self,
-            development: bool
-        ) -> None:
+    def __init__(self, development: bool) -> None:
         self.development = development
+
 
 DEV_CONFIG: t.Final[BaseConfig] = BaseConfig(True)

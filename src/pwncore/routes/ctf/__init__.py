@@ -1,28 +1,25 @@
 from __future__ import annotations
 
+from fastapi import APIRouter
+
 # Metadata at the top for instant accessibility
 metadata = {
     "name": "ctf",
-    "description": "Operations related to CTF, except create and delete (those are under admin)"
+    "description": "Operations related to CTF, except"
+    "create and delete (those are under admin)",
 }
 
-from fastapi import APIRouter
-
-router = APIRouter(
-    prefix="/ctf",
-    tags=["ctf"]
-)
-
-from . import start
+router = APIRouter(prefix="/ctf", tags=["ctf"])
 
 # Routes that do not need a separate submodule for themselves
+
 
 @router.get("/list")
 async def ctf_list():
     # Get list of ctfs
     return [
         {"name": "Password Juggling", "ctf_id": 2243},
-        {"name": "hexane", "ctf_id": 2242}
+        {"name": "hexane", "ctf_id": 2242},
     ]
 
 
