@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import ctf, team
+from pwncore.routes import ctf, team
 
 # Main router (all routes go under /api)
 router = APIRouter(prefix="/api")
