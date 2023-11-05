@@ -24,6 +24,35 @@ uvicorn = "^0.24.0"
 mypy = "^1.6.1"
 httpx = "^0.25.1"
 pytest = "^7.4.3"
+flake8 = "^6.1.0"
+black = "^23.10.1"
+flake8-bugbear = "^23.9.16"
+
+[tool.mypy]
+python_version = 3.11
+warn_return_any = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+check_untyped_defs = true
+show_column_numbers = true
+show_error_codes = true
+
+enable_error_code = [
+    "ignore-without-code",
+    "truthy-bool",
+    "truthy-iterable",
+    "redundant-expr",
+    "no-any-unimported",
+    "redundant-self",
+    "type-arg"
+]
+
+pretty = true
+
+# For per file / package config
+# [[tool.mypy.overrides]]
 
 [build-system]
 requires = ["poetry-core"]
