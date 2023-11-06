@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "pwncore"
+version = "0.1.0"
+description = "The backend for an advanced CTF platform"
+authors = ["LUGVITC"]
+license = "GNU GENERAL PUBLIC LICENSE"
+readme = "README.md"
+
+[[tool.poetry.packages]]
+include = "pwncore"
+from = "src"
+
+# Format to add new packages to the wheel
+# [[tool.poetry.packages]]
+# include = "new_package_or_maybe_script?"
+# from = "src"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.6.1"
+httpx = "^0.25.1"
+pytest = "^7.4.3"
+flake8 = "^6.1.0"
+black = "^23.10.1"
+flake8-bugbear = "^23.9.16"
+
+[tool.mypy]
+python_version = 3.11
+warn_return_any = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
+check_untyped_defs = true
+show_column_numbers = true
+show_error_codes = true
+
+enable_error_code = [
+    "ignore-without-code",
+    "truthy-bool",
+    "truthy-iterable",
+    "redundant-expr",
+    "no-any-unimported",
+    "redundant-self",
+    "type-arg"
+]
+
+pretty = true
+
+# For per file / package config
+# [[tool.mypy.overrides]]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
