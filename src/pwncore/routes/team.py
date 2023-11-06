@@ -1,15 +1,11 @@
-# Metadata at the top for instant accessibility
-metadata = {
-    "name": "team",
-    "description": "Operations with teams"
-}
+from __future__ import annotations
 
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/team",
-    tags=["team"]
-)
+# Metadata at the top for instant accessibility
+metadata = {"name": "team", "description": "Operations with teams"}
+
+router = APIRouter(prefix="/team", tags=["team"])
 
 
 @router.get("/list")

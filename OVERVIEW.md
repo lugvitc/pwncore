@@ -13,7 +13,7 @@ Rough functionality:
 	- clear (NEW)
 		- Stops all running containers associated with the team
 - CTF
-	- (id) -> Get CTF info 
+	- (id) -> Get CTF info
 	- start
 		- Check if team has already completed it
 		- Only if no container is assigned to the team before
