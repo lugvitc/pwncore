@@ -17,6 +17,7 @@ class BaseConfig(Config):
 
     def __init__(self, development: bool) -> None:
         self.development = development
+        self.flag = "C0D"
 
 
 DEV_CONFIG: t.Final[BaseConfig] = BaseConfig(True)
