@@ -104,11 +104,6 @@ async def start_docker_container(ctf_id: int, response: Response):
 @router.post("/stopall")
 async def stop_docker_container(response: Response):
 
-    if not await CTF.filter(id=ctf_id).exists():
-        response.status_code = 404
-        return {"msg": "CTF does not exist."}
-    ctf = await CTF.get(id=ctf_id)
-
     user_id = get_user_id()  # From JWT
     if not await Container.filter(user_id=user_id).exists():
         return {"msg": "You have no running containers."}
