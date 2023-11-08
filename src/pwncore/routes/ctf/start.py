@@ -1,14 +1,23 @@
 from __future__ import annotations
 
+from fastapi import Response
+import uuid
+from tortoise.transactions import atomic
+
 from pwncore.routes.ctf import router
 from pwncore.db import Container, CTF
 from pwncore.container import docker_client
 from pwncore.config import DEV_CONFIG
 
+# UNTESTED
+
+
+@atomic()
 @router.post("/start/{ctf_id}")
-async def start_docker_container(ctf_id: int):
+async def start_docker_container(ctf_id: int, response: Response):
 
     if not await CTF.filter(id=ctf_id).exists():
+        response.status_code = 404
         return {"status": "CTF does not exist."}
     ctf = await CTF.get(id=ctf_id)
 
@@ -81,6 +90,7 @@ async def start_docker_container(ctf_id: int):
         "flag"      : flag,
         "ports"     : ','.join(ports)       # Save ports as csv
     })
+    await Container.save()
 
     return {
         "status": "Container started.",
