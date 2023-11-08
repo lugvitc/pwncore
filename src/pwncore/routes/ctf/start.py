@@ -98,3 +98,53 @@ async def start_docker_container(ctf_id: int, response: Response):
         "ports": ports,
         "ctf_id": ctf_id
     }
+
+
+@atomic()
+@router.post("/stopall")
+async def stop_docker_container(response: Response):
+
+    if not await CTF.filter(id=ctf_id).exists():
+        response.status_code = 404
+        return {"msg": "CTF does not exist."}
+    ctf = await CTF.get(id=ctf_id)
+
+    user_id = get_user_id()  # From JWT
+    if not await Container.filter(user_id=user_id).exists():
+        return {"msg": "You have no running containers."}
+
+    user_container = Container.get(user_id=user_id)
+
+    container = docker_client.containers.get(user_container.id)
+    container.stop()
+    container.remove()
+
+    await Container.filter(user_id=user_id).delete()
+    await Container.save()
+
+    return {"msg": "Container stopped."}
+
+
+@atomic()
+@router.post("/stop/{ctf_id}")
+async def stop_docker_container(ctf_id: int, response: Response):
+
+    if not await CTF.filter(id=ctf_id).exists():
+        response.status_code = 404
+        return {"msg": "CTF does not exist."}
+    ctf = await CTF.get(id=ctf_id)
+
+    user_id = get_user_id()  # From JWT
+    if not await Container.filter(user_id=user_id, ctf_id=ctf_id).exists():
+        return {"msg": "You have no running containers for this CTF."}
+
+    user_container = Container.get(user_id=user_id, ctf_id=ctf_id)
+
+    container = docker_client.containers.get(user_container.id)
+    container.stop()
+    container.remove()
+
+    await Container.filter(user_id=user_id).delete()
+    await Container.save()
+
+    return {"msg": "Container stopped."}
