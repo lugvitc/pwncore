@@ -18,14 +18,14 @@ async def start_docker_container(ctf_id: int, response: Response):
 
     if not await CTF.filter(id=ctf_id).exists():
         response.status_code = 404
-        return {"status": "CTF does not exist."}
+        return {"msg": "CTF does not exist."}
     ctf = await CTF.get(id=ctf_id)
 
     user_id = get_user_id()  # From JWT
     if await Container.filter(user_id=user_id).exists():
         user_container = Container.get(user_id=user_id)
         return {
-            "status": "You already have a running container for a CTF.",
+            "msg": "You already have a running container for a CTF.",
             "ports": user_container.ports.split(","),
             "ctf_id": user_container.ctf_id
         }
@@ -34,7 +34,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     if await Container.filter(team_id=team_id, ctf_id=ctf_id).exists():
         team_container = Container.get(team_id=team_id, ctf_id=ctf_id)
         return {
-            "status": "Your team already has a running container for this CTF.",
+            "msg": "Your team already has a running container for this CTF.",
             "ports": team_container.ports.split(","),
             "ctf_id": team_container.ctf_id
         }
@@ -59,7 +59,8 @@ async def start_docker_container(ctf_id: int, response: Response):
     if len(port_list) < len(image_config["ports"]):
         # Handle error here
         print("AAAAAAAAAAAAAAAAAAA")
-        return {"status": "Server ran out of ports 💀"}
+
+        return {"msg": "Server ran out of ports 💀"}
 
     ports = []  # Only to save the host ports used to return to the user
     for guest_port in image_config["ports"]:
@@ -93,7 +94,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     await Container.save()
 
     return {
-        "status": "Container started.",
+        "msg": "Container started.",
         "ports": ports,
         "ctf_id": ctf_id
     }
