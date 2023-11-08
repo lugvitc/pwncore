@@ -59,7 +59,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     if len(port_list) < len(image_config["ports"]):
         # Handle error here
         print("AAAAAAAAAAAAAAAAAAA")
-
+        response.status_code = 500
         return {"msg": "Server ran out of ports 💀"}
 
     ports = []  # Only to save the host ports used to return to the user
