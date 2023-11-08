@@ -3,7 +3,7 @@ from __future__ import annotations
 from pwncore.routes.ctf import router
 from pwncore.db import Container, CTF
 from pwncore.container import docker_client
-
+from pwncore.config import DEV_CONFIG
 
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int):
@@ -66,7 +66,7 @@ async def start_docker_container(ctf_id: int):
         **image_config
     )
 
-    flag = f"C0D{{{uuid.uuid4().hex}}}"
+    flag = f"{DEV_CONFIG.flag}{{{uuid.uuid4().hex}}}"
     container.exec_run(
         f"/bin/bash /root/gen_flag '{flag}'",
         user="root"
