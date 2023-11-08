@@ -26,15 +26,15 @@ class Container(Model):
     name    = fields.TextField()
     ctf_id  = fields.IntField()
     ports   = fields.TextField()
-    team_id = field.IntField()
-    user_id = field.IntField()
-    flag    = field.TextField()
+    team_id = fields.IntField()
+    user_id = fields.IntField()
+    flag    = fields.TextField()
 
 class CTF(Model):
     id              = fields.IntField(pk=True)
     name            = fields.TextField()
-    image_name      = field.TextField()
-    image_config    = field.TextField()
+    image_name      = fields.TextField()
+    image_config    = fields.TextField()
 
 
 # Might want to keep the schemas and init in separate files
