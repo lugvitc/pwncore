@@ -85,7 +85,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     await Container.create(**{
         "id"        : container.id,
         "name"      : container.name,
-        "user_id"   : user_id
+        "user_id"   : user_id,
         "team_id"   : team_id,
         "ctf_id"    : ctf_id,
         "flag"      : flag,

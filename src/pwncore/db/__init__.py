@@ -22,19 +22,18 @@ CTF:
 
 # No relationships yet
 class Container(Model):
-    id      = fields.TextField(pk=True)
-    name    = fields.TextField()
-    ctf_id  = fields.IntField()
-    ports   = fields.TextField()
-    team_id = fields.IntField()
-    user_id = fields.IntField()
-    flag    = fields.TextField()
+    id: str      = fields.TextField(pk=True)
+    name: str    = fields.TextField()
+    ctf_id: int  = fields.IntField()
+    ports: str   = fields.TextField()
+    team_id: int = fields.IntField()
+    user_id: int = fields.IntField()
+    flag: str    = fields.TextField()
 
 class CTF(Model):
-    id              = fields.IntField(pk=True)
-    name            = fields.TextField()
-    image_name      = fields.TextField()
-    image_config    = fields.TextField()
+    name: str         = fields.TextField()
+    image_name: str   = fields.TextField()
+    image_config: str = fields.TextField()
 
 
 # Might want to keep the schemas and init in separate files
