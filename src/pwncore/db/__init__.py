@@ -27,7 +27,6 @@ class Container(Model):
     ctf_id: int  = fields.IntField()
     ports: str   = fields.TextField()
     team_id: int = fields.IntField()
-    user_id: int = fields.IntField()
     flag: str    = fields.TextField()
 
 class CTF(Model):

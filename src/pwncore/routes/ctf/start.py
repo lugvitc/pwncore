@@ -30,6 +30,9 @@ async def start_docker_container(ctf_id: int, response: Response):
             "ctf_id": team_container.ctf_id
         }
 
+    if Container.filter(team_id=team_id).count() >= 3:
+        
+
     # Start a new container
     image_config = ctf.image_config.copy()
     """
@@ -82,7 +85,6 @@ async def start_docker_container(ctf_id: int, response: Response):
             "flag"      : flag,
             "ports"     : ','.join(ports)       # Save ports as csv
         })
-        await Container.save()
     except:  # Not sure which exception should be filtered here for
         # Stop the container
         container.stop()
@@ -106,16 +108,25 @@ async def stop_docker_container(response: Response):
 
     team_id = get_team_id() # From JWT
 
-    user_container = Container.get(team_id=team_id)
+    containers = Container.filter(team_id=team_id).values()
 
-    container = docker_client.containers.get(user_container.id)
-    container.stop()
-    container.remove()
+    # We first try to delete the record from the DB
+    # Then we stop the container
+    try:
+        await Container.filter(team_id=team_id).delete()
+        await Container.save()
+    except:
+        response.status_code = 500
+        return {
+            "msg": "An error occured, please try again."
+        }
 
-    await Container.filter(user_id=user_id).delete()
-    await Container.save()
+    for db_container in containers:
+        container = docker_client.containers.get(db_container.id)
+        container.stop()
+        container.remove()
 
-    return {"msg": "Container stopped."}
+    return {"msg": "All team containers stopped."}
 
 
 @atomic()
@@ -146,6 +157,5 @@ async def stop_docker_container(ctf_id: int, response: Response):
     container = docker_client.containers.get(team_container.id)
     container.stop()
     container.remove()
-
 
     return {"msg": "Container stopped."}
