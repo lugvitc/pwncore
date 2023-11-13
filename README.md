@@ -44,8 +44,7 @@ In case a certain route has multiple complex tasks, they can be separated as a s
 ```
 docs.py                     # Takes metadata from each route and compiles it for FastAPI
 config.py                   # Configuration variables
-
-db/...                      # Database schemas and connector
+db.py                       # Database schemas and connector
 
 routes/
     L team.py
