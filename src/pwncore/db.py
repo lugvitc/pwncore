@@ -1,4 +1,5 @@
 from tortoise import fields
+from tortoise.fields import JSONField
 from tortoise.models import Model
 
 # Tortoise is initiated from __main__.py since initiating
@@ -16,4 +17,4 @@ class Container(Model):
 class CTF(Model):
     name: str         = fields.TextField()
     image_name: str   = fields.TextField()
-    image_config: str = fields.JSONField()
+    image_config: JSONField = fields.JSONField()

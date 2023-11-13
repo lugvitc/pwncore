@@ -22,15 +22,16 @@ def get_empty_ports():
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int, response: Response):
 
-    await CTF.create(**{
-        "name": "AAA",
-        "image_name": "key",
-        "image_config": {
-            "ports": {
-                "22/tcp": None
-            }
-        }
-    })
+    # Testing purposes
+    # await CTF.create(**{
+    #     "name": "AAA",
+    #     "image_name": "key",
+    #     "image_config": {
+    #         "ports": {
+    #             "22/tcp": None
+    #         }
+    #     }
+    # })
 
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
@@ -55,7 +56,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     image_config = ctf.image_config
 
     # Ports
-    port_list = get_empty_ports() # Need to implement
+    port_list = get_empty_ports()  # Need to implement
 
     if len(port_list) < len(image_config["ports"]):
         # Handle error here
@@ -77,7 +78,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         **image_config
     )
 
-    flag = f"{DEV_CONFIG.flag}{{{uuid.uuid4().hex}}}"
+    flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
     container.exec_run(
         f"/bin/bash /root/gen_flag '{flag}'",
         user="root"
@@ -111,7 +112,7 @@ async def start_docker_container(ctf_id: int, response: Response):
 
 @atomic()
 @router.post("/stopall")
-async def stop_docker_container(response: Response):
+async def stopall_docker_container(response: Response):
 
     team_id = get_team_id() # From JWT
 
@@ -121,7 +122,6 @@ async def stop_docker_container(response: Response):
     # Then we stop the container
     try:
         await Container.filter(team_id=team_id).delete()
-        await Container.save()
     except:
         response.status_code = 500
         return {
@@ -166,12 +166,3 @@ async def stop_docker_container(ctf_id: int, response: Response):
     container.remove()
 
     return {"msg": config.messages["container_stop"]}
-
-
-@router.get("/listaaa")
-async def ctf_list():
-    # Get list of ctfs
-    return [
-        {"name": "Password Juggling", "ctf_id": 2243},
-        {"name": "hexane", "ctf_id": 2242},
-    ]
