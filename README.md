@@ -12,7 +12,8 @@
 ```sh
 python -m venv .venv                # Create a python virtual environment
 source .venv/bin/activate           # Activate it (This command will differ for Windows)
-pip instal -r requirements.txt      # Install the dependencies
+pip install poetry
+poetry install                      # Install the dependencies
 ```
 
 ## Run:
