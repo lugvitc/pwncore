@@ -22,6 +22,16 @@ def get_empty_ports():
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int, response: Response):
 
+    await CTF.create(**{
+        "name": "AAA",
+        "image_name": "key",
+        "image_config": {
+            "ports": {
+                "22/tcp": None
+            }
+        }
+    })
+
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404
@@ -29,7 +39,7 @@ async def start_docker_container(ctf_id: int, response: Response):
 
     team_id = get_team_id()  # From JWT
     team_container = await Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
-    if not team_container:
+    if team_container:
         return {
             "msg": config.messages["container_already_running"],
             "ports": team_container.ports.split(","),
@@ -42,7 +52,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         }
 
     # Start a new container
-    image_config = eval(ctf.image_config)
+    image_config = ctf.image_config
 
     # Ports
     port_list = get_empty_ports() # Need to implement
