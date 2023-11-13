@@ -16,23 +16,14 @@ from pwncore.config import DEV_CONFIG
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int, response: Response):
 
-    if not await CTF.filter(id=ctf_id).exists():
+    ctf = await CTF.get_or_none(id=ctf_id)
+    if not ctf:
         response.status_code = 404
         return {"msg": "CTF does not exist."}
-    ctf = await CTF.get(id=ctf_id)
-
-    user_id = get_user_id()  # From JWT
-    if await Container.filter(user_id=user_id).exists():
-        user_container = Container.get(user_id=user_id)
-        return {
-            "msg": "You already have a running container for a CTF.",
-            "ports": user_container.ports.split(","),
-            "ctf_id": user_container.ctf_id
-        }
 
     team_id = get_team_id()  # From JWT
-    if await Container.filter(team_id=team_id, ctf_id=ctf_id).exists():
-        team_container = Container.get(team_id=team_id, ctf_id=ctf_id)
+    team_container = Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
+    if not team_container:
         return {
             "msg": "Your team already has a running container for this CTF.",
             "ports": team_container.ports.split(","),
@@ -82,16 +73,25 @@ async def start_docker_container(ctf_id: int, response: Response):
         user="root"
     )
 
-    await Container.create(**{
-        "id"        : container.id,
-        "name"      : container.name,
-        "user_id"   : user_id,
-        "team_id"   : team_id,
-        "ctf_id"    : ctf_id,
-        "flag"      : flag,
-        "ports"     : ','.join(ports)       # Save ports as csv
-    })
-    await Container.save()
+    try:
+        await Container.create(**{
+            "id"        : container.id,
+            "name"      : container.name,
+            "team_id"   : team_id,
+            "ctf_id"    : ctf_id,
+            "flag"      : flag,
+            "ports"     : ','.join(ports)       # Save ports as csv
+        })
+        await Container.save()
+    except:  # Not sure which exception should be filtered here for
+        # Stop the container
+        container.stop()
+        container.remove()
+
+        response.status_code = 500
+        return {
+            "msg": "An error occured, please try again."
+        }
 
     return {
         "msg": "Container started.",
@@ -104,11 +104,9 @@ async def start_docker_container(ctf_id: int, response: Response):
 @router.post("/stopall")
 async def stop_docker_container(response: Response):
 
-    user_id = get_user_id()  # From JWT
-    if not await Container.filter(user_id=user_id).exists():
-        return {"msg": "You have no running containers."}
+    team_id = get_team_id() # From JWT
 
-    user_container = Container.get(user_id=user_id)
+    user_container = Container.get(team_id=team_id)
 
     container = docker_client.containers.get(user_container.id)
     container.stop()
@@ -124,22 +122,30 @@ async def stop_docker_container(response: Response):
 @router.post("/stop/{ctf_id}")
 async def stop_docker_container(ctf_id: int, response: Response):
 
-    if not await CTF.filter(id=ctf_id).exists():
+    ctf = await CTF.get_or_none(id=ctf_id)
+    if not ctf:
         response.status_code = 404
         return {"msg": "CTF does not exist."}
-    ctf = await CTF.get(id=ctf_id)
 
-    user_id = get_user_id()  # From JWT
-    if not await Container.filter(user_id=user_id, ctf_id=ctf_id).exists():
+    team_id = get_team_id()
+    team_container = Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
+    if not team_container:
         return {"msg": "You have no running containers for this CTF."}
 
-    user_container = Container.get(user_id=user_id, ctf_id=ctf_id)
+    # We first try to delete the record from the DB
+    # Then we stop the container
+    try:
+        await Container.filter(team_id=team_id, ctf_id=ctf_id).delete()
+        await Container.save()
+    except:  # Not sure which exception should be filtered here for
+        response.status_code = 500
+        return {
+            "msg": "An error occured, please try again."
+        }
 
-    container = docker_client.containers.get(user_container.id)
+    container = docker_client.containers.get(team_container.id)
     container.stop()
     container.remove()
 
-    await Container.filter(user_id=user_id).delete()
-    await Container.save()
 
     return {"msg": "Container stopped."}
