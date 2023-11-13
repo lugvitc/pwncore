@@ -11,6 +11,7 @@ metadata = {
 
 router = APIRouter(prefix="/ctf", tags=["ctf"])
 
+from . import start
 # Routes that do not need a separate submodule for themselves
 
 

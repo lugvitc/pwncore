@@ -11,7 +11,11 @@ from pwncore.config import DEV_CONFIG
 
 config = DEV_CONFIG
 
-# UNTESTED
+# temporary helper functions
+def get_team_id():
+    return 34
+def get_empty_ports():
+    return [4444]
 
 
 @atomic()
@@ -32,24 +36,13 @@ async def start_docker_container(ctf_id: int, response: Response):
             "ctf_id": team_container.ctf_id
         }
 
-    if Container.filter(team_id=team_id).count() >= config.max_containers_per_team:
+    if await Container.filter(team_id=team_id).count() >= config.max_containers_per_team:
         return {
             "msg": config.messages["container_limit_reached"]
         }
 
     # Start a new container
-    image_config = ctf.image_config.copy()
-    """
-    This image_config will look like:
-    {
-        "ports": {
-            "22/tcp": None,
-            "80/tcp": None
-        }
-    }
-
-    `None` gets substitued with the empty ports on the host system.
-    """
+    image_config = eval(ctf.image_config)
 
     # Ports
     port_list = get_empty_ports() # Need to implement
@@ -70,7 +63,7 @@ async def start_docker_container(ctf_id: int, response: Response):
     container = docker_client.containers.run(
         ctf.image_name,
         detach=True,
-        name=f"{team_id}_{ctf_id}",
+        name=f"{team_id}_{ctf_id}_{uuid.uuid4().hex}",
         **image_config
     )
 
@@ -87,7 +80,7 @@ async def start_docker_container(ctf_id: int, response: Response):
             "team_id"   : team_id,
             "ctf_id"    : ctf_id,
             "flag"      : flag,
-            "ports"     : ','.join(ports)       # Save ports as csv
+            "ports"     : ','.join([str(port) for port in ports])       # Save ports as csv
         })
     except:  # Not sure which exception should be filtered here for
         # Stop the container
@@ -100,7 +93,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         }
 
     return {
-        "msg": config.messages["container_started"],
+        "msg": config.messages["container_start"],
         "ports": ports,
         "ctf_id": ctf_id
     }
@@ -163,3 +156,12 @@ async def stop_docker_container(ctf_id: int, response: Response):
     container.remove()
 
     return {"msg": config.messages["container_stop"]}
+
+
+@router.get("/listaaa")
+async def ctf_list():
+    # Get list of ctfs
+    return [
+        {"name": "Password Juggling", "ctf_id": 2243},
+        {"name": "hexane", "ctf_id": 2242},
+    ]
