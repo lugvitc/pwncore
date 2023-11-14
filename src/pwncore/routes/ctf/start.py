@@ -94,8 +94,8 @@ async def start_docker_container(ctf_id: int, response: Response):
             "flag"      : flag,
             "ports"     : ','.join([str(port) for port in ports])       # Save ports as csv
         })
-    except:  # Not sure which exception should be filtered here for
-        # Stop the container
+    except Exception:
+        # Stop the container if failed to make a DB record
         container.stop()
         container.remove()
 
@@ -123,7 +123,7 @@ async def stopall_docker_container(response: Response):
     # Then we stop the container
     try:
         await Container.filter(team_id=team_id).delete()
-    except:
+    except Exception:
         response.status_code = 500
         return {
             "msg": config.messages["db_error"]
@@ -148,19 +148,18 @@ async def stop_docker_container(ctf_id: int, response: Response):
 
     team_id = get_team_id()
     team_container = await Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
-    print(team_container)
     if not team_container:
         return {"msg": config.messages["container_not_found"]}
 
     # We first try to delete the record from the DB
     # Then we stop the container
-    # try:
-    await Container.filter(team_id=team_id, ctf_id=ctf_id).delete()
-    # except:  # Not sure which exception should be filtered here for
-    #     response.status_code = 500
-    #     return {
-    #         "msg": config.messages["db_error"]
-    #     }
+    try:
+        await Container.filter(team_id=team_id, ctf_id=ctf_id).delete()
+    except Exception:
+        response.status_code = 500
+        return {
+            "msg": config.messages["db_error"]
+        }
 
     container = docker_client.containers.get(team_container.id)
     container.stop()
