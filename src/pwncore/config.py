@@ -30,9 +30,25 @@ msg_codes = {
 class Config:
     development: bool
     msg_codes: dict
-    db_url: str = "sqlite://:memory:"
-    flag: str = "C0D"
-    max_containers_per_team: int = 3
+    db_url: str
+    flag: str
+    max_containers_per_team: int
 
 
-config = Config(development=True, msg_codes=msg_codes)
+config = Config(
+    development=True,
+    db_url="sqlite://:memory:",
+    flag="C0D",
+    max_containers_per_team=3,
+    msg_codes={
+        "db_error": 0,
+        "port_limit_reached": 1,
+        "ctf_not_found": 2,
+        "container_start": 3,
+        "container_stop": 4,
+        "containers_team_stop": 5,
+        "container_not_found": 6,
+        "container_already_running": 7,
+        "container_limit_reached": 8
+    }
+)
