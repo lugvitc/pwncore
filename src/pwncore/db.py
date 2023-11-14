@@ -7,14 +7,14 @@ from tortoise.models import Model
 
 # No relationships yet
 class Container(Model):
-    id: str      = fields.TextField(pk=True)
-    name: str    = fields.TextField()
-    ctf_id: int  = fields.IntField()
-    ports: str   = fields.TextField()
-    team_id: int = fields.IntField()
-    flag: str    = fields.TextField()
+    id      = fields.TextField(pk=True)
+    name    = fields.TextField()
+    ctf_id  = fields.IntField()
+    ports   = fields.TextField()
+    team_id = fields.IntField()
+    flag    = fields.TextField()
 
 class CTF(Model):
-    name: str         = fields.TextField()
-    image_name: str   = fields.TextField()
-    image_config: JSONField = fields.JSONField()
+    name            = fields.TextField()
+    image_name      = fields.TextField()
+    image_config    = fields.JSONField()
