@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from tortoise import fields
 from tortoise.models import Model
+
+if TYPE_CHECKING:
+    from pwncore.models.container import Container
 
 # Not too sure here
 
@@ -20,3 +25,4 @@ class Team(Model):
 
     # TODO: Add count constraint
     members: fields.ReverseRelation[User]
+    containers: fields.ReverseRelation[Container]

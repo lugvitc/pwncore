@@ -7,6 +7,7 @@ from tortoise import fields
 
 if t.TYPE_CHECKING:
     from pwncore.models.ctf import Problem
+    from pwncore.models.user import Team
 
 
 # Note: These are all type annotated, dont worry
@@ -15,7 +16,9 @@ class Container(Model):
     ctf: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", on_delete=fields.OnDelete.NO_ACTION
     )
-    team_id = fields.IntField()  # TODO: Foreign
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField(
+        "models.Team", related_name="containers"
+    )
     flag = fields.TextField()
 
     ports: fields.ReverseRelation[Ports]
