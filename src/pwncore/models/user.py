@@ -5,10 +5,14 @@ from tortoise.models import Model
 
 # Not too sure here
 
+
 class User(Model):
     user_name = fields.TextField(unique=True)
 
-    team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField("models.Team", "id", null=True)
+    team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField(
+        "models.Team", "id", null=True
+    )
+
 
 class Team(Model):
     team_name = fields.TextField(unique=True)

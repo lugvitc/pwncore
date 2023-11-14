@@ -12,7 +12,9 @@ if t.TYPE_CHECKING:
 # Note: These are all type annotated, dont worry
 class Container(Model):
     id = fields.TextField(pk=True)
-    ctf: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField("models.Problem", on_delete=fields.OnDelete.NO_ACTION)
+    ctf: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
+        "models.Problem", on_delete=fields.OnDelete.NO_ACTION
+    )
     team_id = fields.IntField()  # TODO: Foreign
     flag = fields.TextField()
 
