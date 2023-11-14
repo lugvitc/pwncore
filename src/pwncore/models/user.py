@@ -15,7 +15,7 @@ class User(Model):
     user_name = fields.TextField(unique=True)
 
     team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField(
-        "models.Team", "id", null=True
+        "models.Team", "members", null=True
     )
 
 
