@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import Response
 import uuid
 from tortoise.transactions import atomic
+import logging
 
 from pwncore.routes.ctf import router
 from pwncore.db import Container, CTF
@@ -60,7 +61,7 @@ async def start_docker_container(ctf_id: int, response: Response):
 
     if len(port_list) < len(image_config["ports"]):
         # Handle error here
-        print("AAAAAAAAAAAAAAAAAAA")
+        logging.critical("No more free ports available on machine.")
         response.status_code = 500
         return {"msg": config.messages["port_limit_reached"]}
 
