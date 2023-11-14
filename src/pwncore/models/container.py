@@ -4,23 +4,24 @@ import typing as t
 
 from tortoise.models import Model
 from tortoise import fields
-from tortoise.fields import ForeignKeyRelation
 
 if t.TYPE_CHECKING:
-    from pwncore.models.ctf import CTF
+    from pwncore.models.ctf import Problem
 
 
 # Note: These are all type annotated, dont worry
 class Container(Model):
     id = fields.TextField(pk=True)
-    ctf_id: ForeignKeyRelation[CTF] = fields.ForeignKeyField("models.CTF", "id")
+    ctf: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField("models.Problem", on_delete=fields.OnDelete.NO_ACTION)
     team_id = fields.IntField()  # TODO: Foreign
     flag = fields.TextField()
+
+    ports: fields.ReverseRelation[Ports]
 
 
 class Ports(Model):
     # FUTURE PROOFING: ADD domain
-    container_id: ForeignKeyRelation[Container] = fields.ForeignKeyField(
-        "models.Container", "id"
+    container: fields.ForeignKeyRelation[Container] = fields.ForeignKeyField(
+        "models.Container", related_name="ports", on_delete=fields.OnDelete.CASCADE
     )
     port = fields.IntField(pk=True)

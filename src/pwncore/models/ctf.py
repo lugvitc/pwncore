@@ -1,14 +1,47 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from tortoise.models import Model
 from tortoise import fields
-from tortoise.fields import Field
 
+if TYPE_CHECKING:
+    from tortoise.fields import Field
+    from pwncore.models.user import Team
 
-class CTF(Model):
+class Problem(Model):
     name = fields.TextField()
-    image_name = fields.TextField()
-    image_config: Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
+    description = fields.TextField()
+    points = fields.IntField()
+    author = fields.TextField()
 
+    hints: fields.ReverseRelation[Hint]
+    image: fields.OneToOneRelation[Image]
 
-# reveal_type(CTF().image_config)
+class Hint(Model):
+    hint_order = fields.SmallIntField() # 0, 1, 2
+    problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField("models.Problem", related_name="hints")
+    text = fields.TextField()
+
+    class Meta:
+        ordering = ("hint_order",)
+
+class Image(Model):
+    name = fields.TextField()
+    config: Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
+    problem: fields.OneToOneRelation[Problem] = fields.OneToOneField("models.Problem", related_name="image")
+
+class SolvedProblems(Model):
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField("models.Problem")
+    solved_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("team", "problem"),)
+
+class ViewedHints(Model):
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField("models.Hint")
+
+    class Meta:
+        unique_together = (("team", "hint"),)
