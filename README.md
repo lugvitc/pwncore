@@ -10,9 +10,9 @@
 
 ## Setup:
 ```sh
+pip install poetry
 python -m venv .venv                # Create a python virtual environment
 source .venv/bin/activate           # Activate it (This command will differ for Windows)
-pip install poetry
 poetry install                      # Install the dependencies
 ```
 

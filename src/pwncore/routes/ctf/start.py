@@ -8,9 +8,7 @@ import logging
 from pwncore.routes.ctf import router
 from pwncore.db import Container, CTF
 from pwncore.container import docker_client
-from pwncore.config import DEV_CONFIG
-
-config = DEV_CONFIG
+from pwncore.config import config
 
 # temporary helper functions
 def get_team_id():

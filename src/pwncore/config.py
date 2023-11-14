@@ -39,3 +39,5 @@ class BaseConfig(Config):
         self.development = development
 
 DEV_CONFIG: t.Final[BaseConfig] = BaseConfig(True)
+
+config = DEV_CONFIG
