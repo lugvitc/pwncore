@@ -35,20 +35,20 @@ async def start_docker_container(ctf_id: int, response: Response):
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404
-        return {"msg": config.messages["ctf_not_found"]}
+        return {"msg_code": config.msg_codes["ctf_not_found"]}
 
     team_id = get_team_id()  # From JWT
     team_container = await Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
     if team_container:
         return {
-            "msg": config.messages["container_already_running"],
+            "msg_code": config.msg_codes["container_already_running"],
             "ports": team_container.ports.split(","),
             "ctf_id": team_container.ctf_id
         }
 
     if await Container.filter(team_id=team_id).count() >= config.max_containers_per_team:
         return {
-            "msg": config.messages["container_limit_reached"]
+            "msg_code": config.msg_codes["container_limit_reached"]
         }
 
     # Start a new container
@@ -61,7 +61,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         # Handle error here
         logging.critical("No more free ports available on machine.")
         response.status_code = 500
-        return {"msg": config.messages["port_limit_reached"]}
+        return {"msg_code": config.msg_codes["port_limit_reached"]}
 
     ports = []  # Only to save the host ports used to return to the user
     for guest_port in image_config["ports"]:
@@ -99,11 +99,11 @@ async def start_docker_container(ctf_id: int, response: Response):
 
         response.status_code = 500
         return {
-            "msg": config.messages["db_error"]
+            "msg_code": config.msg_codes["db_error"]
         }
 
     return {
-        "msg": config.messages["container_start"],
+        "msg_code": config.msg_codes["container_start"],
         "ports": ports,
         "ctf_id": ctf_id
     }
@@ -124,7 +124,7 @@ async def stopall_docker_container(response: Response):
     except Exception:
         response.status_code = 500
         return {
-            "msg": config.messages["db_error"]
+            "msg_code": config.msg_codes["db_error"]
         }
 
     for db_container in containers:
@@ -132,7 +132,7 @@ async def stopall_docker_container(response: Response):
         container.stop()
         container.remove()
 
-    return {"msg": config.messages["containers_team_stop"]}
+    return {"msg_code": config.msg_codes["containers_team_stop"]}
 
 
 @atomic()
@@ -142,12 +142,12 @@ async def stop_docker_container(ctf_id: int, response: Response):
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404
-        return {"msg": config.messages["ctf_not_found"]}
+        return {"msg_code": config.msg_codes["ctf_not_found"]}
 
     team_id = get_team_id()
     team_container = await Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
     if not team_container:
-        return {"msg": config.messages["container_not_found"]}
+        return {"msg_code": config.msg_codes["container_not_found"]}
 
     # We first try to delete the record from the DB
     # Then we stop the container
@@ -156,11 +156,11 @@ async def stop_docker_container(ctf_id: int, response: Response):
     except Exception:
         response.status_code = 500
         return {
-            "msg": config.messages["db_error"]
+            "msg_code": config.msg_codes["db_error"]
         }
 
     container = docker_client.containers.get(team_container.id)
     container.stop()
     container.remove()
 
-    return {"msg": config.messages["container_stop"]}
+    return {"msg_code": config.msg_codes["container_stop"]}
