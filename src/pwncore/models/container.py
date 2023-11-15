@@ -15,7 +15,7 @@ __all__ = ("Container", "Ports")
 # Note: These are all type annotated, dont worry
 class Container(Model):
     id = fields.TextField(pk=True)
-    ctf: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
+    problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", on_delete=fields.OnDelete.NO_ACTION
     )
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField(
