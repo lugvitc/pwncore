@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from tortoise import fields
+from tortoise.exceptions import IntegrityError
 from tortoise.models import Model
+from tortoise.expressions import Q
 
 if TYPE_CHECKING:
     from pwncore.models.container import Container
@@ -13,11 +15,26 @@ __all__ = ("User", "Team", "generate_trigger_script")
 
 
 class User(Model):
-    name = fields.CharField(255, unique=True)
+    # Registration numbers and other identity tags
+    # abstractly just represents one person, expand this
+    # field for Identity providers
+    tag = fields.CharField(128, unique=True)
+    name = fields.CharField(255)
+    email = fields.TextField()
+    phone_num = fields.CharField(15)
 
     team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField(
-        "models.Team", "members", null=True
+        "models.Team", "members", null=True, on_delete=fields.OnDelete.SET_NULL
     )
+
+    async def save(self, *args, **kwargs):
+        # TODO: Insert/Update in one query
+        # Reason why we dont use pre_save: overhead, ugly
+        if self.team is not None:
+            cnt = await self.team.members.filter(~Q(id=self.pk)).count()
+            if cnt >= 3:
+                raise IntegrityError("3 or more users already exist for the team")
+        return await super().save(*args, **kwargs)
 
 
 class Team(Model):
@@ -28,6 +45,9 @@ class Team(Model):
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
 
+
+# Use the trigger if encountering inconsistencies in
+# database (shouldn't happen ever tho)
 
 _TRIGGER_SCRIPT_TEMPLATE = """
 CREATE OR REPLACE FUNCTION check_max_users_per_team()
