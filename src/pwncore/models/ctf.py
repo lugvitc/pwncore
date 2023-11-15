@@ -9,6 +9,8 @@ if TYPE_CHECKING:
     from tortoise.fields import Field
     from pwncore.models.user import Team
 
+__all__ = ("Problem", "Hint", "Image", "SolvedProblem", "ViewedHint")
+
 
 class Problem(Model):
     name = fields.TextField()
@@ -21,7 +23,7 @@ class Problem(Model):
 
 
 class Hint(Model):
-    hint_order = fields.SmallIntField()  # 0, 1, 2
+    order = fields.SmallIntField()  # 0, 1, 2
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", related_name="hints"
     )
@@ -39,7 +41,7 @@ class Image(Model):
     )
 
 
-class SolvedProblems(Model):
+class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem"
@@ -50,7 +52,7 @@ class SolvedProblems(Model):
         unique_together = (("team", "problem"),)
 
 
-class ViewedHints(Model):
+class ViewedHint(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField("models.Hint")
 

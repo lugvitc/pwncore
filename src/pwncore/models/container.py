@@ -9,6 +9,8 @@ if t.TYPE_CHECKING:
     from pwncore.models.ctf import Problem
     from pwncore.models.user import Team
 
+__all__ = ("Container", "Ports")
+
 
 # Note: These are all type annotated, dont worry
 class Container(Model):
