@@ -27,3 +27,16 @@ async def ctf_list():
 async def ctf_get(ctf_id: int):
     # Get ctf from ctf_id
     return {"status": "logged in!"}
+
+
+@router.get("/flag/{ctf_id}")
+async def flag(ctf_id: int):
+    # compare flag against database
+    return {"status": True}
+
+
+@router.get("/hint/{ctf_id}")
+async def hint(ctf_id: int):
+    # fetch hint
+    # reduce points
+    return {"hint": "Ask the cat, it was there when it was hidden", "points": 144}
