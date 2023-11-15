@@ -14,7 +14,7 @@ __all__ = ("Container", "Ports")
 
 # Note: These are all type annotated, dont worry
 class Container(Model):
-    id = fields.TextField(pk=True)
+    docker_id = fields.CharField(128, unique=True)
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", on_delete=fields.OnDelete.NO_ACTION
     )

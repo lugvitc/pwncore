@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from tortoise.fields import Field
     from pwncore.models.user import Team
 
-__all__ = ("Problem", "Hint", "Image", "SolvedProblem", "ViewedHint")
+__all__ = ("Problem", "Hint", "SolvedProblem", "ViewedHint")
 
 
 class Problem(Model):
@@ -18,8 +18,10 @@ class Problem(Model):
     points = fields.IntField()
     author = fields.TextField()
 
+    image_name = fields.TextField()
+    image_config: Field[dict[str, list]] = fields.JSONField() # type: ignore[assignment]
+
     hints: fields.ReverseRelation[Hint]
-    image: fields.OneToOneRelation[Image]
 
 
 class Hint(Model):
@@ -30,16 +32,7 @@ class Hint(Model):
     text = fields.TextField()
 
     class Meta:
-        ordering = ("hint_order",)
-
-
-class Image(Model):
-    name = fields.TextField()
-    config: Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
-    problem: fields.OneToOneRelation[Problem] = fields.OneToOneField(
-        "models.Problem", related_name="image"
-    )
-
+        ordering = ("order",)
 
 class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
