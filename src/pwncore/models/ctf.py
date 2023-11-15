@@ -19,7 +19,7 @@ class Problem(Model):
     author = fields.TextField()
 
     image_name = fields.TextField()
-    image_config: Field[dict[str, list]] = fields.JSONField() # type: ignore[assignment]
+    image_config: Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
 
     hints: fields.ReverseRelation[Hint]
 
@@ -33,6 +33,7 @@ class Hint(Model):
 
     class Meta:
         ordering = ("order",)
+
 
 class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
