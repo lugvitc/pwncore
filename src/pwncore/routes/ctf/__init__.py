@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from pwncore.routes.ctf import start
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -10,8 +11,7 @@ metadata = {
 }
 
 router = APIRouter(prefix="/ctf", tags=["ctf"])
-
-from . import start
+router.include_router(start.router)
 # Routes that do not need a separate submodule for themselves
 
 

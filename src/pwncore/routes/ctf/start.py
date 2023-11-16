@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from fastapi import Response
+from fastapi import APIRouter, Response
 import uuid
 from tortoise.transactions import atomic
 import logging
 
-from pwncore.routes.ctf import router
 from pwncore.db import Container, CTF
 from pwncore.container import docker_client
 from pwncore.config import config
@@ -17,20 +16,32 @@ def get_empty_ports():
     return [4444]
 
 
+router = APIRouter(tags=["ctf"])
+
+
 @atomic()
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int, response: Response):
 
     # Testing purposes
-    # await CTF.create(**{
-    #     "name": "AAA",
-    #     "image_name": "key",
-    #     "image_config": {
-    #         "ports": {
-    #             "22/tcp": None
-    #         }
-    #     }
-    # })
+    """
+    image_config format:
+
+    """
+    await CTF.create(**{
+        "name": "Invisible-Incursion",
+        "docker_config": {
+            "Image": "key:latest",
+            "AttachStdin": False,
+            "AttachStdout": False,
+            "AttachStderr": False,
+            "Tty": False,
+            "OpenStdin": False,
+            "PortBindings": {
+                "22/tcp": []
+            }
+        }
+    })
 
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
@@ -52,51 +63,57 @@ async def start_docker_container(ctf_id: int, response: Response):
         }
 
     # Start a new container
-    image_config = ctf.image_config
+    container_name = f"{team_id}_{ctf_id}_{uuid.uuid4().hex}"
+    container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
+    image_config = ctf.docker_config
 
     # Ports
     port_list = get_empty_ports()  # Need to implement
 
-    if len(port_list) < len(image_config["ports"]):
+    if len(port_list) < len(image_config["PortBindings"]):
         # Handle error here
         logging.critical("No more free ports available on machine.")
         response.status_code = 500
         return {"msg_code": config.msg_codes["port_limit_reached"]}
 
     ports = []  # Only to save the host ports used to return to the user
-    for guest_port in image_config["ports"]:
+    for guest_port in image_config["PortBindings"]:
         port = port_list.pop()
         ports.append(port)
-        image_config["ports"][guest_port] = port
+        image_config["PortBindings"][guest_port] = [{"HostPost": port}]
 
     # Run
-    container = docker_client.containers.run(
-        ctf.image_name,
-        detach=True,
-        name=f"{team_id}_{ctf_id}_{uuid.uuid4().hex}",
-        **image_config
-    )
+    container = await docker_client.containers.run({
+        "Image": "key:latest",
+        "AttachStdin": False,
+        "AttachStdout": False,
+        "AttachStderr": False,
+        "Tty": False,
+        "OpenStdin": False,
+        "PortBindings": {
+            "22/tcp": [{"HostPort": "4444"}]
+        }
+    }, name=container_name)
 
-    flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
-    container.exec_run(
-        f"/bin/bash /root/gen_flag '{flag}'",
-        user="root"
-    )
+    await (
+        await container.exec(["/bin/bash", "/root/gen_flag", container_flag])
+    ).start(detach=True)
 
     try:
         await Container.create(**{
             "id"        : container.id,
-            "name"      : container.name,
+            "name"      : container_name,
             "team_id"   : team_id,
             "ctf_id"    : ctf_id,
-            "flag"      : flag,
+            "flag"      : container_flag,
             "ports"     : ','.join([str(port) for port in ports])       # Save ports as csv
         })
-    except Exception:
+    except Exception as e:
         # Stop the container if failed to make a DB record
-        container.stop()
-        container.remove()
+        await container.stop()
+        await container.delete()
 
+        logging.critical(e)
         response.status_code = 500
         return {
             "msg_code": config.msg_codes["db_error"]
@@ -113,7 +130,7 @@ async def start_docker_container(ctf_id: int, response: Response):
 @router.post("/stopall")
 async def stopall_docker_container(response: Response):
 
-    team_id = get_team_id() # From JWT
+    team_id = get_team_id()  # From JWT
 
     containers = await Container.filter(team_id=team_id).values()
 
@@ -128,9 +145,9 @@ async def stopall_docker_container(response: Response):
         }
 
     for db_container in containers:
-        container = docker_client.containers.get(db_container.id)
-        container.stop()
-        container.remove()
+        container = await docker_client.containers.get(db_container.id)
+        await container.stop()
+        await container.delete()
 
     return {"msg_code": config.msg_codes["containers_team_stop"]}
 
@@ -159,8 +176,8 @@ async def stop_docker_container(ctf_id: int, response: Response):
             "msg_code": config.msg_codes["db_error"]
         }
 
-    container = docker_client.containers.get(team_container.id)
-    container.stop()
-    container.remove()
+    container = await docker_client.containers.get(team_container.id)
+    await container.stop()
+    await container.delete()
 
     return {"msg_code": config.msg_codes["container_stop"]}

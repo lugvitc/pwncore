@@ -16,5 +16,6 @@ class Container(Model):
 
 class CTF(Model):
     name            = fields.TextField()
-    image_name      = fields.TextField()
-    image_config    = fields.JSONField()
+    docker_config   = fields.JSONField()
+    # image_name      = fields.TextField()
+    # image_config    = fields.JSONField()
