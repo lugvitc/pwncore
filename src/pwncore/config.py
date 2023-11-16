@@ -22,7 +22,7 @@ msg_codes = {
     "containers_team_stop": 5,
     "container_not_found": 6,
     "container_already_running": 7,
-    "container_limit_reached": 8
+    "container_limit_reached": 8,
 }
 
 
@@ -49,6 +49,6 @@ config = Config(
         "containers_team_stop": 5,
         "container_not_found": 6,
         "container_already_running": 7,
-        "container_limit_reached": 8
-    }
+        "container_limit_reached": 8,
+    },
 )
