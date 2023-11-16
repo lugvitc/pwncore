@@ -11,9 +11,7 @@ from pwncore.config import config
 
 # temporary helper functions
 if config.development:
-
-    def get_team_id():
-        return 1
+    def get_team_id(): return 1
 
 
 router = APIRouter(tags=["ctf"])
@@ -114,7 +112,7 @@ async def start_docker_container(ctf_id: int, response: Response):
             ports.append(port)
             await Ports.create(port=port, container=db_container)
 
-    except Exception as e:
+    except Exception:
         # Stop the container if failed to make a DB record
         await container.stop()
         await container.delete()
