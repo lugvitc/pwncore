@@ -5,7 +5,7 @@ import uuid
 from tortoise.transactions import atomic
 import logging
 
-from pwncore.db import Container, CTF
+from pwncore.db import Container, CTF, Ports
 from pwncore.container import docker_client
 from pwncore.config import config
 
@@ -23,25 +23,26 @@ router = APIRouter(tags=["ctf"])
 @router.post("/start/{ctf_id}")
 async def start_docker_container(ctf_id: int, response: Response):
 
-    # Testing purposes
     """
-    image_config format:
-
-    """
-    await CTF.create(**{
-        "name": "Invisible-Incursion",
-        "docker_config": {
-            "Image": "key:latest",
-            "AttachStdin": False,
-            "AttachStdout": False,
-            "AttachStderr": False,
-            "Tty": False,
-            "OpenStdin": False,
-            "PortBindings": {
-                "22/tcp": []
-            }
+    image_config contains the raw POST data that gets sent to the Docker Remote API.
+    For now it just contains the guest ports that need to be opened on the host.
+    image_config:
+    {
+        "PortBindings": {
+            "22/tcp": [{}]      # Let docker randomly assign ports
         }
-    })
+    }
+    """
+    # Testing purposes
+    # await CTF.create(**{
+    #     "name": "Invisible-Incursion",
+    #     "image_name": "key:latest",
+    #     "image_config": {
+    #         "PortBindings": {
+    #             "22/tcp": [{}]
+    #         }
+    #     }
+    # })
 
     ctf = await CTF.get_or_none(id=ctf_id)
     if not ctf:
@@ -51,9 +52,11 @@ async def start_docker_container(ctf_id: int, response: Response):
     team_id = get_team_id()  # From JWT
     team_container = await Container.get_or_none(team_id=team_id, ctf_id=ctf_id)
     if team_container:
+        db_ports = await team_container.ports.all().values('port')  # Get ports from DB
+        ports = [ db_port['port'] for db_port in db_ports ]           # Create a list out of it
         return {
             "msg_code": config.msg_codes["container_already_running"],
-            "ports": team_container.ports.split(","),
+            "ports": ports,
             "ctf_id": team_container.ctf_id
         }
 
@@ -65,55 +68,49 @@ async def start_docker_container(ctf_id: int, response: Response):
     # Start a new container
     container_name = f"{team_id}_{ctf_id}_{uuid.uuid4().hex}"
     container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
-    image_config = ctf.docker_config
-
-    # Ports
-    port_list = get_empty_ports()  # Need to implement
-
-    if len(port_list) < len(image_config["PortBindings"]):
-        # Handle error here
-        logging.critical("No more free ports available on machine.")
-        response.status_code = 500
-        return {"msg_code": config.msg_codes["port_limit_reached"]}
-
-    ports = []  # Only to save the host ports used to return to the user
-    for guest_port in image_config["PortBindings"]:
-        port = port_list.pop()
-        ports.append(port)
-        image_config["PortBindings"][guest_port] = [{"HostPost": port}]
 
     # Run
-    container = await docker_client.containers.run({
-        "Image": "key:latest",
-        "AttachStdin": False,
-        "AttachStdout": False,
-        "AttachStderr": False,
-        "Tty": False,
-        "OpenStdin": False,
-        "PortBindings": {
-            "22/tcp": [{"HostPort": "4444"}]
+    container = await docker_client.containers.run(
+        name=container_name,
+        config={
+            "Image": ctf.image_name,
+            "AttachStdin": False,
+            "AttachStdout": False,
+            "AttachStderr": False,
+            "Tty": False,
+            "OpenStdin": False,
+            **ctf.image_config
         }
-    }, name=container_name)
+    )
 
     await (
         await container.exec(["/bin/bash", "/root/gen_flag", container_flag])
     ).start(detach=True)
 
     try:
-        await Container.create(**{
+        db_container = await Container.create(**{
             "id"        : container.id,
             "name"      : container_name,
             "team_id"   : team_id,
             "ctf_id"    : ctf_id,
-            "flag"      : container_flag,
-            "ports"     : ','.join([str(port) for port in ports])       # Save ports as csv
+            "flag"      : container_flag
         })
-    except Exception as e:
+
+        # Get ports and save them
+        ports = []  # List to return back to frontend
+        for guest_port in ctf.image_config['PortBindings']:
+            # Docker assigns the port to the IPv4 and IPv6 addresses
+            # Since we only require IPv4, we select the zeroth item
+            # from the returned list.
+            port = int((await container.port(guest_port))[0]["HostPort"])
+            ports.append(port)
+            host_port = await Ports.create(port=port, container=db_container)
+
+    except Exception:
         # Stop the container if failed to make a DB record
         await container.stop()
         await container.delete()
 
-        logging.critical(e)
         response.status_code = 500
         return {
             "msg_code": config.msg_codes["db_error"]
