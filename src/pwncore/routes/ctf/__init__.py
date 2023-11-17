@@ -1,5 +1,7 @@
 from fastapi import APIRouter
+
 from pwncore.routes.ctf.start import router as start_router
+from pwncore.models.ctf import Problem
 
 # Metadata at the top for instant accessibility
 metadata = {
