@@ -13,10 +13,7 @@ from pwncore.models import Container
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
     # Startup
-    await Tortoise.init(
-        db_url=config.db_url,
-        modules={"models": ["pwncore.models"]}
-    )
+    await Tortoise.init(db_url=config.db_url, modules={"models": ["pwncore.models"]})
     await Tortoise.generate_schemas()
 
     yield
@@ -29,7 +26,8 @@ async def app_lifespan(app: FastAPI):
         await container.stop()
         await container.delete()
 
-    await Tortoise.close_connections()  # Deprecated, not sure how to use connections.close_all()
+    # close_connections is deprecated, not sure how to use connections.close_all()
+    await Tortoise.close_connections()
     await docker_client.close()
 
 

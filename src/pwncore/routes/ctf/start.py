@@ -4,14 +4,15 @@ from fastapi import APIRouter, Response
 import uuid
 from tortoise.transactions import atomic
 
-# from pwncore.db import Problem, Container, Ports
 from pwncore.models import Problem, Container, Ports, Team
 from pwncore.container import docker_client
 from pwncore.config import config
 
 # temporary helper functions
 if config.development:
-    def get_team_id(): return 1
+
+    def get_team_id():
+        return 1
 
 
 router = APIRouter(tags=["ctf"])
@@ -32,20 +33,15 @@ async def start_docker_container(ctf_id: int, response: Response):
     """
     if config.development:
         await Problem.create(
-            **{
-                "name": "Invisible-Incursion",
-                "description": "Chod de tujhe se na ho paye",
-                "author": "Meetesh Saini",
-                "points": 300,
-                "image_name": "key:latest",
-                "image_config": {"PortBindings": {"22/tcp": [{}]}},
-            }
+            name="Invisible-Incursion",
+            description="Chod de tujhe se na ho paye",
+            author="Meetesh Saini",
+            points=300,
+            image_name="key:latest",
+            image_config={"PortBindings": {"22/tcp": [{}]}},
         )
         await Team.create(
-            **{
-                "name": "CID Squad" + uuid.uuid4().hex,
-                "secret_hash": "veryverysecret",
-            }
+            name="CID Squad" + uuid.uuid4().hex, secret_hash="veryverysecret"
         )
 
     ctf = await Problem.get_or_none(id=ctf_id)
@@ -61,13 +57,10 @@ async def start_docker_container(ctf_id: int, response: Response):
         return {
             "msg_code": config.msg_codes["container_already_running"],
             "ports": ports,
-            "ctf_id": team_container.problem_id,
+            "ctf_id": ctf_id,
         }
 
-    if (
-        await Container.filter(team_id=team_id).count()
-        >= config.max_containers_per_team
-    ):
+    if await Container.filter(team_id=team_id).count() >= config.max_containers_per_team:  # noqa: B950
         return {"msg_code": config.msg_codes["container_limit_reached"]}
 
     # Start a new container
@@ -79,6 +72,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         name=container_name,
         config={
             "Image": ctf.image_name,
+            # Detach stuff
             "AttachStdin": False,
             "AttachStdout": False,
             "AttachStderr": False,
@@ -94,12 +88,10 @@ async def start_docker_container(ctf_id: int, response: Response):
 
     try:
         db_container = await Container.create(
-            **{
-                "docker_id": container.id,
-                "team_id": team_id,
-                "problem_id": ctf_id,
-                "flag": container_flag,
-            }
+            docker_id=container.id,
+            team_id=team_id,
+            problem_id=ctf_id,
+            flag=container_flag,
         )
 
         # Get ports and save them

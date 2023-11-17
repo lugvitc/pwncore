@@ -10,7 +10,8 @@ Sample messages:
 "containers_team_stop": "All team containers stopped.",
 "container_not_found": "You have no running containers for this CTF.",
 "container_already_running": "Your team already has a running container for this CTF.",
-"container_limit_reached": "Your team already has reached the maximum number of containers limit, please stop other unused containers."
+"container_limit_reached": "Your team already has reached the maximum number"
+                           " of containers limit, please stop other unused containers."
 """
 
 msg_codes = {
@@ -31,6 +32,7 @@ class Config:
     development: bool
     msg_codes: dict
     db_url: str
+    docker_url: str | None
     flag: str
     max_containers_per_team: int
 
@@ -38,6 +40,7 @@ class Config:
 config = Config(
     development=True,
     db_url="sqlite://:memory:",
+    docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
     msg_codes={
