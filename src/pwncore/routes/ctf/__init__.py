@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from pwncore.models.ctf import Problem
 
 # Metadata at the top for instant accessibility
 metadata = {
