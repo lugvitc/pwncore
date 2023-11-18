@@ -42,9 +42,12 @@ class Hint(Model):
             viewed_hint = await Hint.filter(
                 problem_id=problem_id, id__in=viewed
             ).values_list("order", flat=True)
-            hint = await Hint.get_or_none(
-                problem_id=problem_id, order=max(viewed_hint) + 1
-            ).values()
+            if viewed_hint:
+                hint = await Hint.get_or_none(
+                    problem_id=problem_id, order=max(viewed_hint) + 1
+                ).values()
+            else:
+                hint = await Hint.get(problem_id=problem_id, order=0).values()
         else:
             hint = await Hint.get(problem_id=problem_id, order=0).values()
 

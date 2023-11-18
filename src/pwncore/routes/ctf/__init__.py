@@ -69,9 +69,15 @@ async def ctf_get(ctf_id: int):
 
 
 # @router.get("/flag/{ctf_id}")
+async def flag_get(ctf_id: int):
+    flag = await Container.filter(
+        problem_id=ctf_id, team_id=get_team_id(), flag=flag
+    ).values()
+    return flag
+
+
 @router.get("/flag/{ctf_id}/{flag}")
 async def flag_get(ctf_id: int, flag: str):
-    # flag = await Container.filter(problem_id=ctf_id, team_id=get_team_id(), flag=flag).values()
     flag = await Container.check_flag(
         flag=flag, team_id=get_team_id(), problem_id=ctf_id
     )
@@ -82,4 +88,3 @@ async def flag_get(ctf_id: int, flag: str):
 async def hint_get(ctf_id: int):
     hint = await Hint.return_hint(ctf_id, get_team_id())
     return hint
-
