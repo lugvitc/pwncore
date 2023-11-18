@@ -69,11 +69,11 @@ async def ctf_get(ctf_id: int):
 
 
 # @router.get("/flag/{ctf_id}")
-async def flag_get(ctf_id: int):
-    flag = await Container.filter(
-        problem_id=ctf_id, team_id=get_team_id(), flag=flag
-    ).values()
-    return flag
+# async def flag_get(ctf_id: int):
+#     flag = await Container.filter(
+#         problem_id=ctf_id, team_id=get_team_id(), flag=flag
+#     ).values()
+#     return flag
 
 
 @router.get("/flag/{ctf_id}/{flag}")
