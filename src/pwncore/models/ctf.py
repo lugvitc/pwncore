@@ -34,6 +34,24 @@ class Hint(Model):
     class Meta:
         ordering = ("order",)
 
+    async def return_hint(problem_id: int, team_id: int):
+        viewed = await ViewedHint.filter(team_id=team_id).values_list(
+            "hint_id", flat=True
+        )
+        if viewed:
+            viewed_hint = await Hint.filter(
+                problem_id=problem_id, id__in=viewed
+            ).values_list("order", flat=True)
+            hint = await Hint.get_or_none(
+                problem_id=problem_id, order=max(viewed_hint) + 1
+            ).values()
+        else:
+            hint = await Hint.get(problem_id=problem_id, order=0).values()
+
+        if hint:
+            await ViewedHint.create(hint_id=hint["id"], team_id=team_id)
+        return hint
+
 
 class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
@@ -48,8 +66,9 @@ class SolvedProblem(Model):
 
 class ViewedHint(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
-    hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField("models.Hint")
+    hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
+        "models.Hint", related_name="hints"
+    )
 
     class Meta:
         unique_together = (("team", "hint"),)
-
