@@ -24,6 +24,7 @@ msg_codes = {
     "container_not_found": 6,
     "container_already_running": 7,
     "container_limit_reached": 8,
+    "hint_limit_reached": 9,
 }
 
 
@@ -43,15 +44,5 @@ config = Config(
     docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
-    msg_codes={
-        "db_error": 0,
-        "port_limit_reached": 1,
-        "ctf_not_found": 2,
-        "container_start": 3,
-        "container_stop": 4,
-        "containers_team_stop": 5,
-        "container_not_found": 6,
-        "container_already_running": 7,
-        "container_limit_reached": 8,
-    },
+    msg_codes=msg_codes
 )
