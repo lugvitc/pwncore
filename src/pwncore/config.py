@@ -25,6 +25,7 @@ msg_codes = {
     "container_already_running": 7,
     "container_limit_reached": 8,
     "hint_limit_reached": 9,
+    "team_not_found": 10,
 }
 
 
