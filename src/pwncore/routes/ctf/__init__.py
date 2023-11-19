@@ -95,6 +95,7 @@ async def ctf_list():
 #     return flag
 
 
+# For testing purposes only. flag to be passed in body of POST function.
 @router.get("/flag/{ctf_id}/{flag}")
 async def flag_get(ctf_id: int, flag: str):
     problem = await Problem.get_or_none(id=ctf_id)
@@ -127,7 +128,7 @@ async def hint_get(ctf_id: int):
         )
         if viewed_hint:
             hint = await Hint.get_or_none(
-                problem_id=ctf_id, order=max(viewed_hint) + 1
+                problem_id=ctf_id, order=max(viewed_hint) + 1  # type: ignore[operator]
             ).values()
         else:
             hint = await Hint.get(problem_id=ctf_id, order=0).values()
