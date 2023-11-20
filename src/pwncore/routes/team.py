@@ -26,7 +26,5 @@ async def team_login():
 @router.get("/members/{team_id}")
 async def team_members(team_id: int, response: Response):
     members = await User.filter(team_id=team_id).values()
-    if not members:
-        response.status_code = 404
-        return {"msg_code": config.msg_codes["user_not_found"]}
+    # Incase of no members, it just returns an empty list.
     return members
