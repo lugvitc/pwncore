@@ -26,6 +26,7 @@ msg_codes = {
     "container_limit_reached": 8,
     "hint_limit_reached": 9,
     "team_not_found": 10,
+    "user_not_found": 11,
 }
 
 

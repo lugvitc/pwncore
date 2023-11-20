@@ -29,7 +29,7 @@ class User(Model):
     async def save(self, *args, **kwargs):
         # TODO: Insert/Update in one query
         # Reason why we dont use pre_save: overhead, ugly
-        if self.team is not None:
+        if self.team is not None and hasattr(self.team, "members"):
             count = await self.team.members.filter(~Q(id=self.pk)).count()
             if count >= 3:
                 raise IntegrityError("3 or more users already exist for the team")

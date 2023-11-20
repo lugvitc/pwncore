@@ -34,9 +34,27 @@ async def init_db():
         await Team.create(
             name="Triple A battery" + uuid.uuid4().hex, secret_hash="chotiwali"
         )
-        await User.create(name="Aditya Jyoti", team_id=2)
-        await User.create(name="Aadivishnu Gajendra", team_id=2)
-        await User.create(name="Anumeya Sehgal", team_id=2)
+        await User.create(
+            tag="23BRS1000",
+            name="Aditya Jyoti",
+            team_id=2,
+            phone_num=8274817361,
+            email="email1@xyz.org",
+        )
+        await User.create(
+            tag="23BCE1000",
+            name="Aadivishnu Gajendra",
+            team_id=2,
+            phone_num=8274817362,
+            email="email1@xyz.org",
+        )
+        await User.create(
+            tag="23BAI1000",
+            name="Anumeya Sehgal",
+            team_id=2,
+            phone_num=8274817363,
+            email="email1@xyz.org",
+        )
         await Container.create(
             docker_id="letsjustsay1",
             flag="pwncore{this_is_a_test_flag}",
