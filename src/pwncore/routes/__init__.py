@@ -9,7 +9,6 @@ import uuid
 router = APIRouter(prefix="/api")
 
 
-@router.get("/create")
 async def init_db():
     if config.development:
         await Problem.create(
@@ -79,13 +78,8 @@ async def init_db():
         await Hint.create(order=0, problem_id=2, text="This is the first hint")
         await Hint.create(order=1, problem_id=2, text="This is the second hint")
 
+await init_db()
 
 # Include all the subroutes
 router.include_router(ctf.router)
 router.include_router(team.router)
-
-
-# Miscellaneous routes
-@router.get("/asd")
-async def a():
-    return {"ASD": "asd"}

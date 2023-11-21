@@ -4,12 +4,22 @@ from typing import TYPE_CHECKING
 
 from tortoise.models import Model
 from tortoise import fields
+from tortoise.contrib.pydantic import pydantic_model_creator
+
+from pwncore.models.user import Team
 
 if TYPE_CHECKING:
     from tortoise.fields import Field
     from pwncore.models.user import Team
 
-__all__ = ("Problem", "Hint", "SolvedProblem", "ViewedHint")
+__all__ = (
+    "Problem",
+    "Hint",
+    "SolvedProblem",
+    "ViewedHint",
+    "Problem_Pydantic",
+    "Hint_Pydantic",
+)
 
 
 class Problem(Model):
@@ -19,7 +29,7 @@ class Problem(Model):
     author = fields.TextField()
 
     image_name = fields.TextField()
-    image_config: Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
+    image_config: fields.Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
 
     hints: fields.ReverseRelation[Hint]
 
@@ -27,7 +37,7 @@ class Problem(Model):
 class Hint(Model):
     order = fields.SmallIntField()  # 0, 1, 2
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
-        "models.Problem", related_name="hints"
+        "models.Problem"
     )
     text = fields.TextField()
 
@@ -38,7 +48,7 @@ class Hint(Model):
 class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
-        "models.Problem"
+        "models.Problem", related_name="problem"
     )
     solved_at = fields.DatetimeField(auto_now_add=True)
 
@@ -49,8 +59,12 @@ class SolvedProblem(Model):
 class ViewedHint(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
-        "models.Hint", related_name="hints"
+        "models.Hint", related_name="hint"
     )
 
     class Meta:
         unique_together = (("team", "hint"),)
+
+
+Problem_Pydantic = pydantic_model_creator(Problem)
+Hint_Pydantic = pydantic_model_creator(Hint)

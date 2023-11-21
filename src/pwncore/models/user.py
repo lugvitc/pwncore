@@ -6,11 +6,19 @@ from tortoise import fields
 from tortoise.exceptions import IntegrityError
 from tortoise.models import Model
 from tortoise.expressions import Q
+from tortoise.contrib.pydantic import pydantic_model_creator
+
+from pwncore.models.container import Container
 
 if TYPE_CHECKING:
     from pwncore.models.container import Container
 
-__all__ = ("User", "Team")
+__all__ = (
+    "User",
+    "Team",
+    "User_Pydantic",
+    "Team_Pydantic",
+)
 
 
 class User(Model):
@@ -42,3 +50,10 @@ class Team(Model):
 
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
+
+    class PydanticMeta:
+        exclude = ["secret_hash"]
+
+
+Team_Pydantic = pydantic_model_creator(Team)
+User_Pydantic = pydantic_model_creator(User)

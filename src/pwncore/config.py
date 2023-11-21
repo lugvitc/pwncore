@@ -27,6 +27,7 @@ msg_codes = {
     "hint_limit_reached": 9,
     "team_not_found": 10,
     "user_not_found": 11,
+    "ctf_solved": 12,
 }
 
 
