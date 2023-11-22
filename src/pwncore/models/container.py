@@ -4,7 +4,6 @@ import typing as t
 
 from tortoise.models import Model
 from tortoise import fields
-from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 
 if t.TYPE_CHECKING:
     from pwncore.models.ctf import Problem
