@@ -6,6 +6,7 @@ from tortoise import fields
 from tortoise.exceptions import IntegrityError
 from tortoise.models import Model
 from tortoise.expressions import Q
+from passlib.hash import bcrypt
 
 if TYPE_CHECKING:
     from pwncore.models.container import Container
@@ -17,10 +18,10 @@ class User(Model):
     # Registration numbers and other identity tags
     # abstractly just represents one person, expand this
     # field for Identity providers
-    tag = fields.CharField(128, unique=True)
-    name = fields.CharField(255)
-    email = fields.TextField()
-    phone_num = fields.CharField(15)
+    tag : fields.CharField = fields.CharField(128, unique=True)
+    name : str = fields.TextField()
+    email : str = fields.TextField()
+    phone_num : fields.CharField = fields.CharField(15)
 
     team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField(
         "models.Team", "members", null=True, on_delete=fields.OnDelete.SET_NULL
@@ -37,8 +38,14 @@ class User(Model):
 
 
 class Team(Model):
-    name = fields.CharField(255, unique=True)
-    secret_hash = fields.TextField()
+    name : fields.CharField = fields.CharField(255, unique=True)
+    password : fields.CharField = fields.CharField(255, unique=True)
+    current_points : int = fields.IntField(null=True)
+    current_stage : int = fields.IntField(null=True)
+    last_timestamp : fields.DatetimeField = fields.DatetimeField(null=True)
 
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
+
+    async def check_password(self, password : str) -> bool:
+        return bcrypt.verify(self.password, password)

@@ -35,6 +35,7 @@ class Config:
     docker_url: str | None
     flag: str
     max_containers_per_team: int
+    jwt_secret : str
 
 
 config = Config(
@@ -43,6 +44,7 @@ config = Config(
     docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
+    jwt_secret='mysecret',
     msg_codes={
         "db_error": 0,
         "port_limit_reached": 1,
