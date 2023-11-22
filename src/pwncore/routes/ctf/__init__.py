@@ -9,11 +9,11 @@ from pwncore.models import (
     Container,
     Hint,
     ViewedHint,
-    Team,
     Problem_Pydantic,
     Hint_Pydantic,
 )
 from pwncore.config import config
+from pwncore.routes.team import get_team_id
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -24,22 +24,23 @@ metadata = {
 
 router = APIRouter(prefix="/ctf", tags=["ctf"])
 
-
 # Routes that do not need a separate submodule for themselves
-# Fetch team_id from cookies
-def get_team_id():
-    return 1
+
+
+# For testing purposes. Replace function with POST method
+def get_flag():
+    return "pwncore{flag_1}"
 
 
 @router.get("/list")
-async def ctf_list(response: Response):
+async def ctf_list():
     problems = await Problem_Pydantic.from_queryset(Problem.all())
     return problems
 
 
 # For testing purposes only. flag to be passed in body of POST function.
-@router.get("/{ctf_id}/flag/{flag}")
-async def flag_get(ctf_id: int, flag: str, response: Response):
+@router.get("/{ctf_id}/flag")
+async def flag_get(ctf_id: int, response: Response):
     problem = await Problem.exists(id=ctf_id)
     if not problem:
         response.status_code = 404
@@ -51,7 +52,7 @@ async def flag_get(ctf_id: int, flag: str, response: Response):
         return {"msg_code": config.msg_codes["ctf_solved"]}
 
     check_solved = await Container.get_or_none(
-        team_id=get_team_id(), flag=flag, problem_id=ctf_id
+        team_id=get_team_id(), flag=get_flag(), problem_id=ctf_id
     )
     if check_solved:
         await SolvedProblem.create(team_id=get_team_id(), problem_id=ctf_id)
@@ -66,33 +67,41 @@ async def hint_get(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    viewed = await ViewedHint.filter(team_id=get_team_id()).values_list(
-        "hint_id", flat=True
+    viewed_hints = await Hint_Pydantic.from_queryset(
+        Hint.filter(problem_id=ctf_id, hint__team_id=get_team_id()).prefetch_related(
+            "hint"
+        )
     )
 
-    if viewed:
-        viewed_hint = await Hint.filter(problem_id=ctf_id, id__in=viewed).values_list(
-            "order", flat=True
+    if viewed_hints:
+        hint = await Hint.exists(problem_id=ctf_id, order=viewed_hints[-1].order + 1)
+        if not hint:
+            response.status_code = 403
+            return {"msg_code": config.msg_codes["hint_limit_reached"]}
+
+        hint = await Hint_Pydantic.from_queryset_single(
+            Hint.get(problem_id=ctf_id, order=viewed_hints[-1].order + 1)
         )
-        if viewed_hint:
-            hint = await Hint.get_or_none(
-                problem_id=ctf_id, order=max(viewed_hint) + 1  # type: ignore[operator]
-            ).values()
-        else:
-            hint = await Hint.get(problem_id=ctf_id, order=0).values()
+
     else:
-        hint = await Hint.get(problem_id=ctf_id, order=0).values()
+        hint = await Hint_Pydantic.from_queryset_single(
+            Hint.get(problem_id=ctf_id, order=0)
+        )
 
-    if not hint:
-        response.status_code = 403
-        return {"msg_code": config.msg_codes["hint_limit_reached"]}
-
-    await ViewedHint.create(hint_id=hint["id"], team_id=get_team_id())
+    await ViewedHint.create(hint_id=hint.id, team_id=get_team_id())
     return hint
 
 
+@router.get("/viewed_hints")
+async def viewed_hints_get():
+    viewed_hints = await Hint_Pydantic.from_queryset(
+        Hint.filter(hint__team_id=get_team_id()).prefetch_related("hint")
+    )
+    return viewed_hints
+
+
 @router.get("/{ctf_id}/viewed_hints")
-async def completed_hints_get(ctf_id: int):
+async def viewed_problem_hints_get(ctf_id: int):
     viewed_hints = await Hint_Pydantic.from_queryset(
         Hint.filter(problem_id=ctf_id, hint__team_id=get_team_id()).prefetch_related(
             "hint"
