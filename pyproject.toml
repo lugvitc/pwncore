@@ -22,6 +22,8 @@ uvicorn = "^0.24.0"
 tortoise-orm = {version = "^0.20.0", extras = ["asyncpg", "accel"]}
 aiodocker = "^0.21.0"
 passlib = "^1.7.4"
+pyjwt = "^2.8.0"
+types-passlib = "^1.7.7.13"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.6.1"

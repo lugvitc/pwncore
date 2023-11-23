@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tortoise import fields
 from tortoise.exceptions import IntegrityError
 from tortoise.models import Model
 from tortoise.expressions import Q
-from passlib.hash import bcrypt
 from pwncore.models.container import Container
 
 
@@ -37,6 +34,7 @@ class User(Model):
 
 
 class Team(Model):
+    id = fields.IntField(pk=True)  # team.id raises Team does not have id, so explicitly adding it
     name = fields.CharField(255, unique=True)
     secret_hash = fields.TextField()
 
