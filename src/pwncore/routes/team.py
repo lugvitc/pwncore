@@ -18,7 +18,7 @@ Team_pydantic = pydantic_model_creator(Team, name='Team')
 TeamIn_pydantic = pydantic_model_creator(Team, name='TeamIn', exclude_readonly=True)
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 
 async def get_current_team(token : str = Depends(oauth2_scheme)):
@@ -33,7 +33,6 @@ async def get_current_team(token : str = Depends(oauth2_scheme)):
     return await Team_pydantic.from_tortoise_orm(team)
 
 
-@router.post('/token')
 async def generate_token(team_data : TeamIn_pydantic):
     team = await Team.get_or_none(name=team_data.name)
     if team is not None and await team.check_password(team_data.password):
@@ -71,17 +70,20 @@ async def team_login(
     team : Team_pydantic = Depends(get_current_team)
 ):
 
-    issued_at = datetime.datetime.utcfromtimestamp(token['iat'])
-    current_time = datetime.datetime.utcnow()
-    idle_time = current_time - issued_at
+    if team_data.name in (jwt.decode(token, config.jwt_secret, algorithms=['HS256'])):
+        issued_at = datetime.datetime.utcfromtimestamp(token['iat'])
+        current_time = datetime.datetime.utcnow()
+        idle_time = current_time - issued_at
 
-    if idle_time < datetime.timedelta(hours=2):
-        expiration_time = current_time + datetime.timedelta(hours=2)
-        token_payload = jwt.decode(token, config.jwt_secret, algorithms=['HS256'])
-        token_payload['exp'] = expiration_time
-        token = jwt.encode(token_payload, config.jwt_secret, algorithm='HS256')
+        if idle_time < datetime.timedelta(hours=2):
+            expiration_time = current_time + datetime.timedelta(hours=2)
+            token_payload = jwt.decode(token, config.jwt_secret, algorithms=['HS256'])
+            token_payload['exp'] = expiration_time
+            token = jwt.encode(token_payload, config.jwt_secret, algorithm='HS256')
 
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+        return {
+            "access_token": token,
+            "token_type": "bearer"
+        }
+    else:
+        return generate_token(team_data)
