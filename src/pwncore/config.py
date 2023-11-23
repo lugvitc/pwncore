@@ -24,6 +24,11 @@ msg_codes = {
     "container_not_found": 6,
     "container_already_running": 7,
     "container_limit_reached": 8,
+    "signup_success": 9,
+    "wrong_password": 10,
+    "login_success": 11,
+    "team_not_found": 12,
+    "team_exists": 13 
 }
 
 
@@ -35,7 +40,8 @@ class Config:
     docker_url: str | None
     flag: str
     max_containers_per_team: int
-    jwt_secret : str
+    jwt_secret: str
+    jwt_valid_duration: int
 
 
 config = Config(
@@ -44,16 +50,7 @@ config = Config(
     docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
-    jwt_secret='mysecret',
-    msg_codes={
-        "db_error": 0,
-        "port_limit_reached": 1,
-        "ctf_not_found": 2,
-        "container_start": 3,
-        "container_stop": 4,
-        "containers_team_stop": 5,
-        "container_not_found": 6,
-        "container_already_running": 7,
-        "container_limit_reached": 8,
-    },
+    jwt_secret="mysecret",
+    jwt_valid_duration=12,  # In hours
+    msg_codes=msg_codes,
 )

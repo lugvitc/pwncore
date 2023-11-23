@@ -1,26 +1,20 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends
 import uuid
 from tortoise.transactions import atomic
 
 from pwncore.models import Problem, Container, Ports, Team
 from pwncore.container import docker_client
 from pwncore.config import config
-
-# temporary helper functions
-if config.development:
-
-    def get_team_id():
-        return 1
-
+from pwncore.routes.auth import get_jwt
 
 router = APIRouter(tags=["ctf"])
 
 
 @atomic()
 @router.post("/start/{ctf_id}")
-async def start_docker_container(ctf_id: int, response: Response):
+async def start_docker_container(ctf_id: int, response: Response, jwt = Depends(get_jwt)):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
     For now it just contains the guest ports that need to be opened on the host.
@@ -49,7 +43,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    team_id = get_team_id()  # From JWT
+    team_id = jwt["team_id"]  # From JWT
     team_container = await Container.get_or_none(team=team_id, problem=ctf_id)
     if team_container:
         db_ports = await team_container.ports.all().values("port")  # Get ports from DB
@@ -121,8 +115,8 @@ async def start_docker_container(ctf_id: int, response: Response):
 
 @atomic()
 @router.post("/stopall")
-async def stopall_docker_container(response: Response):
-    team_id = get_team_id()  # From JWT
+async def stopall_docker_container(response: Response, jwt = Depends(get_jwt)):
+    team_id = jwt["team_id"]  # From JWT
 
     containers = await Container.filter(team_id=team_id).values()
 
@@ -144,13 +138,13 @@ async def stopall_docker_container(response: Response):
 
 @atomic()
 @router.post("/stop/{ctf_id}")
-async def stop_docker_container(ctf_id: int, response: Response):
+async def stop_docker_container(ctf_id: int, response: Response, jwt = Depends(get_jwt)):
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    team_id = get_team_id()
+    team_id = jwt["team_id"]
     team_container = await Container.get_or_none(team_id=team_id, problem_id=ctf_id)
     if not team_container:
         return {"msg_code": config.msg_codes["container_not_found"]}
