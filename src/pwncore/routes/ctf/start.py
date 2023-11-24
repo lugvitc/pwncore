@@ -56,7 +56,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt=require_jw
 
     if (
         await Container.filter(team_id=team_id).count()
-        >= config.max_containers_per_team
+        >= config.max_containers_per_team  # noqa: W503
     ):
         return {"msg_code": config.msg_codes["container_limit_reached"]}
 

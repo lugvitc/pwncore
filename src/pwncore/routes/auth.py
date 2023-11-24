@@ -81,5 +81,6 @@ async def get_jwt(*, authorization: str = Header()):  # noqa: B008
         raise HTTPException(status_code=401)
     return decoded_token
 
+
 # Using a pre-assigned variable everywhere else to follow flake8's B008
 require_jwt = Depends(get_jwt)
