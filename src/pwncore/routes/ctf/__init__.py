@@ -22,6 +22,7 @@ metadata = {
 }
 
 router = APIRouter(prefix="/ctf", tags=["ctf"])
+router.include_router(start_router)
 
 # Routes that do not need a separate submodule for themselves
 

@@ -2,7 +2,7 @@
 
 ## Tech Stack:
 - Framework: **FastAPI**
-- Database: **PostgreSQL (ORM: SQLAlchemy)**
+- Database: **PostgreSQL (ORM: Tortoise)**
 - Server: **Uvicorn**
 - Test: **TestClient (in FastAPI) / Tox**
 - Containerization: **Docker**
@@ -10,9 +10,10 @@
 
 ## Setup:
 ```sh
+pip install poetry
 python -m venv .venv                # Create a python virtual environment
 source .venv/bin/activate           # Activate it (This command will differ for Windows)
-pip instal -r requirements.txt      # Install the dependencies
+poetry install                      # Install the dependencies
 ```
 
 ## Run:
@@ -39,13 +40,11 @@ All individual routes (`/team/*`, `/ctf/*`) are then put behind `/api` in the `r
 
 In case a certain route has multiple complex tasks, they can be separated as a submodule. For example, the route `/api/ctf/start` will perform a lot of tasks (interacting with docker etc.), and hence has a separate file for it.
 
+`src/`:
 ```
-app.py                      # Main file
 docs.py                     # Takes metadata from each route and compiles it for FastAPI
-config.py                   # Environment variables, could use .env instead
-db.py                       # Database schemas and connector (may do a separate directory if complexity exceeds)
-
-Dockerfile
+config.py                   # Configuration variables
+db.py                       # Database schemas and connector
 
 routes/
     L team.py
@@ -54,10 +53,8 @@ routes/
         L __init__.py       # Rest of the ctf routes go here
     L admin.py
     L leaderboard.py
+    L team.py
     L __init__.py           # Main router under `/api`, any misc routes go here
-helpers/
-    L container.py          # Specific helper functions
-    L __init__.py           # Contains general helper functions
 tests/
 ```
 
