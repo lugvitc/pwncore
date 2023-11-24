@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import jwt
-from fastapi import APIRouter, Header, Response, HTTPException
+from fastapi import APIRouter, Header, Response, HTTPException, Depends
 from pwncore.models import Team
 from pwncore.config import config
 import datetime
@@ -72,12 +72,14 @@ async def team_login(team_data: LoginBody, response: Response):
 
 
 # Custom JWT processing (since FastAPI's implentation deals with refresh tokens)
-async def get_jwt(*, authorization: str = Header()):
-    token = authorization.split(" ")[1]  # Remove Bearer
-    if token is None:
-        raise HTTPException(status_code=401)
+# Supressing B008 in order to be able to use Header() in arguments
+async def get_jwt(*, authorization: str = Header()):  # noqa: B008
     try:
+        token = authorization.split(" ")[1]  # Remove Bearer
         decoded_token = jwt.decode(token, config.jwt_secret, algorithm="HS256")
     except Exception:  # Will filter for invalid signature/expired tokens
         raise HTTPException(status_code=401)
     return decoded_token
+
+# Using a pre-assigned variable everywhere else to follow flake8's B008
+require_jwt = Depends(get_jwt)

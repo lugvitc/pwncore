@@ -34,7 +34,9 @@ class User(Model):
 
 
 class Team(Model):
-    id = fields.IntField(pk=True)  # team.id raises Team does not have id, so explicitly adding it
+    id = fields.IntField(
+        pk=True
+    )  # team.id raises Team does not have id, so explicitly adding it
     name = fields.CharField(255, unique=True)
     secret_hash = fields.TextField()
 
