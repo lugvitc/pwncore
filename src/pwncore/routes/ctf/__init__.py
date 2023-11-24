@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
-from fastapi import Response
+from fastapi import APIRouter, Response
 
 from pwncore.models import (
     Problem,
@@ -67,29 +66,23 @@ async def hint_get(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    viewed_hints = await Hint_Pydantic.from_queryset(
-        Hint.filter(problem_id=ctf_id, hint__team_id=get_team_id()).prefetch_related(
-            "hint"
-        )
-    )
-
+    viewed_hints = await Hint.filter(problem_id=ctf_id, viewedhints__team_id=get_team_id()).order_by("-order").first()
     if viewed_hints:
-        hint = await Hint.exists(problem_id=ctf_id, order=viewed_hints[-1].order + 1)
+        hint = await Hint.exists(problem_id=ctf_id, order=viewed_hints.order + 1)
         if not hint:
             response.status_code = 403
             return {"msg_code": config.msg_codes["hint_limit_reached"]}
 
-        hint = await Hint_Pydantic.from_queryset_single(
-            Hint.get(problem_id=ctf_id, order=viewed_hints[-1].order + 1)
-        )
+        hint = await Hint.get(problem_id=ctf_id, order=viewed_hints.order + 1)
 
     else:
-        hint = await Hint_Pydantic.from_queryset_single(
-            Hint.get(problem_id=ctf_id, order=0)
-        )
+        hint = await Hint.get(problem_id=ctf_id, order=0)
 
     await ViewedHint.create(hint_id=hint.id, team_id=get_team_id())
-    return hint
+    return {
+        "text": hint.text,
+        "order": hint.order
+    }
 
 
 @router.get("/viewed_hints")

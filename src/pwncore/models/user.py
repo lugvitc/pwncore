@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tortoise import fields
 from tortoise.exceptions import IntegrityError
 from tortoise.models import Model
@@ -9,9 +7,6 @@ from tortoise.expressions import Q
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from pwncore.models.container import Container
-
-if TYPE_CHECKING:
-    from pwncore.models.container import Container
 
 __all__ = (
     "User",
