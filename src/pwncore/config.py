@@ -47,5 +47,5 @@ config = Config(
     docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
-    msg_codes=msg_codes
+    msg_codes=msg_codes,
 )

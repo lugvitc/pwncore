@@ -68,10 +68,13 @@ async def hint_get(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    viewed_hints = await Hint.filter(problem_id=ctf_id, viewedhints__team_id=get_team_id()).order_by("-order").first()
+    viewed_hints = (
+        await Hint.filter(problem_id=ctf_id, viewedhints__team_id=get_team_id())
+        .order_by("-order")
+        .first()
+    )
     if viewed_hints:
-        hint = await Hint.exists(problem_id=ctf_id, order=viewed_hints.order + 1)
-        if not hint:
+        if await Hint.exists(problem_id=ctf_id, order=viewed_hints.order + 1):
             response.status_code = 403
             return {"msg_code": config.msg_codes["hint_limit_reached"]}
 
@@ -81,10 +84,7 @@ async def hint_get(ctf_id: int, response: Response):
         hint = await Hint.get(problem_id=ctf_id, order=0)
 
     await ViewedHint.create(hint_id=hint.id, team_id=get_team_id())
-    return {
-        "text": hint.text,
-        "order": hint.order
-    }
+    return {"text": hint.text, "order": hint.order}
 
 
 @router.get("/viewed_hints")

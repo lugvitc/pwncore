@@ -27,12 +27,15 @@ async def app_lifespan(app: FastAPI):
             container = await docker_client.containers.get(db_container["docker_id"])
             await container.stop()
             await container.delete()
-        except Exception:  # Raises DockerError if container does not exist, just pass for now. 
+        except (
+            Exception
+        ):  # Raises DockerError if container does not exist, just pass for now.
             pass
 
     # close_connections is deprecated, not sure how to use connections.close_all()
     await Tortoise.close_connections()
     await docker_client.close()
+
 
 app = FastAPI(
     title="Pwncore",
