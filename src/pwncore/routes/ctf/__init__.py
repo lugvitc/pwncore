@@ -47,12 +47,12 @@ async def flag_get(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    status = await SolvedProblem.get_or_none(team_id=get_team_id(), problem_id=ctf_id)
+    status = await SolvedProblem.exists(team_id=get_team_id(), problem_id=ctf_id)
     if status:
         response.status_code = 401
         return {"msg_code": config.msg_codes["ctf_solved"]}
 
-    check_solved = await Container.get_or_none(
+    check_solved = await Container.exists(
         team_id=get_team_id(), flag=get_flag(), problem_id=ctf_id
     )
     if check_solved:
