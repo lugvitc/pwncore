@@ -1,16 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tortoise.models import Model
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from pwncore.models.user import Team
-
-if TYPE_CHECKING:
-    from tortoise.fields import Field
-    from pwncore.models.user import Team
 
 __all__ = (
     "Problem",
@@ -35,6 +29,7 @@ class Problem(Model):
 
 
 class Hint(Model):
+    id = fields.IntField(pk=True)
     order = fields.SmallIntField()  # 0, 1, 2
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem"
@@ -59,7 +54,8 @@ class SolvedProblem(Model):
 class ViewedHint(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
-        "models.Hint", related_name="hint"
+        "models.Hint",
+        # related_name="viewed_hint"
     )
 
     class Meta:
