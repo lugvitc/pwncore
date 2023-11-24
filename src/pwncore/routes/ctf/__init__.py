@@ -74,7 +74,7 @@ async def hint_get(ctf_id: int, response: Response):
         .first()
     )
     if viewed_hints:
-        if await Hint.exists(problem_id=ctf_id, order=viewed_hints.order + 1):
+        if not await Hint.exists(problem_id=ctf_id, order=viewed_hints.order + 1):
             response.status_code = 403
             return {"msg_code": config.msg_codes["hint_limit_reached"]}
 
@@ -87,20 +87,10 @@ async def hint_get(ctf_id: int, response: Response):
     return {"text": hint.text, "order": hint.order}
 
 
-@router.get("/viewed_hints")
-async def viewed_hints_get():
-    viewed_hints = await Hint_Pydantic.from_queryset(
-        Hint.filter(hint__team_id=get_team_id()).prefetch_related("hint")
-    )
-    return viewed_hints
-
-
 @router.get("/{ctf_id}/viewed_hints")
 async def viewed_problem_hints_get(ctf_id: int):
     viewed_hints = await Hint_Pydantic.from_queryset(
-        Hint.filter(problem_id=ctf_id, hint__team_id=get_team_id()).prefetch_related(
-            "hint"
-        )
+        Hint.filter(problem_id=ctf_id, viewedhints__team_id=get_team_id())
     )
     return viewed_hints
 
@@ -108,7 +98,7 @@ async def viewed_problem_hints_get(ctf_id: int):
 @router.get("/completed")
 async def completed_problem_get():
     problems = await Problem_Pydantic.from_queryset(
-        Problem.filter(problem__team_id=get_team_id()).prefetch_related("problem")
+        Problem.filter(solvedproblems__team_id=get_team_id())
     )
     return problems
 

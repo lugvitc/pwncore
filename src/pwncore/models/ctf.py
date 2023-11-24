@@ -27,6 +27,9 @@ class Problem(Model):
 
     hints: fields.ReverseRelation[Hint]
 
+    class PydanticMeta:
+        exclude = ["image_name", "image_config"]
+
 
 class Hint(Model):
     id = fields.IntField(pk=True)
@@ -43,7 +46,7 @@ class Hint(Model):
 class SolvedProblem(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
-        "models.Problem", related_name="problem"
+        "models.Problem"
     )
     solved_at = fields.DatetimeField(auto_now_add=True)
 
@@ -55,7 +58,6 @@ class ViewedHint(Model):
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
         "models.Hint",
-        # related_name="viewed_hint"
     )
 
     class Meta:
