@@ -13,6 +13,7 @@ from pwncore.models import (
 )
 from pwncore.config import config
 from pwncore.routes.team import get_team_id
+from pwncore.routes.ctf.start import router as start_router
 
 # Metadata at the top for instant accessibility
 metadata = {

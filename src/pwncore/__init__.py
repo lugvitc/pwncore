@@ -23,9 +23,12 @@ async def app_lifespan(app: FastAPI):
     containers = await Container.all().values()
     await Container.all().delete()
     for db_container in containers:
-        container = await docker_client.containers.get(db_container["docker_id"])
-        await container.stop()
-        await container.delete()
+        try:
+            container = await docker_client.containers.get(db_container["docker_id"])
+            await container.stop()
+            await container.delete()
+        except Exception:  # Raises DockerError if container does not exist, just pass for now. 
+            pass
 
     # close_connections is deprecated, not sure how to use connections.close_all()
     await Tortoise.close_connections()
