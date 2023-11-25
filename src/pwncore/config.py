@@ -24,11 +24,15 @@ msg_codes = {
     "container_not_found": 6,
     "container_already_running": 7,
     "container_limit_reached": 8,
-    "signup_success": 9,
-    "wrong_password": 10,
-    "login_success": 11,
-    "team_not_found": 12,
-    "team_exists": 13,
+    "hint_limit_reached": 9,
+    "team_not_found": 10,
+    "user_not_found": 11,
+    "ctf_solved": 12,
+    "signup_success": 13,
+    "wrong_password": 14,
+    "login_success": 15,
+    "team_not_found": 16,
+    "team_exists": 17,
 }
 
 
