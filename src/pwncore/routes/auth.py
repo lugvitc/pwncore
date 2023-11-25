@@ -76,7 +76,7 @@ async def team_login(team_data: LoginBody, response: Response):
 
 # Custom JWT processing (since FastAPI's implentation deals with refresh tokens)
 # Supressing B008 in order to be able to use Header() in arguments
-def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:  # noqa: B008
+def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:
     try:
         token = authorization.split(" ")[1]  # Remove Bearer
         decoded_token: JwtInfo = jwt.decode(
