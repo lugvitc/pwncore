@@ -28,6 +28,10 @@ msg_codes = {
     "team_not_found": 10,
     "user_not_found": 11,
     "ctf_solved": 12,
+    "signup_success": 13,
+    "wrong_password": 14,
+    "login_success": 15,
+    "team_exists": 17,
 }
 
 
@@ -39,6 +43,8 @@ class Config:
     docker_url: str | None
     flag: str
     max_containers_per_team: int
+    jwt_secret: str
+    jwt_valid_duration: int
 
 
 config = Config(
@@ -47,5 +53,7 @@ config = Config(
     docker_url=None,  # None for default system docker
     flag="C0D",
     max_containers_per_team=3,
+    jwt_secret="mysecret",
+    jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
 )

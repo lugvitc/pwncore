@@ -7,20 +7,14 @@ from tortoise.transactions import atomic
 from pwncore.models import Problem, Container, Ports, Team
 from pwncore.container import docker_client
 from pwncore.config import config
-
-# temporary helper functions
-if config.development:
-
-    def get_team_id():
-        return 1
-
+from pwncore.routes.auth import RequireJwt
 
 router = APIRouter(tags=["ctf"])
 
 
 @atomic()
-@router.post("/start/{ctf_id}")
-async def start_docker_container(ctf_id: int, response: Response):
+@router.post("/{ctf_id}/start")
+async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
     For now it just contains the guest ports that need to be opened on the host.
@@ -49,7 +43,7 @@ async def start_docker_container(ctf_id: int, response: Response):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    team_id = get_team_id()  # From JWT
+    team_id = jwt["team_id"]  # From JWT
     team_container = await Container.get_or_none(team=team_id, problem=ctf_id)
     if team_container:
         db_ports = await team_container.ports.all().values("port")  # Get ports from DB
@@ -60,7 +54,11 @@ async def start_docker_container(ctf_id: int, response: Response):
             "ctf_id": ctf_id,
         }
 
-    if (await Container.filter(team_id=team_id).count() >= config.max_containers_per_team):  # noqa: B950
+    if (
+        await Container.filter(
+            team_id=team_id
+        ).count() >= config.max_containers_per_team
+    ):  # fmt: skip
         return {"msg_code": config.msg_codes["container_limit_reached"]}
 
     # Start a new container
@@ -121,8 +119,8 @@ async def start_docker_container(ctf_id: int, response: Response):
 
 @atomic()
 @router.post("/stopall")
-async def stopall_docker_container(response: Response):
-    team_id = get_team_id()  # From JWT
+async def stopall_docker_container(response: Response, jwt: RequireJwt):
+    team_id = jwt["team_id"]  # From JWT
 
     containers = await Container.filter(team_id=team_id).values()
 
@@ -143,14 +141,14 @@ async def stopall_docker_container(response: Response):
 
 
 @atomic()
-@router.post("/stop/{ctf_id}")
-async def stop_docker_container(ctf_id: int, response: Response):
+@router.post("/{ctf_id}/stop")
+async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    team_id = get_team_id()
+    team_id = jwt["team_id"]
     team_container = await Container.get_or_none(team_id=team_id, problem_id=ctf_id)
     if not team_container:
         return {"msg_code": config.msg_codes["container_not_found"]}

@@ -2,16 +2,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic
+from pwncore.routes.auth import RequireJwt
 
 # Metadata at the top for instant accessibility
 metadata = {"name": "team", "description": "Operations with teams"}
 
 router = APIRouter(prefix="/team", tags=["team"])
-
-
-# Retrieve team_id from cookies
-def get_team_id():
-    return 1
 
 
 @router.get("/list")
@@ -20,15 +16,10 @@ async def team_list():
     return teams
 
 
-@router.get("/login")
-async def team_login():
-    # Do login verification here
-    return {"status": "logged in!"}
-
-
 # Unable to test as adding users returns an error
 @router.get("/members")
-async def team_members():
-    members = await User_Pydantic.from_queryset(User.filter(team_id=get_team_id()))
+async def team_members(jwt: RequireJwt):
+    team_id = jwt["team_id"]
+    members = await User_Pydantic.from_queryset(User.filter(team_id=team_id))
     # Incase of no members, it just returns an empty list.
     return members
