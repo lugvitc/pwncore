@@ -7,14 +7,14 @@ from tortoise.transactions import atomic
 from pwncore.models import Problem, Container, Ports, Team
 from pwncore.container import docker_client
 from pwncore.config import config
-from pwncore.routes.auth import require_jwt
+from pwncore.routes.auth import RequireJwt
 
 router = APIRouter(tags=["ctf"])
 
 
 @atomic()
 @router.post("/start/{ctf_id}")
-async def start_docker_container(ctf_id: int, response: Response, jwt=require_jwt):
+async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
     For now it just contains the guest ports that need to be opened on the host.
@@ -118,7 +118,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt=require_jw
 
 @atomic()
 @router.post("/stopall")
-async def stopall_docker_container(response: Response, jwt=require_jwt):
+async def stopall_docker_container(response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]  # From JWT
 
     containers = await Container.filter(team_id=team_id).values()
@@ -141,7 +141,7 @@ async def stopall_docker_container(response: Response, jwt=require_jwt):
 
 @atomic()
 @router.post("/stop/{ctf_id}")
-async def stop_docker_container(ctf_id: int, response: Response, jwt=require_jwt):
+async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404

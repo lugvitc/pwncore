@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import datetime
+import typing as t
+
 import jwt
 from fastapi import APIRouter, Header, Response, HTTPException, Depends
-from pwncore.models import Team
-from pwncore.config import config
-import datetime
 from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
+
+from pwncore.models import Team
+from pwncore.config import config
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -73,14 +76,17 @@ async def team_login(team_data: LoginBody, response: Response):
 
 # Custom JWT processing (since FastAPI's implentation deals with refresh tokens)
 # Supressing B008 in order to be able to use Header() in arguments
-async def get_jwt(*, authorization: str = Header()):  # noqa: B008
+def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:  # noqa: B008
     try:
         token = authorization.split(" ")[1]  # Remove Bearer
-        decoded_token = jwt.decode(token, config.jwt_secret, algorithm="HS256")
+        decoded_token: JwtInfo = jwt.decode(
+            token, config.jwt_secret, algorithms=["HS256"]
+        )
     except Exception:  # Will filter for invalid signature/expired tokens
         raise HTTPException(status_code=401)
     return decoded_token
 
 
 # Using a pre-assigned variable everywhere else to follow flake8's B008
-require_jwt = Depends(get_jwt)
+JwtInfo = t.TypedDict("JwtInfo", {"team_id": int, "exp": int})
+RequireJwt = t.Annotated[JwtInfo, Depends(get_jwt)]
