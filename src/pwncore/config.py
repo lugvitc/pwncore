@@ -31,7 +31,6 @@ msg_codes = {
     "signup_success": 13,
     "wrong_password": 14,
     "login_success": 15,
-    "team_not_found": 16,
     "team_exists": 17,
 }
 
