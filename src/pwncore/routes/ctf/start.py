@@ -13,7 +13,7 @@ router = APIRouter(tags=["ctf"])
 
 
 @atomic()
-@router.post("/start/{ctf_id}")
+@router.post("/{ctf_id}/start")
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
@@ -141,7 +141,7 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
 
 
 @atomic()
-@router.post("/stop/{ctf_id}")
+@router.post("/{ctf_id}/stop")
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:
