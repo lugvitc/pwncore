@@ -28,7 +28,7 @@ router.include_router(start_router)
 
 
 class Flag(BaseModel):
-    text: str
+    flag: str
 
 
 @router.get("/list")
@@ -51,7 +51,7 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
         return {"msg_code": config.msg_codes["ctf_solved"]}
 
     check_solved = await Container.exists(
-        team_id=team_id, flag=flag.text, problem_id=ctf_id
+        team_id=team_id, flag=flag.flag, problem_id=ctf_id
     )
     if check_solved:
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id)
