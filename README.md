@@ -1,14 +1,16 @@
 # CTF Backend
 
 ## Tech Stack:
-- Framework: **FastAPI**
-- Database: **PostgreSQL (ORM: Tortoise)**
-- Server: **Uvicorn**
-- Test: **TestClient (in FastAPI) / Tox**
-- Containerization: **Docker**
-- CI/CD: **Github Actions** and ship to **Github packages**
+
+-   Framework: **FastAPI**
+-   Database: **PostgreSQL (ORM: Tortoise)**
+-   Server: **Uvicorn**
+-   Test: **TestClient (in FastAPI) / Tox**
+-   Containerization: **Docker**
+-   CI/CD: **Github Actions** and ship to **Github packages**
 
 ## Setup:
+
 ```sh
 pip install poetry
 python -m venv .venv                # Create a python virtual environment
@@ -17,8 +19,9 @@ poetry install                      # Install the dependencies
 ```
 
 ## Run:
+
 ```sh
-python -m uvicorn app:app --reload
+python -m uvicorn pwncore:app --reload
 ```
 
 ## Testing:
@@ -26,6 +29,7 @@ python -m uvicorn app:app --reload
 Take a look at `tests/test_login.py` as an example on writing tests.
 
 A Github Workflow is set to automatically run pytest on all filenames beginning with `test` under tox. Regardless, you might want to run the tests on your machine locally before pushing:
+
 ```sh
 tox
 ```
@@ -41,6 +45,7 @@ All individual routes (`/team/*`, `/ctf/*`) are then put behind `/api` in the `r
 In case a certain route has multiple complex tasks, they can be separated as a submodule. For example, the route `/api/ctf/start` will perform a lot of tasks (interacting with docker etc.), and hence has a separate file for it.
 
 `src/`:
+
 ```
 docs.py                     # Takes metadata from each route and compiles it for FastAPI
 config.py                   # Configuration variables
@@ -65,6 +70,7 @@ FastAPI generates documentation for the routes using OpenAPI. The documentation 
 There are 2 ways to add documentation for a route:
 
 1. Explicitly mention the summary and description:
+
 ```py
 @router.get("/start/{ctf_id}",
     description="This description supports **Markdown**.",
@@ -73,6 +79,7 @@ There are 2 ways to add documentation for a route:
 ```
 
 2. Let it infer summary from function name and description from comments:
+
 ```py
 @router.get("/start/{ctf_id}")
 async def start_the_docker_container(ctf_id: int):       # The function name is inferred for the summary
