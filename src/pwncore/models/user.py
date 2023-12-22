@@ -35,7 +35,8 @@ class User(Model):
         if self.team is not None and hasattr(self.team, "members"):
             count = await self.team.members.filter(~Q(id=self.pk)).count()
             if count >= 3:
-                raise IntegrityError("3 or more users already exist for the team")
+                raise IntegrityError(
+                    "3 or more users already exist for the team")
         return await super().save(*args, **kwargs)
 
 
@@ -45,6 +46,7 @@ class Team(Model):
     )  # team.id raises Team does not have id, so explicitly adding it
     name = fields.CharField(255, unique=True)
     secret_hash = fields.TextField()
+    coins = fields.IntField(default=0)
 
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]

@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from passlib.hash import bcrypt
 
 from pwncore.models import Team, Problem, Hint, User
 
@@ -28,8 +29,8 @@ async def init_db():
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
     )
-    await Team.create(name="CID Squad", secret_hash="veryverysecret")
-    await Team.create(name="Triple A battery", secret_hash="chotiwali")
+    await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
+    await Team.create(name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20)
     await User.create(
         tag="23BRS1000",
         name="abc",

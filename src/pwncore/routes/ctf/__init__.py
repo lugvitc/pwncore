@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
+from tortoise.transactions import atomic
 
 from pwncore.models import (
     Problem,
@@ -11,6 +12,7 @@ from pwncore.models import (
     ViewedHint,
     Problem_Pydantic,
     Hint_Pydantic,
+    Team
 )
 from pwncore.config import config
 from pwncore.routes.ctf.start import router as start_router
@@ -59,6 +61,7 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
     return {"status": False}
 
 
+@atomic()
 @router.get("/{ctf_id}/hint")
 async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
@@ -66,6 +69,10 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
+
+    team = await Team.get(id=team_id)
+    if team.coins < config.hint_penalty:
+        return {"msg_code": config.msg_codes["insufficient_coins"]}
 
     viewed_hints = (
         await Hint.filter(problem_id=ctf_id, viewedhints__team_id=team_id)
@@ -81,6 +88,9 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
 
     else:
         hint = await Hint.get(problem_id=ctf_id, order=0)
+
+    team.coins -= config.hint_penalty
+    await team.save()
 
     await ViewedHint.create(hint_id=hint.id, team_id=team_id)
     return {"text": hint.text, "order": hint.order}
