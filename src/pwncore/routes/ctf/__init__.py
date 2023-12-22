@@ -12,7 +12,7 @@ from pwncore.models import (
     ViewedHint,
     Problem_Pydantic,
     Hint_Pydantic,
-    Team
+    Team,
 )
 from pwncore.config import config
 from pwncore.routes.ctf.start import router as start_router

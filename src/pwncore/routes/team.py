@@ -57,7 +57,7 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
             name=user.name,
             email=user.email,
             phone_num=user.phone_num,
-            team_id=team_id
+            team_id=team_id,
         )
     except Exception:
         response.status_code = 500
@@ -67,7 +67,7 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
 
 @atomic()
 @router.post("/remove")
-async def add_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
+async def remove_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
 
     user = await User.get_or_none(team_id=team_id, tag=user_info.tag)

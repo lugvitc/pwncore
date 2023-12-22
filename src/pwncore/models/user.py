@@ -35,8 +35,7 @@ class User(Model):
         if self.team is not None and hasattr(self.team, "members"):
             count = await self.team.members.filter(~Q(id=self.pk)).count()
             if count >= 3:
-                raise IntegrityError(
-                    "3 or more users already exist for the team")
+                raise IntegrityError("3 or more users already exist for the team")
         return await super().save(*args, **kwargs)
 
 

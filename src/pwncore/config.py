@@ -36,7 +36,7 @@ msg_codes = {
     "user_removed": 19,
     "user_already_in_team": 20,
     "user_not_in_team": 21,
-    "insufficient_coins": 22
+    "insufficient_coins": 22,
 }
 
 
@@ -64,5 +64,5 @@ config = Config(
     jwt_secret="mysecret",
     jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
-    hint_penalty=10
+    hint_penalty=10,
 )

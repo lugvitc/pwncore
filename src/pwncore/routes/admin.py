@@ -30,7 +30,9 @@ async def init_db():
         image_config={"PortBindings": {"22/tcp": [{}]}},
     )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
-    await Team.create(name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20)
+    await Team.create(
+        name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
+    )
     await User.create(
         tag="23BRS1000",
         name="abc",
