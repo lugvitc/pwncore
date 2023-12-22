@@ -32,6 +32,7 @@ msg_codes = {
     "wrong_password": 14,
     "login_success": 15,
     "team_exists": 17,
+    "user_created": 18,
     "insufficient_coins": 18
 }
 
