@@ -21,26 +21,18 @@ metadata = {
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-class SignupBody(BaseModel):
-    name: str
-    password: str
-    # members: list[str]
-
-
-class LoginBody(BaseModel):
+class AuthBody(BaseModel):
     name: str
     password: str
 
 
 @atomic()
 @router.post("/signup")
-async def signup_team(team: SignupBody, response: Response):
+async def signup_team(team: AuthBody, response: Response):
     try:
         if await Team.exists(name=team.name):
             response.status_code = 406
             return {"msg_code": config.msg_codes["team_exists"]}
-
-        # TODO: Add users details
 
         await Team.create(name=team.name, secret_hash=bcrypt.hash(team.password))
     except Exception:
@@ -50,7 +42,7 @@ async def signup_team(team: SignupBody, response: Response):
 
 
 @router.post("/login")
-async def team_login(team_data: LoginBody, response: Response):
+async def team_login(team_data: AuthBody, response: Response):
     # TODO: Simplified logic since we're not doing refresh tokens.
 
     team = await Team.get_or_none(name=team_data.name)

@@ -32,8 +32,11 @@ msg_codes = {
     "wrong_password": 14,
     "login_success": 15,
     "team_exists": 17,
-    "user_created": 18,
-    "insufficient_coins": 18
+    "user_added": 18,
+    "user_removed": 19,
+    "user_already_in_team": 20,
+    "user_not_in_team": 21,
+    "insufficient_coins": 22
 }
 
 

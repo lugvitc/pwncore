@@ -21,6 +21,10 @@ class UserAddBody(BaseModel):
     phone_num: str
 
 
+class UserRemoveBody(BaseModel):
+    tag: str
+
+
 @router.get("/list")
 async def team_list():
     teams = await Team_Pydantic.from_queryset(Team.all())
@@ -40,6 +44,11 @@ async def team_members(jwt: RequireJwt):
 @router.post("/add")
 async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
+
+    if await User.get_or_none(tag=user.tag):
+        response.status_code = 403
+        return {"msg_code": config.msg_codes["user_already_in_team"]}
+
     try:
         await User.create(
             # Validation for user tag (reg. no. in our case)
@@ -53,4 +62,22 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
     except Exception:
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
-    return {"msg_code": config.msg_codes["user_created"]}
+    return {"msg_code": config.msg_codes["user_added"]}
+
+
+@atomic()
+@router.post("/remove")
+async def add_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
+    team_id = jwt["team_id"]
+
+    user = await User.get_or_none(team_id=team_id, tag=user_info.tag)
+    if not user:
+        response.status_code = 403
+        return {"msg_code": config.msg_codes["user_not_in_team"]}
+
+    try:
+        await user.delete()
+    except Exception:
+        response.status_code = 500
+        return {"msg_code": config.msg_codes["db_error"]}
+    return {"msg_code": config.msg_codes["user_removed"]}
