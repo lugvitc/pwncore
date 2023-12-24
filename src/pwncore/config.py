@@ -56,9 +56,9 @@ class Config:
 config = Config(
     development=True,
     db_url="sqlite://:memory:",
-    # docker_url=None,  # None for default system docker
+    docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
-    docker_url="http://google.com",
+    # docker_url="http://google.com",
     flag="C0D",
     max_containers_per_team=3,
     jwt_secret="mysecret",

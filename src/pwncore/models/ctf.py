@@ -22,6 +22,8 @@ class Problem(Model):
     points = fields.IntField()
     author = fields.TextField()
 
+    coins = fields.IntField(default=0)
+
     image_name = fields.TextField()
     image_config: fields.Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
 
