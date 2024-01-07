@@ -22,12 +22,28 @@ async def init_db():
         image_config={"PortBindings": {"22/tcp": [{}]}},
     )
     await Problem.create(
+        name="Static_test",
+        description="Chod de tujhe se na ho paye",
+        author="Meetesh Saini",
+        points=300,
+        coins=20,
+        flag="asd",
+    )
+    await Problem.create(
         name="In-Plain-Sight",
         description="A curious image with hidden secrets?",
         author="KreativeThinker",
         points=300,
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
+    )
+    await Problem.create(
+        name="GitGood",
+        description="How to master the art of solving CTFs? Git good nub.",
+        author="Aadivishnu and Shoubhit",
+        points=300,
+        image_name="test:latest",
+        image_config={"PortBindings": {"22/tcp": [{}], "5000/tcp": [{}]}},
     )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
     await Team.create(

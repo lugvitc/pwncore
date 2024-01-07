@@ -51,6 +51,7 @@ class Config:
     jwt_secret: str
     jwt_valid_duration: int
     hint_penalty: int
+    max_members_per_team: int
 
 
 config = Config(
@@ -65,4 +66,5 @@ config = Config(
     jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
     hint_penalty=10,
+    max_members_per_team=3,
 )

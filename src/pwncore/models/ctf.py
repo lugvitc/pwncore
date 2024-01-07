@@ -11,6 +11,7 @@ __all__ = (
     "Hint",
     "SolvedProblem",
     "ViewedHint",
+    "PreEventSolvedProblem",
     "Problem_Pydantic",
     "Hint_Pydantic",
 )
@@ -24,13 +25,17 @@ class Problem(Model):
 
     coins = fields.IntField(default=0)
 
+    flag = fields.TextField(null=True)  # Static flag CTFs
+
     image_name = fields.TextField()
-    image_config: fields.Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
+    image_config: fields.Field[dict[str, list]] = fields.JSONField(
+        null=True
+    )  # type: ignore[assignment]
 
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
-        exclude = ["image_name", "image_config"]
+        exclude = ["image_name", "image_config", "flag"]
 
 
 class Hint(Model):
@@ -64,6 +69,17 @@ class ViewedHint(Model):
 
     class Meta:
         unique_together = (("team", "hint"),)
+
+
+class PreEventSolvedProblem(Model):
+    tag = fields.CharField(128)
+    problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
+        "models.Problem"
+    )
+    solved_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("tag", "problem"),)
 
 
 Problem_Pydantic = pydantic_model_creator(Problem)

@@ -13,6 +13,7 @@ from pwncore.models import (
     Problem_Pydantic,
     Hint_Pydantic,
     Team,
+    PreEventSolvedProblem,
 )
 from pwncore.config import config
 from pwncore.routes.ctf.start import router as start_router
@@ -30,6 +31,11 @@ router.include_router(start_router)
 
 
 class Flag(BaseModel):
+    flag: str
+
+
+class PreEventFlag(BaseModel):
+    tag: str
     flag: str
 
 
@@ -62,6 +68,27 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
         team = await Team.get(id=team_id)
         team.coins += problem.coins
         await team.save()
+
+        return {"status": True}
+    return {"status": False}
+
+
+@atomic()
+@router.post("/{ctf_id}/pre_event_flag")
+async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
+    problem = await Problem.get_or_none(id=ctf_id)
+    if not problem:
+        response.status_code = 404
+        return {"msg_code": config.msg_codes["ctf_not_found"]}
+
+    print(problem)
+
+    if await PreEventSolvedProblem.exists(tag=post_body.tag, problem_id=ctf_id):
+        response.status_code = 401
+        return {"msg_code": config.msg_codes["ctf_solved"]}
+
+    if problem.flag == post_body.flag:
+        await PreEventSolvedProblem.create(tag=post_body.tag, problem_id=ctf_id)
 
         return {"status": True}
     return {"status": False}
