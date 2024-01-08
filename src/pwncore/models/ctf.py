@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from math import tanh
+from typing import Any, Optional, Tuple, Type
+from tortoise.backends.base.client import BaseDBAsyncClient
+
 from tortoise.models import Model
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -30,14 +34,26 @@ class Problem(BaseProblem):
         null=True
     )  # type: ignore[assignment]
 
+    mi = fields.IntField()
+    ma = fields.IntField()
+
     hints: fields.ReverseRelation[Hint]
 
+    class PydanticMeta:
+        exclude = ["image_name", "image_config"]
+
+    async def solves(self) -> int:
+        return await SolvedProblem.filter(problem=self).count()
+
+    async def _update_points(self) -> None:
+        self.points = round(self.mi + (self.ma - self.mi) * (1 - tanh(await self.solves())))
+        await self.save()
 
 class Hint(Model):
     id = fields.IntField(pk=True)
     order = fields.SmallIntField()  # 0, 1, 2
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
-        "models.Problem"
+        "models.Problem", related_name="hints"
     )
     text = fields.TextField()
 
