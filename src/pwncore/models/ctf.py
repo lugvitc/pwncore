@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from math import tanh
-from typing import Any, Optional, Tuple, Type
-from tortoise.backends.base.client import BaseDBAsyncClient
 
 from tortoise.models import Model
 from tortoise import fields
@@ -46,8 +44,11 @@ class Problem(BaseProblem):
         return await SolvedProblem.filter(problem=self).count()
 
     async def _update_points(self) -> None:
-        self.points = round(self.mi + (self.ma - self.mi) * (1 - tanh(await self.solves())))
+        self.points = round(
+            self.mi + (self.ma - self.mi) * (1 - tanh(await self.solves()))
+        )
         await self.save()
+
 
 class Hint(Model):
     id = fields.IntField(pk=True)
