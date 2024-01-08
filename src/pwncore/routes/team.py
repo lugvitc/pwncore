@@ -53,7 +53,7 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
         await User.create(
             # Validation for user tag (reg. no. in our case)
             # needs to be done on frontend to not make the server event specific
-            tag=user.tag,
+            tag=user.tag.strip().casefold(),
             name=user.name,
             email=user.email,
             phone_num=user.phone_num,

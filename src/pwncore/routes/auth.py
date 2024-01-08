@@ -29,6 +29,7 @@ class AuthBody(BaseModel):
 @atomic()
 @router.post("/signup")
 async def signup_team(team: AuthBody, response: Response):
+    team.name = team.name.strip()
     try:
         if await Team.exists(name=team.name):
             response.status_code = 406

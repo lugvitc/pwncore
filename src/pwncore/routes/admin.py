@@ -22,14 +22,16 @@ async def calculate_team_coins():  # Inefficient, anyways will be used only once
     logging.info("Calculating team points form pre-event CTFs:")
     team_ids = await Team.filter().values_list("id", flat=True)
     for team_id in team_ids:
-        member_tags = await User.filter(team_id=team_id).values_list('tag', flat=True)
+        member_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
 
         if not member_tags:
             return 0
 
-        problems_solved = set(await PreEventSolvedProblem.filter(
-            tag__in=member_tags
-        ).values_list('problem_id', flat=True))
+        problems_solved = set(
+            await PreEventSolvedProblem.filter(tag__in=member_tags).values_list(
+                "problem_id", flat=True
+            )
+        )
 
         team = await Team.get(id=team_id)
         for ctf_id in problems_solved:
@@ -77,14 +79,8 @@ async def init_db():
     await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
-    await PreEventSolvedProblem.create(
-        tag="23BCE1000",
-        problem_id="1"
-    )
-    await PreEventSolvedProblem.create(
-        tag="23BRS1000",
-        problem_id="2"
-    )
+    await PreEventSolvedProblem.create(tag="23BCE1000", problem_id="1")
+    await PreEventSolvedProblem.create(tag="23BRS1000", problem_id="2")
     # await PreEventSolvedProblem.create(
     #     tag="23BAI1000",
     #     problem_id="2"
