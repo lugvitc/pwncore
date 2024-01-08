@@ -81,8 +81,6 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
-    print(problem)
-
     if await PreEventSolvedProblem.exists(tag=post_body.tag, problem_id=ctf_id):
         response.status_code = 401
         return {"msg_code": config.msg_codes["ctf_solved"]}
