@@ -32,6 +32,11 @@ msg_codes = {
     "wrong_password": 14,
     "login_success": 15,
     "team_exists": 17,
+    "user_added": 18,
+    "user_removed": 19,
+    "user_already_in_team": 20,
+    "user_not_in_team": 21,
+    "insufficient_coins": 22,
 }
 
 
@@ -45,15 +50,21 @@ class Config:
     max_containers_per_team: int
     jwt_secret: str
     jwt_valid_duration: int
+    hint_penalty: int
+    max_members_per_team: int
 
 
 config = Config(
     development=True,
     db_url="sqlite://:memory:",
-    docker_url=None,  # None for default system docker
+    # docker_url=None,  # None for default system docker
+    # Or set it to an arbitrary URL for testing without Docker
+    docker_url="http://google.com",
     flag="C0D",
     max_containers_per_team=3,
     jwt_secret="mysecret",
     jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
+    hint_penalty=10,
+    max_members_per_team=3,
 )

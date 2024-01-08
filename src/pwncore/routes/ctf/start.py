@@ -4,7 +4,7 @@ from fastapi import APIRouter, Response
 import uuid
 from tortoise.transactions import atomic
 
-from pwncore.models import Problem, Container, Ports, Team
+from pwncore.models import Problem, Container, Ports
 from pwncore.container import docker_client
 from pwncore.config import config
 from pwncore.routes.auth import RequireJwt
@@ -25,18 +25,6 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         }
     }
     """
-    if config.development:
-        await Problem.create(
-            name="Invisible-Incursion",
-            description="Chod de tujhe se na ho paye",
-            author="Meetesh Saini",
-            points=300,
-            image_name="key:latest",
-            image_config={"PortBindings": {"22/tcp": [{}]}},
-        )
-        await Team.create(
-            name="CID Squad" + uuid.uuid4().hex, secret_hash="veryverysecret"
-        )
 
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:

@@ -1,13 +1,43 @@
+import logging
 from fastapi import APIRouter
+from passlib.hash import bcrypt
 
-from pwncore.models import Team, Problem, Hint, User
+from pwncore.models import Team, Problem, Hint, User, PreEventSolvedProblem
+from pwncore.config import config
 
 metadata = {
     "name": "admin",
     "description": "Admin routes (currently only running when development on)",
 }
 
+# TODO: Make this protected
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+if config.development:
+    logging.basicConfig(level=logging.INFO)
+
+
+@router.get("/union")
+async def calculate_team_coins():  # Inefficient, anyways will be used only once
+    logging.info("Calculating team points form pre-event CTFs:")
+    team_ids = await Team.filter().values_list("id", flat=True)
+    for team_id in team_ids:
+        member_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
+
+        if not member_tags:
+            return 0
+
+        problems_solved = set(
+            await PreEventSolvedProblem.filter(tag__in=member_tags).values_list(
+                "problem_id", flat=True
+            )
+        )
+
+        team = await Team.get(id=team_id)
+        for ctf_id in problems_solved:
+            team.coins += (await Problem.get(id=ctf_id)).coins
+        logging.info(f"{team.id}) {team.name}: {team.coins}")
+        await team.save()
 
 
 @router.get("/create")
@@ -17,8 +47,17 @@ async def init_db():
         description="Chod de tujhe se na ho paye",
         author="Meetesh Saini",
         points=300,
+        coins=20,
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
+    )
+    await Problem.create(
+        name="Static_test",
+        description="Chod de tujhe se na ho paye",
+        author="Meetesh Saini",
+        points=300,
+        coins=20,
+        flag="asd",
     )
     await Problem.create(
         name="In-Plain-Sight",
@@ -28,8 +67,24 @@ async def init_db():
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
     )
-    await Team.create(name="CID Squad", secret_hash="veryverysecret")
-    await Team.create(name="Triple A battery", secret_hash="chotiwali")
+    await Problem.create(
+        name="GitGood",
+        description="How to master the art of solving CTFs? Git good nub.",
+        author="Aadivishnu and Shoubhit",
+        points=300,
+        image_name="test:latest",
+        image_config={"PortBindings": {"22/tcp": [{}], "5000/tcp": [{}]}},
+    )
+    await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
+    await Team.create(
+        name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
+    )
+    await PreEventSolvedProblem.create(tag="23BCE1000", problem_id="1")
+    await PreEventSolvedProblem.create(tag="23BRS1000", problem_id="2")
+    # await PreEventSolvedProblem.create(
+    #     tag="23BAI1000",
+    #     problem_id="2"
+    # )
     await User.create(
         tag="23BRS1000",
         name="abc",
