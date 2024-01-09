@@ -46,7 +46,9 @@ class Hint(Model):
 
 
 class SolvedProblem(Model):
-    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField(
+        "models.Team", related_name="solved_problem"
+    )
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem"
     )
