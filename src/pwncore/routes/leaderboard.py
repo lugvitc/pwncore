@@ -17,5 +17,5 @@ async def fetch_leaderboard():
         .annotate(team_points=Sum("solved_problem__problem__points"))
         .values_list("name", "team_points")
     )
-    points = sorted(points, key=lambda x: x[0], reverse=True)
+    # points = sorted(points, key=lambda x: x[0], reverse=True)
     return points
