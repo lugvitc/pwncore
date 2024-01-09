@@ -9,7 +9,7 @@ metadata = {"name": "leaderboard", "description": "Operations on the leaderboard
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
 
-@router.get("/fetch_leaderboard")
+@router.get("/")
 async def fetch_leaderboard():
     teams = await Team_Pydantic.from_queryset(Team.all())
     # points = await SolvedProblem.filter(team=2).values("problem__points")
