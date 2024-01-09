@@ -10,13 +10,13 @@ from pwncore.models import (
     Container,
     Hint,
     ViewedHint,
-    Problem_Pydantic,
+    BaseProblem_Pydantic,
     Hint_Pydantic,
     Team,
-    PreEventSolvedProblem,
 )
 from pwncore.config import config
 from pwncore.routes.ctf.start import router as start_router
+from pwncore.routes.ctf.pre_event import router as pre_event_router
 from pwncore.routes.auth import RequireJwt
 
 # Metadata at the top for instant accessibility
@@ -28,20 +28,16 @@ metadata = {
 
 router = APIRouter(prefix="/ctf", tags=["ctf"])
 router.include_router(start_router)
+router.include_router(pre_event_router)
 
 
 class Flag(BaseModel):
     flag: str
 
 
-class PreEventFlag(BaseModel):
-    tag: str
-    flag: str
-
-
 @router.get("/list")
 async def ctf_list():
-    problems = await Problem_Pydantic.from_queryset(Problem.all())
+    problems = await BaseProblem_Pydantic.from_queryset(Problem.all())
     return problems
 
 
@@ -64,32 +60,6 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
     )
     if check_solved:
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id)
-
-        team = await Team.get(id=team_id)
-        team.coins += problem.coins
-        await team.save()
-
-        return {"status": True}
-    return {"status": False}
-
-
-@atomic()
-@router.post("/{ctf_id}/pre_event_flag")
-async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
-    problem = await Problem.get_or_none(id=ctf_id)
-    if not problem:
-        response.status_code = 404
-        return {"msg_code": config.msg_codes["ctf_not_found"]}
-
-    user_tag = post_body.tag.strip().casefold()
-
-    if await PreEventSolvedProblem.exists(tag=user_tag, problem_id=ctf_id):
-        response.status_code = 401
-        return {"msg_code": config.msg_codes["ctf_solved"]}
-
-    if problem.flag == post_body.flag:
-        await PreEventSolvedProblem.create(tag=user_tag, problem_id=ctf_id)
-
         return {"status": True}
     return {"status": False}
 
@@ -141,7 +111,7 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
 @router.get("/completed")
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
-    problems = await Problem_Pydantic.from_queryset(
+    problems = await BaseProblem_Pydantic.from_queryset(
         Problem.filter(solvedproblems__team_id=team_id)
     )
     return problems
@@ -149,7 +119,7 @@ async def completed_problem_get(jwt: RequireJwt):
 
 @router.get("/{ctf_id}")
 async def ctf_get(ctf_id: int, response: Response):
-    problem = await Problem_Pydantic.from_queryset(Problem.filter(id=ctf_id))
+    problem = await BaseProblem_Pydantic.from_queryset(Problem.filter(id=ctf_id))
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}

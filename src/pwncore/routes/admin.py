@@ -2,7 +2,14 @@ import logging
 from fastapi import APIRouter
 from passlib.hash import bcrypt
 
-from pwncore.models import Team, Problem, Hint, User, PreEventSolvedProblem
+from pwncore.models import (
+    Team,
+    Problem,
+    Hint,
+    User,
+    PreEventSolvedProblem,
+    PreEventProblem,
+)
 from pwncore.config import config
 
 metadata = {
@@ -35,7 +42,7 @@ async def calculate_team_coins():  # Inefficient, anyways will be used only once
 
         team = await Team.get(id=team_id)
         for ctf_id in problems_solved:
-            team.coins += (await Problem.get(id=ctf_id)).coins
+            team.coins += (await PreEventProblem.get(id=ctf_id)).points
         logging.info(f"{team.id}) {team.name}: {team.coins}")
         await team.save()
 
@@ -47,17 +54,24 @@ async def init_db():
         description="Chod de tujhe se na ho paye",
         author="Meetesh Saini",
         points=300,
-        coins=20,
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
     )
-    await Problem.create(
+    await PreEventProblem.create(
         name="Static_test",
         description="Chod de tujhe se na ho paye",
         author="Meetesh Saini",
-        points=300,
-        coins=20,
+        points=20,
         flag="asd",
+        url="lugvitc.org",
+    )
+    await PreEventProblem.create(
+        name="New Static Test",
+        description="AJJSBFISHDBFHSD",
+        author="Meetesh Saini",
+        points=21,
+        flag="asdf",
+        url="lugvitc.org",
     )
     await Problem.create(
         name="In-Plain-Sight",
@@ -80,7 +94,7 @@ async def init_db():
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
     await PreEventSolvedProblem.create(tag="23BCE1000", problem_id="1")
-    await PreEventSolvedProblem.create(tag="23BRS1000", problem_id="2")
+    await PreEventSolvedProblem.create(tag="23BRS1000", problem_id="1")
     # await PreEventSolvedProblem.create(
     #     tag="23BAI1000",
     #     problem_id="2"
