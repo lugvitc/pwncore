@@ -11,6 +11,7 @@ from pwncore.models import (
     PreEventProblem,
 )
 from pwncore.config import config
+from pwncore.models.ctf import SolvedProblem
 
 metadata = {
     "name": "admin",
@@ -146,3 +147,6 @@ async def init_db():
     await Hint.create(order=2, problem_id=1, text="This is the third hint")
     await Hint.create(order=0, problem_id=2, text="This is the first hint")
     await Hint.create(order=1, problem_id=2, text="This is the second hint")
+    await SolvedProblem.create(team_id=2, problem_id=1)
+    await SolvedProblem.create(team_id=2, problem_id=2)
+    await SolvedProblem.create(team_id=1, problem_id=2)
