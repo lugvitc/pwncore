@@ -9,10 +9,9 @@ metadata = {"name": "leaderboard", "description": "Operations on the leaderboard
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
 
-@router.get("/")
+@router.get("")
 async def fetch_leaderboard():
     teams = await Team.all()
-    # points = await SolvedProblem.filter(team=2).values("problem__points")
     leaderboard = {}
     for team in teams:
         problems_solved_by_team = await SolvedProblem.filter(
@@ -24,4 +23,4 @@ async def fetch_leaderboard():
 
     # Uncomment to return sorted leaderboard
     # leaderboard = dict(sorted(leaderboard.items(), key=lambda x: x[0], reverse=True))
-    return "asd"
+    return leaderboard
