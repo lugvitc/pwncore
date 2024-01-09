@@ -9,15 +9,18 @@ from pwncore.models.ctf import (
     SolvedProblem,
     Hint,
     ViewedHint,
-    Problem_Pydantic,
     Hint_Pydantic,
-    PreEventSolvedProblem,
+    BaseProblem_Pydantic,
 )
 from pwncore.models.user import User, Team, Team_Pydantic, User_Pydantic
+from pwncore.models.pre_event import (
+    PreEventProblem,
+    PreEventSolvedProblem,
+)
 
 __all__ = (
     "Problem",
-    "Problem_Pydantic",
+    "BaseProblem_Pydantic",
     "Hint",
     "Hint_Pydantic",
     "SolvedProblem",
@@ -26,6 +29,7 @@ __all__ = (
     "Ports",
     "User",
     "PreEventSolvedProblem",
+    "PreEventProblem",
     "User_Pydantic",
     "Team",
     "Team_Pydantic",
