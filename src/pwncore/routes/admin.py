@@ -57,6 +57,8 @@ async def init_db():
         points=300,
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
+        mi=200,
+        ma=400,
     )
     await PreEventProblem.create(
         name="Static_test",
@@ -81,6 +83,8 @@ async def init_db():
         points=300,
         image_name="key:latest",
         image_config={"PortBindings": {"22/tcp": [{}]}},
+        mi=200,
+        ma=400,
     )
     await Problem.create(
         name="GitGood",

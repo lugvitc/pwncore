@@ -32,8 +32,8 @@ class Problem(BaseProblem):
         null=True
     )  # type: ignore[assignment]
 
-    mi = fields.IntField()
-    ma = fields.IntField()
+    mi = fields.IntField(default=100) # Arbitrary meaning full defaults
+    ma = fields.IntField(default=600)
 
     hints: fields.ReverseRelation[Hint]
 
@@ -76,7 +76,7 @@ class SolvedProblem(Model):
 
 
 class ViewedHint(Model):
-    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team", related_name="viewedhints")
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
         "models.Hint",
     )
