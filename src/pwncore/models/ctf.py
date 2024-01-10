@@ -11,24 +11,26 @@ __all__ = (
     "Hint",
     "SolvedProblem",
     "ViewedHint",
-    "Problem_Pydantic",
+    "BaseProblem_Pydantic",
     "Hint_Pydantic",
 )
 
 
-class Problem(Model):
+class BaseProblem(Model):
     name = fields.TextField()
     description = fields.TextField()
+    # both tables inherit points, for pre-event points means coins
     points = fields.IntField()
     author = fields.TextField()
 
+
+class Problem(BaseProblem):
     image_name = fields.TextField()
-    image_config: fields.Field[dict[str, list]] = fields.JSONField()  # type: ignore[assignment]
+    image_config: fields.Field[dict[str, list]] = fields.JSONField(
+        null=True
+    )  # type: ignore[assignment]
 
     hints: fields.ReverseRelation[Hint]
-
-    class PydanticMeta:
-        exclude = ["image_name", "image_config"]
 
 
 class Hint(Model):
@@ -44,7 +46,9 @@ class Hint(Model):
 
 
 class SolvedProblem(Model):
-    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField(
+        "models.Team", related_name="solved_problem"
+    )
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem"
     )
@@ -64,5 +68,5 @@ class ViewedHint(Model):
         unique_together = (("team", "hint"),)
 
 
-Problem_Pydantic = pydantic_model_creator(Problem)
+BaseProblem_Pydantic = pydantic_model_creator(BaseProblem)
 Hint_Pydantic = pydantic_model_creator(Hint)
