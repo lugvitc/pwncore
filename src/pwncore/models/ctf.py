@@ -32,7 +32,7 @@ class Problem(BaseProblem):
         null=True
     )  # type: ignore[assignment]
 
-    mi = fields.IntField(default=100) # Arbitrary meaning full defaults
+    mi = fields.IntField(default=100)  # Arbitrary meaning full defaults
     ma = fields.IntField(default=600)
 
     hints: fields.ReverseRelation[Hint]
@@ -40,12 +40,12 @@ class Problem(BaseProblem):
     class PydanticMeta:
         exclude = ["image_name", "image_config"]
 
-    async def solves(self) -> int:
+    async def _solves(self) -> int:
         return await SolvedProblem.filter(problem=self).count()
 
-    async def _update_points(self) -> None:
+    async def update_points(self) -> None:
         self.points = round(
-            self.mi + (self.ma - self.mi) * (1 - tanh(await self.solves()))
+            self.mi + (self.ma - self.mi) * (1 - tanh(await self._solves()))
         )
         await self.save()
 
@@ -76,7 +76,9 @@ class SolvedProblem(Model):
 
 
 class ViewedHint(Model):
-    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team", related_name="viewedhints")
+    team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField(
+        "models.Team", related_name="viewedhints"
+    )
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
         "models.Hint",
     )
