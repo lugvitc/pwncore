@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from asyncio import create_task
 from logging import getLogger
+from collections import defaultdict
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
@@ -36,6 +37,15 @@ router.include_router(pre_event_router)
 logger = getLogger("routes.ctf")
 
 
+def _invalid_order():
+    logger.warn("= Invalid penalty lookup by order occured =")
+    return 0
+
+# 0 - 10 - 10
+# 1 - 7  - 17
+# 2 - 8 - 25
+HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 7, 2: 8})
+
 class Flag(BaseModel):
     flag: str
 
@@ -46,17 +56,19 @@ async def ctf_list():
     return problems
 
 
-async def update_points(ctf_id: int):
+async def update_points(req: Request, ctf_id: int):
     try:
         p = await Problem.get(id=ctf_id)
         await p.update_points()
+        req.app.state.force_expire = True
     except Exception:
         logger.exception("An error occured while updating points")
 
 
+
 @atomic()
 @router.post("/{ctf_id}/flag")
-async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt):
+async def flag_post(req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
     problem = await Problem.get_or_none(id=ctf_id)
     if not problem:
@@ -72,8 +84,11 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
         team_id=team_id, flag=flag.flag, problem_id=ctf_id
     )
     if check_solved:
-        await SolvedProblem.create(team_id=team_id, problem_id=ctf_id)
-        create_task(update_points(ctf_id))
+        hints = await Hint.filter(problem_id=ctf_id, viewedhints__team_id=team_id, with_points=True)
+        pnlt = (100 - sum(map(lambda h: HINTPENALTY[h.order], hints))) / 100
+
+        await SolvedProblem.create(team_id=team_id, problem_id=ctf_id, penalty=pnlt)
+        create_task(update_points(req, ctf_id))
         return {"status": True}
     return {"status": False}
 
@@ -88,8 +103,8 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
     team = await Team.get(id=team_id)
-    if team.coins < config.hint_penalty:
-        return {"msg_code": config.msg_codes["insufficient_coins"]}
+    # if team.coins < config.hint_penalty:
+    #     return {"msg_code": config.msg_codes["insufficient_coins"]}
 
     viewed_hints = (
         await Hint.filter(problem_id=ctf_id, viewedhints__team_id=team_id)
@@ -106,11 +121,13 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     else:
         hint = await Hint.get(problem_id=ctf_id, order=0)
 
-    team.coins -= config.hint_penalty
-    await team.save()
+    with_points = team.coins < config.hint_penalty
+    if not with_points:
+        team.coins -= config.hint_penalty
+        await team.save()
 
-    await ViewedHint.create(hint_id=hint.id, team_id=team_id)
-    return {"text": hint.text, "order": hint.order}
+    await ViewedHint.create(hint_id=hint.id, team_id=team_id, with_points=with_points)
+    return {"text": hint.text, "order": hint.order, }
 
 
 @router.get("/{ctf_id}/viewed_hints")

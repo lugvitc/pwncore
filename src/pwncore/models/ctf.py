@@ -71,6 +71,8 @@ class SolvedProblem(Model):
     )
     solved_at = fields.DatetimeField(auto_now_add=True)
 
+    penalty = fields.FloatField(default=1.0)
+
     class Meta:
         unique_together = (("team", "problem"),)
 
@@ -82,6 +84,8 @@ class ViewedHint(Model):
     hint: fields.ForeignKeyRelation[Hint] = fields.ForeignKeyField(
         "models.Hint",
     )
+
+    with_points = fields.BooleanField(default=False)
 
     class Meta:
         unique_together = (("team", "hint"),)
