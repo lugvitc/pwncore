@@ -28,7 +28,13 @@ class ExpiringLBCache:
         self.data = dict(
             await Team.all()
             .filter(solved_problem__problem__id__gt=-1)
-            .annotate(tpoints=Sum(RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')))
+            .annotate(
+                tpoints=Sum(
+                    RawSQL(
+                        '"solvedproblem"."penalty" * "solvedproblem__problem"."points"'
+                    )
+                )
+            )
             .values_list("name", "tpoints")
         )
         self.last_update = monotonic()
@@ -36,7 +42,7 @@ class ExpiringLBCache:
     async def get_lb(self, req: Request):
         if (
             getattr(req.app.state, "force_expire", False)
-            or (monotonic() - self.last_update) > self.period
+            or (monotonic() - self.last_update) > self.period  # noqa: W503
         ):
             await self._do_update()
             req.app.state.force_expire = False
