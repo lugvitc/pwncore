@@ -13,6 +13,7 @@ metadata = {"name": "leaderboard", "description": "Operations on the leaderboard
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
+
 class ExpiringLBCache:
     period: float
     last_update: float
@@ -27,18 +28,23 @@ class ExpiringLBCache:
         self.data = dict(
             await Team.all()  # type: ignore[call-overload, arg-type]
             .filter(solved_problem__problem__id__gt=-1)
-            .annotate(tpoints = Sum(RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"'))) # type: ignore[pylance]
+            .annotate(tpoints=Sum(RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')))  # type: ignore[pylance]
             .values_list("name", "tpoints")
         )
         self.last_update = monotonic()
 
     async def get_lb(self, req: Request):
-        if getattr(req.app.state, "force_expire", False) or (monotonic() - self.last_update) > self.period:
+        if (
+            getattr(req.app.state, "force_expire", False)
+            or (monotonic() - self.last_update) > self.period
+        ):
             await self._do_update()
             req.app.state.force_expire = False
         return self.data
 
+
 gcache = ExpiringLBCache(30.0)
+
 
 @router.get("")
 async def fetch_leaderboard(req: Request):

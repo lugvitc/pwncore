@@ -41,10 +41,12 @@ def _invalid_order():
     logger.warn("= Invalid penalty lookup by order occured =")
     return 0
 
+
 # 0 - 10 - 10
 # 1 - 7  - 17
 # 2 - 8 - 25
 HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 7, 2: 8})
+
 
 class Flag(BaseModel):
     flag: str
@@ -65,10 +67,11 @@ async def update_points(req: Request, ctf_id: int):
         logger.exception("An error occured while updating points")
 
 
-
 @atomic()
 @router.post("/{ctf_id}/flag")
-async def flag_post(req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt):
+async def flag_post(
+    req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
+):
     team_id = jwt["team_id"]
     problem = await Problem.get_or_none(id=ctf_id)
     if not problem:
@@ -84,7 +87,9 @@ async def flag_post(req: Request, ctf_id: int, flag: Flag, response: Response, j
         team_id=team_id, flag=flag.flag, problem_id=ctf_id
     )
     if check_solved:
-        hints = await Hint.filter(problem_id=ctf_id, viewedhints__team_id=team_id, with_points=True)
+        hints = await Hint.filter(
+            problem_id=ctf_id, viewedhints__team_id=team_id, with_points=True
+        )
         pnlt = (100 - sum(map(lambda h: HINTPENALTY[h.order], hints))) / 100
 
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id, penalty=pnlt)
@@ -127,7 +132,10 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
         await team.save()
 
     await ViewedHint.create(hint_id=hint.id, team_id=team_id, with_points=with_points)
-    return {"text": hint.text, "order": hint.order, }
+    return {
+        "text": hint.text,
+        "order": hint.order,
+    }
 
 
 @router.get("/{ctf_id}/viewed_hints")
