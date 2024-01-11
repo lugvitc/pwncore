@@ -26,9 +26,9 @@ class ExpiringLBCache:
 
     async def _do_update(self):
         self.data = dict(
-            await Team.all()  # type: ignore[call-overload, arg-type]
+            await Team.all()
             .filter(solved_problem__problem__id__gt=-1)
-            .annotate(tpoints=Sum(RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')))  # type: ignore[pylance]
+            .annotate(tpoints=Sum(RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')))
             .values_list("name", "tpoints")
         )
         self.last_update = monotonic()
