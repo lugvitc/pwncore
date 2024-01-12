@@ -16,6 +16,7 @@ from pwncore.models.user import User, Team, Team_Pydantic, User_Pydantic
 from pwncore.models.pre_event import (
     PreEventProblem,
     PreEventSolvedProblem,
+    PreEventProblem_Pydantic,
 )
 
 __all__ = (
@@ -33,4 +34,5 @@ __all__ = (
     "User_Pydantic",
     "Team",
     "Team_Pydantic",
+    "PreEventProblem_Pydantic",
 )
