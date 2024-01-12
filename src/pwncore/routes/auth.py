@@ -50,16 +50,25 @@ async def signup_team(team: SignupBody, response: Response):
         q = await User.filter(tag__in=members)
         if len(q) != len(members):
             response.status_code = 404
-            return {"msg_code": config.msg_codes["users_not_found"], "tags": list(members - set(map(lambda h: h.tag, q)))}
+            return {
+                "msg_code": config.msg_codes["users_not_found"],
+                "tags": list(members - set(map(lambda h: h.tag, q))),
+            }
         in_teams = list(filter(lambda h: h.team is not None, q))
         if in_teams:
             response.status_code = 401
-            return {"msg_code": config.msg_codes["user_already_in_team"], "tags": list(in_teams)}
+            return {
+                "msg_code": config.msg_codes["user_already_in_team"],
+                "tags": list(in_teams),
+            }
 
-        newteam = await Team.create(name=team.name, secret_hash=bcrypt.hash(team.password))
+        newteam = await Team.create(
+            name=team.name, secret_hash=bcrypt.hash(team.password)
+        )
         for user in q:
             user.team = newteam
-        if q: await User.bulk_update(q, fields=["team"])
+        if q:
+            await User.bulk_update(q, fields=["team"])
     except Exception:
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
