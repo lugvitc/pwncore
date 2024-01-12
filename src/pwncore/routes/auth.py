@@ -9,7 +9,7 @@ from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
-from pwncore.models import Team
+from pwncore.models import Team, User
 from pwncore.config import config
 
 # Metadata at the top for instant accessibility
@@ -26,16 +26,40 @@ class AuthBody(BaseModel):
     password: str
 
 
+class SignupBody(BaseModel):
+    name: str
+    password: str
+    tags: set[str]
+
+
+def normalise_tag(tag: str):
+    return tag.strip().casefold()
+
+
 @atomic()
 @router.post("/signup")
-async def signup_team(team: AuthBody, response: Response):
+async def signup_team(team: SignupBody, response: Response):
     team.name = team.name.strip()
+    members = set(map(normalise_tag, team.tags))
+
     try:
         if await Team.exists(name=team.name):
             response.status_code = 406
             return {"msg_code": config.msg_codes["team_exists"]}
 
-        await Team.create(name=team.name, secret_hash=bcrypt.hash(team.password))
+        q = await User.filter(tag__in=members)
+        if len(q) != len(members):
+            response.status_code = 404
+            return {"msg_code": config.msg_codes["users_not_found"], "tags": list(members - set(map(lambda h: h.tag, q)))}
+        in_teams = list(filter(lambda h: h.team is not None, q))
+        if in_teams:
+            response.status_code = 401
+            return {"msg_code": config.msg_codes["user_already_in_team"], "tags": list(in_teams)}
+
+        newteam = await Team.create(name=team.name, secret_hash=bcrypt.hash(team.password))
+        for user in q:
+            user.team = newteam
+        if q: await User.bulk_update(q, fields=["team"])
     except Exception:
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
