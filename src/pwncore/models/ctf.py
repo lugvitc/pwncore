@@ -45,7 +45,7 @@ class Problem(BaseProblem):
 
     async def update_points(self) -> None:
         self.points = round(
-            self.mi + (self.ma - self.mi) * (1 - tanh(await self._solves()))
+            self.mi + (self.ma - self.mi) * (1 - tanh((await self._solves()) / 125))
         )
         await self.save()
 
