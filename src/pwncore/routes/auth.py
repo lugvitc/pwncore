@@ -68,7 +68,7 @@ async def signup_team(team: SignupBody, response: Response):
 
         for user in q:
             # Mypy kinda not working
-            user.team = newteam # type: ignore[assignment]
+            user.team = newteam  # type: ignore[assignment]
         if q:
             await User.bulk_update(q, fields=["team"])
     except Exception:
