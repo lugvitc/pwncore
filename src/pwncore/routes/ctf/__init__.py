@@ -158,7 +158,9 @@ async def completed_problem_get(jwt: RequireJwt):
 
 @router.get("/{ctf_id}")
 async def ctf_get(ctf_id: int, response: Response):
-    problem = await BaseProblem_Pydantic.from_queryset(Problem.filter(id=ctf_id, visible=True))
+    problem = await BaseProblem_Pydantic.from_queryset(
+        Problem.filter(id=ctf_id, visible=True)
+    )
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
