@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from tortoise.transactions import atomic
 
 from pwncore.config import config
-from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container, Ports
+from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
 
 # Metadata at the top for instant accessibility
@@ -85,13 +85,18 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
 
 @router.get("/containers")
 async def get_team_containers(response: Response, jwt: RequireJwt):
-    containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related("ports")
+    containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
+        "ports", "problem"
+    )
     result = []
 
     for container in containers:
-        result.append({
-            "id": container.problem_id,
-            "ports": await container.ports.all().values_list("port", flat=True)
-        })
+        result.append(
+            {
+                # mypy complains id doesnt exist in Problem
+                "id": container.problem.id,  # type: ignore[attr-defined]
+                "ports": await container.ports.all().values_list("port", flat=True),
+            }
+        )
 
     return result
