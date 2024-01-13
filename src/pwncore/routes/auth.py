@@ -65,8 +65,10 @@ async def signup_team(team: SignupBody, response: Response):
         newteam = await Team.create(
             name=team.name, secret_hash=bcrypt.hash(team.password)
         )
+
         for user in q:
-            user.team = newteam
+            # Mypy kinda not working
+            user.team = newteam # type: ignore[assignment]
         if q:
             await User.bulk_update(q, fields=["team"])
     except Exception:
