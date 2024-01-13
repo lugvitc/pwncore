@@ -91,7 +91,7 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
     for container in containers:
         result.append({
             "id": container.problem_id,
-            "ports": await container.ports.all().values_list("port", flat=True),
+            "ports": await container.ports.all().values_list("port", flat=True)
         })
 
     return result
