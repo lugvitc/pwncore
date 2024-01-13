@@ -63,5 +63,5 @@ async def ctf_get(ctf_id: int, response: Response):
 @router.get("/today")
 async def ctf_today():
     return await PreEventProblem_Pydantic.from_queryset(
-        PreEventProblem().all().filter(date=datetime.now(_IST).date())
+        PreEventProblem().filter(date=datetime.now(_IST).date())
     )
