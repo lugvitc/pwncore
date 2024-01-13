@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from tortoise.transactions import atomic
 
 from pwncore.config import config
-from pwncore.models import Team, User, Team_Pydantic, User_Pydantic
+from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
 
 # Metadata at the top for instant accessibility
@@ -81,3 +81,11 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["user_removed"]}
+
+
+@router.get("/containers")
+async def get_team_containers(response: Response, jwt: RequireJwt):
+    containers = await Container.filter(
+        team_id=jwt["team_id"]
+    ).values("problem_id")
+    return containers
