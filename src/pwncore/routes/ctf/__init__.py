@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from asyncio import create_task
+from logging import getLogger
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
 from tortoise.transactions import atomic
@@ -30,6 +33,8 @@ router = APIRouter(prefix="/ctf", tags=["ctf"])
 router.include_router(start_router)
 router.include_router(pre_event_router)
 
+logger = getLogger("routes.ctf")
+
 
 class Flag(BaseModel):
     flag: str
@@ -39,6 +44,14 @@ class Flag(BaseModel):
 async def ctf_list():
     problems = await BaseProblem_Pydantic.from_queryset(Problem.all())
     return problems
+
+
+async def update_points(ctf_id: int):
+    try:
+        p = await Problem.get(id=ctf_id)
+        await p.update_points()
+    except Exception:
+        logger.exception("An error occured while updating points")
 
 
 @atomic()
@@ -60,6 +73,7 @@ async def flag_post(ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
     )
     if check_solved:
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id)
+        create_task(update_points(ctf_id))
         return {"status": True}
     return {"status": False}
 
