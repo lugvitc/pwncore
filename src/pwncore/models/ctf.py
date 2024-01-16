@@ -34,6 +34,7 @@ class Problem(BaseProblem):
 
     mi = fields.IntField(default=50)
     ma = fields.IntField(default=500)
+    visible = fields.BooleanField(default=True)
 
     hints: fields.ReverseRelation[Hint]
 

@@ -1,3 +1,4 @@
+from datetime import date
 import logging
 from fastapi import APIRouter
 from passlib.hash import bcrypt
@@ -67,6 +68,7 @@ async def init_db():
         points=20,
         flag="asd",
         url="lugvitc.org",
+        date=date.today(),
     )
     await PreEventProblem.create(
         name="New Static Test",
@@ -75,6 +77,7 @@ async def init_db():
         points=21,
         flag="asdf",
         url="lugvitc.org",
+        date=date.today(),
     )
     await Problem.create(
         name="In-Plain-Sight",
