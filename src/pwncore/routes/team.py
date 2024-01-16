@@ -88,15 +88,9 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
     containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
         "ports", "problem"
     )
-    result = []
 
+    result = {}
     for container in containers:
-        result.append(
-            {
-                # mypy complains id doesnt exist in Problem
-                "id": container.problem.id,  # type: ignore[attr-defined]
-                "ports": await container.ports.all().values_list("port", flat=True),
-            }
-        )
+        result[container.problem.id] = await container.ports.all().values_list("port", flat=True)
 
     return result
