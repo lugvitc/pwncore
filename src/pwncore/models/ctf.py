@@ -34,6 +34,7 @@ class Problem(BaseProblem):
 
     mi = fields.IntField(default=100)  # Arbitrary meaning full defaults
     ma = fields.IntField(default=600)
+    visible = fields.BooleanField(default=True)
 
     hints: fields.ReverseRelation[Hint]
 

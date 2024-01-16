@@ -27,7 +27,7 @@ class ExpiringLBCache:
     async def _do_update(self):
         self.data = dict(
             await Team.all()
-            .filter(solved_problem__problem__id__gt=-1)
+            .filter(solved_problem__problem__visible=True)
             .annotate(
                 tpoints=Sum(
                     RawSQL(

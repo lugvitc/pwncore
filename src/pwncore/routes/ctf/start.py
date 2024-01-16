@@ -26,7 +26,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
     }
     """
 
-    ctf = await Problem.get_or_none(id=ctf_id)
+    ctf = await Problem.get_or_none(id=ctf_id, visible=True)
     if not ctf:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
@@ -131,6 +131,8 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
 @atomic()
 @router.post("/{ctf_id}/stop")
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
+    # Let this work on invisible problems incase
+    # we mess up the database while making problems visible
     ctf = await Problem.get_or_none(id=ctf_id)
     if not ctf:
         response.status_code = 404

@@ -54,7 +54,7 @@ class Flag(BaseModel):
 
 @router.get("/list")
 async def ctf_list():
-    problems = await BaseProblem_Pydantic.from_queryset(Problem.all())
+    problems = await BaseProblem_Pydantic.from_queryset(Problem.filter(visible=True))
     return problems
 
 
@@ -73,7 +73,7 @@ async def flag_post(
     req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
 ):
     team_id = jwt["team_id"]
-    problem = await Problem.get_or_none(id=ctf_id)
+    problem = await Problem.get_or_none(id=ctf_id, visible=True)
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
@@ -102,7 +102,7 @@ async def flag_post(
 @router.get("/{ctf_id}/hint")
 async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
-    problem = await Problem.exists(id=ctf_id)
+    problem = await Problem.exists(id=ctf_id, visible=True)
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
@@ -151,14 +151,16 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
     problems = await BaseProblem_Pydantic.from_queryset(
-        Problem.filter(solvedproblems__team_id=team_id)
+        Problem.filter(solvedproblems__team_id=team_id, visible=True)
     )
     return problems
 
 
 @router.get("/{ctf_id}")
 async def ctf_get(ctf_id: int, response: Response):
-    problem = await BaseProblem_Pydantic.from_queryset(Problem.filter(id=ctf_id))
+    problem = await BaseProblem_Pydantic.from_queryset(
+        Problem.filter(id=ctf_id, visible=True)
+    )
     if not problem:
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
