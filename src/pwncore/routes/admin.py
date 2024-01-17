@@ -102,10 +102,10 @@ async def init_db():
     await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
-    await PreEventUser.create(tag="23BCE1000", email="dd@ff.in")
-    await PreEventUser.create(tag="23BRS1000", email="d2d@ff.in")
-    await PreEventSolvedProblem.create(user_id="23BCE1000", problem_id="1")
-    await PreEventSolvedProblem.create(user_id="23BRS1000", problem_id="1")
+    await PreEventUser.create(tag="23bce1000", email="dd@ff.in")
+    await PreEventUser.create(tag="23brs1000", email="d2d@ff.in")
+    await PreEventSolvedProblem.create(user_id="23bce1000", problem_id="1")
+    await PreEventSolvedProblem.create(user_id="23brs1000", problem_id="1")
     # await PreEventSolvedProblem.create(
     #     tag="23BAI1000",
     #     problem_id="2"

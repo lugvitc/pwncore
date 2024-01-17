@@ -6,7 +6,7 @@ from fastapi import APIRouter, Response
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 from tortoise.functions import Sum
-from tortoise.exceptions import DoesNotExist
+from tortoise.exceptions import DoesNotExist, IntegrityError
 
 from pwncore.models import (
     PreEventProblem,
@@ -43,14 +43,14 @@ async def ctf_today():
     )
 
 
-@router.get("/coins")
-async def coins_get(cq: CoinsQuery):
+@router.get("/coins/{tag}")
+async def coins_get(tag: str):
     try:
-        return (
-            await PreEventUser.get(tag=cq.tag.strip().casefold())
+        return {
+            "coins": await PreEventUser.get(tag=tag.strip().casefold())
             .annotate(coins=Sum("solvedproblems__problem__points"))
             .values_list("coins", flat=True)
-        )
+        }
     except DoesNotExist:
         return 0
 
@@ -60,7 +60,7 @@ async def coins_get(cq: CoinsQuery):
 async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
     problem = await PreEventProblem.get_or_none(id=ctf_id)
 
-    if not problem:
+    if not problem or (problem.date != datetime.now(_IST).date()):
         response.status_code = 404
         return {"msg_code": config.msg_codes["ctf_not_found"]}
 
@@ -70,12 +70,19 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
         response.status_code = 401
         return {"msg_code": config.msg_codes["ctf_solved"]}
 
-    pu = await PreEventUser.get_or_none(tag=user_tag)
-    if pu is None:
-        pu = await PreEventUser.create(tag=user_tag, email=post_body.email)
-    elif pu.email != post_body.email:
-        pu.email = post_body.email
-        await pu.save()
+    try:
+        pu = await PreEventUser.get_or_none(tag=user_tag)
+        print(pu, user_tag, post_body.email)
+        if pu is None:
+            print(1)
+            pu = await PreEventUser.create(tag=user_tag, email=post_body.email)
+        elif pu.email != post_body.email:
+            print(2)
+            pu.email = post_body.email
+            await pu.save()
+    except IntegrityError:
+        response.status_code = 401
+        return {"msg_code": config.msg_codes["user_or_email_exists"]}
 
     if status := problem.flag == post_body.flag:
         await PreEventSolvedProblem.create(user=pu, problem_id=ctf_id)
