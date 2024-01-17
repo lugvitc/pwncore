@@ -38,6 +38,7 @@ msg_codes = {
     "user_not_in_team": 21,
     "insufficient_coins": 22,
     "user_or_email_exists": 23,
+    "users_not_found": 24,
 }
 
 
