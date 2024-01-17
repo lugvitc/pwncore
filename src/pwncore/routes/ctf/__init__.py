@@ -43,9 +43,9 @@ def _invalid_order():
 
 
 # 0 - 10 - 10
-# 1 - 7  - 17
-# 2 - 8 - 25
-HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 7, 2: 8})
+# 1 - 5  - 15
+# 2 - 10 - 25
+HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 5, 2: 10})
 
 
 class Flag(BaseModel):
