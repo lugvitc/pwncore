@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from os import getenv
+from sys import stderr
 
 """
 Sample messages:
@@ -56,15 +58,31 @@ class Config:
     max_members_per_team: int
 
 
+db_url = getenv("DATABASE_URL")
+docker_url = getenv("DOCKER_URL")
+secret = getenv("JWT_SECRET")
+
+# do export PYTHONOPTIMIZE=2 in prod please
+
+if db_url is None:
+    print("DATABASE_URL environment variable not set", file=stderr)
+    raise SystemExit(1)
+
+if secret is None and __debug__ is False:
+    print("JWT_SECRET environment variables not set", file=stderr)
+    raise SystemExit(1)
+else:
+    secret = "12345678"
+
 config = Config(
     development=True,
-    db_url="sqlite://:memory:",
+    db_url=db_url,
     # docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
-    docker_url="http://google.com",
-    flag="C0D",
+    docker_url=docker_url,
+    flag="PWNCOR3",
     max_containers_per_team=3,
-    jwt_secret="mysecret",
+    jwt_secret=secret,
     jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
     hint_penalty=10,
