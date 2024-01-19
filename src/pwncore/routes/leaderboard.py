@@ -22,7 +22,7 @@ class ExpiringLBCache:
     def __init__(self, period: float) -> None:
         self.period = period
         self.last_update = 0
-        self.data = {}
+        self.data = []
 
     async def _do_update(self):
         self.data = (
