@@ -1,6 +1,7 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
 import pwncore.docs as docs
@@ -44,3 +45,18 @@ app = FastAPI(
     lifespan=app_lifespan,
 )
 app.include_router(routes.router)
+
+origins = [
+    "http://ctf.lugvitc.org",
+]
+
+if config.development:
+    origins.append("http://localhost:5173")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
