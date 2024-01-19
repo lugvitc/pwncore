@@ -80,6 +80,15 @@ async def init_db():
         url="lugvitc.org",
         date=date.today(),
     )
+    await PreEventProblem.create(
+        name="Static_test2",
+        description="Chod de tujhe se na ho payga",
+        author="Meetesh_Saini",
+        points=23,
+        flag="asd",
+        url="http://lugvitc.org",
+        date=date.today(),
+    )
     await Problem.create(
         name="In-Plain-Sight",
         description="A curious image with hidden secrets?",

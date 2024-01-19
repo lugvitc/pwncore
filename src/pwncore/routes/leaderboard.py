@@ -17,7 +17,7 @@ router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 class ExpiringLBCache:
     period: float
     last_update: float
-    data: dict[str, float]
+    data: list[dict[str, float]]
 
     def __init__(self, period: float) -> None:
         self.period = period
@@ -25,7 +25,7 @@ class ExpiringLBCache:
         self.data = {}
 
     async def _do_update(self):
-        self.data = dict(
+        self.data = (
             await Team.all()
             .filter(solved_problem__problem__id__gt=-1)
             .annotate(
@@ -35,7 +35,7 @@ class ExpiringLBCache:
                     )
                 )
             )
-            .values_list("name", "tpoints")
+            .values("name", "tpoints")
         )
         self.last_update = monotonic()
 
