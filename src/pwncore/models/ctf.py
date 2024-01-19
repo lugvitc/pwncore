@@ -32,8 +32,9 @@ class Problem(BaseProblem):
         null=True
     )  # type: ignore[assignment]
 
-    mi = fields.IntField(default=100)  # Arbitrary meaning full defaults
-    ma = fields.IntField(default=600)
+    mi = fields.IntField(default=50)
+    ma = fields.IntField(default=500)
+    visible = fields.BooleanField(default=True)
 
     hints: fields.ReverseRelation[Hint]
 
