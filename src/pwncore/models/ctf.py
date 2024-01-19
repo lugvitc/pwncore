@@ -15,6 +15,7 @@ __all__ = (
     "ViewedHint",
     "BaseProblem_Pydantic",
     "Hint_Pydantic",
+    "Problem_Pydantic",
 )
 
 
@@ -35,11 +36,12 @@ class Problem(BaseProblem):
     mi = fields.IntField(default=50)
     ma = fields.IntField(default=500)
     visible = fields.BooleanField(default=True)
+    tags = fields.SmallIntField(default=1)  # by default misc, 16 tag limit
 
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
-        exclude = ["image_name", "image_config"]
+        exclude = ["image_name", "image_config", "mi", "ma", "visible"]
 
     async def _solves(self) -> int:
         return await SolvedProblem.filter(problem=self).count()
@@ -93,4 +95,5 @@ class ViewedHint(Model):
 
 
 BaseProblem_Pydantic = pydantic_model_creator(BaseProblem)
+Problem_Pydantic = pydantic_model_creator(Problem)
 Hint_Pydantic = pydantic_model_creator(Hint)
