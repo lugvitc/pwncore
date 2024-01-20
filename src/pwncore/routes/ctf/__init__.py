@@ -14,11 +14,11 @@ from pwncore.models import (
     Container,
     Hint,
     ViewedHint,
-    BaseProblem_Pydantic,
     Hint_Pydantic,
     Team,
 )
 from pwncore.config import config
+from pwncore.models.ctf import Problem_Pydantic
 from pwncore.routes.ctf.start import router as start_router
 from pwncore.routes.ctf.pre_event import router as pre_event_router
 from pwncore.routes.auth import RequireJwt
@@ -54,7 +54,7 @@ class Flag(BaseModel):
 
 @router.get("/list")
 async def ctf_list():
-    problems = await BaseProblem_Pydantic.from_queryset(Problem.filter(visible=True))
+    problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
     return problems
 
 
@@ -150,7 +150,7 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
 @router.get("/completed")
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
-    problems = await BaseProblem_Pydantic.from_queryset(
+    problems = await Problem_Pydantic.from_queryset(
         Problem.filter(solvedproblems__team_id=team_id, visible=True)
     )
     return problems
@@ -158,7 +158,7 @@ async def completed_problem_get(jwt: RequireJwt):
 
 @router.get("/{ctf_id}")
 async def ctf_get(ctf_id: int, response: Response):
-    problem = await BaseProblem_Pydantic.from_queryset(
+    problem = await Problem_Pydantic.from_queryset(
         Problem.filter(id=ctf_id, visible=True)
     )
     if not problem:
