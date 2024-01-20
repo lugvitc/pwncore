@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -48,6 +49,7 @@ app.include_router(routes.router)
 
 origins = [
     "http://ctf.lugvitc.org",
+    "https://ctf.lugvitc.org",
 ]
 
 if config.development:
