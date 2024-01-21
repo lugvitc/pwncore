@@ -13,7 +13,14 @@ from pwncore.models.ctf import (
     BaseProblem_Pydantic,
     Problem_Pydantic,
 )
-from pwncore.models.user import User, Team, Team_Pydantic, User_Pydantic
+from pwncore.models.user import (
+    User,
+    Team,
+    MetaTeam,
+    Team_Pydantic,
+    User_Pydantic,
+    MetaTeam_Pydantic,
+)
 from pwncore.models.pre_event import (
     PreEventProblem,
     PreEventSolvedProblem,
@@ -37,6 +44,8 @@ __all__ = (
     "User_Pydantic",
     "Team",
     "Team_Pydantic",
+    "MetaTeam",
+    "MetaTeam_Pydantic",
     "PreEventProblem_Pydantic",
     "Problem_Pydantic",
 )
