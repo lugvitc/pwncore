@@ -12,6 +12,8 @@ from pwncore.config import config
 __all__ = (
     "User",
     "Team",
+    "MetaTeam",
+    "MetaTeam_Pydantic",
     "User_Pydantic",
     "Team_Pydantic",
 )
@@ -54,9 +56,21 @@ class Team(Model):
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
 
+    meta_team: fields.ForeignKeyNullableRelation[MetaTeam] = fields.ForeignKeyField(
+        "models.MetaTeam", "teams", null=True, on_delete=fields.OnDelete.SET_NULL
+    )
+
     class PydanticMeta:
         exclude = ["secret_hash"]
 
 
+class MetaTeam(Model):
+    id = fields.IntField(pk=True)
+    name = fields.CharField(255, unique=True)
+
+    teams: fields.ReverseRelation[Team]
+
+
 Team_Pydantic = pydantic_model_creator(Team)
 User_Pydantic = pydantic_model_creator(User)
+MetaTeam_Pydantic = pydantic_model_creator(MetaTeam)
