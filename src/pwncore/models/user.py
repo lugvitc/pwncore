@@ -65,10 +65,10 @@ class Team(Model):
 
 
 class MetaTeam(Model):
-    id = fields.IntField(pk = True)
+    id = fields.IntField(pk=True)
     name = fields.CharField(255, unique=True)
 
-    teams : fields.ReverseRelation[Team]
+    teams: fields.ReverseRelation[Team]
 
 
 Team_Pydantic = pydantic_model_creator(Team)
