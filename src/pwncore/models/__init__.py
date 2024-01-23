@@ -28,6 +28,13 @@ from pwncore.models.pre_event import (
     PreEventProblem_Pydantic,
 )
 
+from pwncore.models.meta import (
+    MetaProblem,
+    MetaContainer,
+    MetaPorts,
+    MetaProblem_Pydantic,
+)
+
 __all__ = (
     "Problem",
     "BaseProblem_Pydantic",
@@ -48,4 +55,8 @@ __all__ = (
     "MetaTeam_Pydantic",
     "PreEventProblem_Pydantic",
     "Problem_Pydantic",
+    "MetaProblem",
+    "MetaProblem_Pydantic",
+    "MetaContainer",
+    "MetaPorts",
 )

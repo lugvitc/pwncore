@@ -9,17 +9,20 @@ if t.TYPE_CHECKING:
     from pwncore.models.ctf import Problem
     from pwncore.models.user import Team
 
-__all__ = ("Container", "Ports")
+__all__ = ("BaseContainer", "Container", "Ports")
+
+
+class BaseContainer(Model):
+    docker_id = fields.CharField(128, unique=True)
+    flag = fields.TextField()
 
 
 # Note: These are all type annotated, dont worry
-class Container(Model):
-    docker_id = fields.CharField(128, unique=True)
+class Container(BaseContainer):
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", on_delete=fields.OnDelete.NO_ACTION
     )
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
-    flag = fields.TextField()
 
     ports: fields.ReverseRelation[Ports]
 
