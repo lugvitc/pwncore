@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import typing as t
+from logging import getLogger
 
 import jwt
 from fastapi import APIRouter, Header, Response, HTTPException, Depends
@@ -19,7 +20,7 @@ metadata = {
 }
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
+logger = getLogger(__name__)
 
 class AuthBody(BaseModel):
     name: str
@@ -48,13 +49,14 @@ async def signup_team(team: SignupBody, response: Response):
             return {"msg_code": config.msg_codes["team_exists"]}
 
         q = await User.filter(tag__in=members)
+        # print(q, members)
         if len(q) != len(members):
             response.status_code = 404
             return {
                 "msg_code": config.msg_codes["users_not_found"],
                 "tags": list(members - set(map(lambda h: h.tag, q))),
             }
-        in_teams = list(filter(lambda h: h.team is not None, q))
+        in_teams = list(filter(lambda h: h.team, q))
         if in_teams:
             response.status_code = 401
             return {
@@ -68,10 +70,13 @@ async def signup_team(team: SignupBody, response: Response):
 
         for user in q:
             # Mypy kinda not working
-            user.team = newteam  # type: ignore[assignment]
+            user.team_id = newteam.id # type: ignore[assignment]
         if q:
-            await User.bulk_update(q, fields=["team"])
+            b = User.bulk_update(q, fields=["team_id"])
+            # print(b.sql())
+            await b
     except Exception:
+        logger.exception("error in signup!")
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["signup_success"]}
@@ -107,10 +112,12 @@ async def team_login(team_data: AuthBody, response: Response):
 def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:
     try:
         token = authorization.split(" ")[1]  # Remove Bearer
+        # print(token, authorization)
         decoded_token: JwtInfo = jwt.decode(
             token, config.jwt_secret, algorithms=["HS256"]
         )
-    except Exception:  # Will filter for invalid signature/expired tokens
+    except Exception as err:  # Will filter for invalid signature/expired tokens
+        logger.warning("Invalid login", exc_info=err)
         raise HTTPException(status_code=401)
     return decoded_token
 
