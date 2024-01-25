@@ -52,6 +52,15 @@ class Flag(BaseModel):
     flag: str
 
 
+@router.get("/completed")
+async def completed_problem_get(jwt: RequireJwt):
+    team_id = jwt["team_id"]
+    problems = await Problem_Pydantic.from_queryset(
+        Problem.filter(solvedproblems__team_id=team_id, visible=True)
+    )
+    return problems
+
+
 @router.get("/list")
 async def ctf_list():
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
@@ -88,7 +97,9 @@ async def flag_post(
     )
     if check_solved:
         hints = await Hint.filter(
-            problem_id=ctf_id, viewedhints__team_id=team_id, with_points=True
+            problem_id=ctf_id,
+            viewedhints__team_id=team_id,
+            viewedhints__with_points=True,
         )
         pnlt = (100 - sum(map(lambda h: HINTPENALTY[h.order], hints))) / 100
 
@@ -145,15 +156,6 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
         Hint.filter(problem_id=ctf_id, viewedhints__team_id=team_id)
     )
     return viewed_hints
-
-
-@router.get("/completed")
-async def completed_problem_get(jwt: RequireJwt):
-    team_id = jwt["team_id"]
-    problems = await Problem_Pydantic.from_queryset(
-        Problem.filter(solvedproblems__team_id=team_id, visible=True)
-    )
-    return problems
 
 
 @router.get("/{ctf_id}")

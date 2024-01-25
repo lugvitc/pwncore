@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from logging import getLogger
+
 from fastapi import APIRouter, Response
 import uuid
 from tortoise.transactions import atomic
@@ -10,6 +12,7 @@ from pwncore.config import config
 from pwncore.routes.auth import RequireJwt
 
 router = APIRouter(tags=["ctf"])
+logger = getLogger(__name__)
 
 
 @atomic()
@@ -90,10 +93,11 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             ports.append(port)
             await Ports.create(port=port, container=db_container)
 
-    except Exception:
+    except Exception as err:
         # Stop the container if failed to make a DB record
         await container.stop()
         await container.delete()
+        logger.exception("Error while starting", exc_info=err)
 
         response.status_code = 500
         return {"msg_code": config.msg_codes["db_error"]}
