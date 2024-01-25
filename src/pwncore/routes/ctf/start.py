@@ -14,6 +14,7 @@ from pwncore.routes.auth import RequireJwt
 router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
 
+
 @atomic()
 @router.post("/{ctf_id}/start")
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):

@@ -97,7 +97,9 @@ async def flag_post(
     )
     if check_solved:
         hints = await Hint.filter(
-            problem_id=ctf_id, viewedhints__team_id=team_id, viewedhints__with_points=True
+            problem_id=ctf_id,
+            viewedhints__team_id=team_id,
+            viewedhints__with_points=True,
         )
         pnlt = (100 - sum(map(lambda h: HINTPENALTY[h.order], hints))) / 100
 
