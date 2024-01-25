@@ -22,6 +22,7 @@ metadata = {
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = getLogger(__name__)
 
+
 class AuthBody(BaseModel):
     name: str
     password: str
@@ -70,7 +71,7 @@ async def signup_team(team: SignupBody, response: Response):
 
         for user in q:
             # Mypy kinda not working
-            user.team_id = newteam.id # type: ignore[assignment]
+            user.team_id = newteam.id  # type: ignore[attr-defined]
         if q:
             b = User.bulk_update(q, fields=["team_id"])
             # print(b.sql())
@@ -95,7 +96,8 @@ async def team_login(team_data: AuthBody, response: Response):
         return {"msg_code": config.msg_codes["wrong_password"]}
 
     current_time = datetime.datetime.utcnow()
-    expiration_time = current_time + datetime.timedelta(hours=config.jwt_valid_duration)
+    expiration_time = current_time + \
+        datetime.timedelta(hours=config.jwt_valid_duration)
     token_payload = {"team_id": team.id, "exp": expiration_time}
     token = jwt.encode(token_payload, config.jwt_secret, algorithm="HS256")
 
