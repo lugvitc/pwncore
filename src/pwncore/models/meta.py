@@ -17,7 +17,7 @@ __all__ = (
 
 
 class MetaProblem(Problem):
-    solved: fields.BooleanField(default=False)
+    solved = fields.BooleanField(default=False)
 
 
 class MetaContainer(BaseContainer):
