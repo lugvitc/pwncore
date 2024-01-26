@@ -52,6 +52,7 @@ class Team(Model):
     name = fields.CharField(255, unique=True)
     secret_hash = fields.TextField()
     coins = fields.IntField(default=0)
+    points = fields.IntField(default=0)
 
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
@@ -67,6 +68,7 @@ class Team(Model):
 class MetaTeam(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(255, unique=True)
+    points = fields.IntField(default=0)
 
     teams: fields.ReverseRelation[Team]
 

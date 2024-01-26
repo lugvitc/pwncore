@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import tanh
+from typing import Any
 
 from tortoise.models import Model
 from tortoise import fields
@@ -16,6 +17,7 @@ __all__ = (
     "BaseProblem_Pydantic",
     "Hint_Pydantic",
     "Problem_Pydantic",
+    "BaseProblem",
 )
 
 
@@ -29,7 +31,7 @@ class BaseProblem(Model):
 
 class Problem(BaseProblem):
     image_name = fields.TextField()
-    image_config: fields.Field[dict[str, list]] = fields.JSONField(
+    image_config: fields.Field[dict[str, Any]] = fields.JSONField(
         null=True
     )  # type: ignore[assignment]
 
