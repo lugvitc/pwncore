@@ -9,7 +9,8 @@ from tortoise.expressions import RawSQL
 from pwncore.models import Team
 
 # Metadata at the top for instant accessibility
-metadata = {"name": "leaderboard", "description": "Operations on the leaderboard"}
+metadata = {"name": "leaderboard",
+            "description": "Operations on the leaderboard"}
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
@@ -49,7 +50,7 @@ class ExpiringLBCache:
         return self.data
 
 
-gcache = ExpiringLBCache(30.0)
+gcache = ExpiringLBCache(1.0)
 
 
 @router.get("")
