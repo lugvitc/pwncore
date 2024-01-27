@@ -55,10 +55,10 @@ async def get_self_team(jwt: RequireJwt):
 
     # Get points from leaderboard
     # would be better is cache stores the values in a dict indexed by team id
-    for leaderboard_team in gcache.data:
-        if leaderboard_team["name"] == team["name"]:
-            team["tpoints"] = leaderboard_team["tpoints"]
-            break
+    # for leaderboard_team in gcache.data:
+    #     if leaderboard_team["name"] == team["name"]:
+    #         team["tpoints"] = leaderboard_team["tpoints"]
+    #         break
 
     return team
 
