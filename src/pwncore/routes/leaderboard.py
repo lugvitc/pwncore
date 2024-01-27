@@ -3,7 +3,7 @@ from __future__ import annotations
 from time import monotonic
 
 from fastapi import APIRouter, Request
-from tortoise.functions import Sum
+
 from tortoise.expressions import RawSQL
 
 from pwncore.models import Team
@@ -30,7 +30,8 @@ class ExpiringLBCache:
             .filter(solved_problem__problem__visible=True)
             .annotate(
                 tpoints=RawSQL(
-                    'SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points") + "team"."points"'
+                    'SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
+                    ' + "team"."points"'
                 )
             )
             .group_by("id")
