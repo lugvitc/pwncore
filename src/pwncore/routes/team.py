@@ -49,9 +49,12 @@ async def get_self_team(jwt: RequireJwt):
     team = dict(await Team_Pydantic.from_tortoise_orm(team_model))
 
     # Get members
-    team["members"] = [await User_Pydantic.from_tortoise_orm(member) for member in team_model.members]
+    team["members"] = [
+        await User_Pydantic.from_tortoise_orm(member) for member in team_model.members
+    ]
 
     # Get points from leaderboard
+    # would be better is cache stores the values in a dict indexed by team id
     for leaderboard_team in gcache.data:
         if leaderboard_team["name"] == team["name"]:
             team["tpoints"] = leaderboard_team["tpoints"]
@@ -60,8 +63,8 @@ async def get_self_team(jwt: RequireJwt):
     return team
 
 
-@ atomic()
-@ router.post("/add")
+@atomic()
+@router.post("/add")
 async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -85,8 +88,8 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
     return {"msg_code": config.msg_codes["user_added"]}
 
 
-@ atomic()
-@ router.post("/remove")
+@atomic()
+@router.post("/remove")
 async def remove_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -103,7 +106,7 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
     return {"msg_code": config.msg_codes["user_removed"]}
 
 
-@ router.get("/containers")
+@router.get("/containers")
 async def get_team_containers(response: Response, jwt: RequireJwt):
     containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
         "ports", "problem"
