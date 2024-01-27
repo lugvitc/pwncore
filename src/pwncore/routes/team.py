@@ -7,7 +7,7 @@ from tortoise.transactions import atomic
 from pwncore.config import config
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
-from pwncore.routes.leaderboard import gcache
+# from pwncore.routes.leaderboard import gcache
 
 # Metadata at the top for instant accessibility
 metadata = {"name": "team", "description": "Operations with teams"}
