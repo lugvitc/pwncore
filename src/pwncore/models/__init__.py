@@ -64,13 +64,16 @@ __all__ = (
     "R2Problem",
     "R2Ports",
     "R2Container",
+    "R2Container_Pydantic",
 )
 
-def get_annotations(cls, method = None):
+
+def get_annotations(cls, method=None):
     return typing.get_type_hints(method or cls)
 
-tortoise.contrib.pydantic.utils.get_annotations = get_annotations # type: ignore[pylance]
-tortoise.contrib.pydantic.creator.get_annotations = get_annotations # type: ignore[pylance]
+
+tortoise.contrib.pydantic.utils.get_annotations = get_annotations  # type: ignore[pylance]
+tortoise.contrib.pydantic.creator.get_annotations = get_annotations  # type: ignore[pylance]
 
 
 tortoise.Tortoise.init_models(["pwncore.models.round2"], "models")

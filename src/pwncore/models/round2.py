@@ -14,22 +14,28 @@ __all__ = (
     "R2Ports",
 )
 
+
 class R2Problem(BaseProblem):
     image_name = fields.TextField()
     image_config: fields.Field[dict[str, Any]] = fields.JSONField(
         null=True
     )  # type: ignore[assignment]
 
-    visible = fields.BooleanField(default=True)
-
     class PydanticMeta:
-        exclude = ["image_name", "image_config",]
+        exclude = [
+            "image_name",
+            "image_config",
+        ]
 
 
 class R2Container(Model):
     docker_id = fields.CharField(128, unique=True)
-    problem: fields.ForeignKeyRelation[R2Problem] = fields.ForeignKeyField("models.R2Problem", on_delete=fields.OnDelete.NO_ACTION)
-    meta_team: fields.ForeignKeyRelation[MetaTeam] = fields.ForeignKeyField("models.MetaTeam", on_delete=fields.OnDelete.NO_ACTION)
+    problem: fields.ForeignKeyRelation[R2Problem] = fields.ForeignKeyField(
+        "models.R2Problem", on_delete=fields.OnDelete.NO_ACTION
+    )
+    meta_team: fields.ForeignKeyRelation[MetaTeam] = fields.ForeignKeyField(
+        "models.MetaTeam", on_delete=fields.OnDelete.NO_ACTION
+    )
     flag = fields.TextField()
     solved = fields.BooleanField(default=False)
 
