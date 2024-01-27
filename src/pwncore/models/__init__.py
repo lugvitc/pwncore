@@ -72,8 +72,8 @@ def get_annotations(cls, method=None):
     return typing.get_type_hints(method or cls)
 
 
-tortoise.contrib.pydantic.utils.get_annotations = get_annotations  # type: ignore[pylance]
-tortoise.contrib.pydantic.creator.get_annotations = get_annotations  # type: ignore[pylance]
+tortoise.contrib.pydantic.utils.get_annotations = get_annotations  # type: ignore[unused-ignore]
+tortoise.contrib.pydantic.creator.get_annotations = get_annotations  # type: ignore[unused-ignore]
 
 
 tortoise.Tortoise.init_models(["pwncore.models.round2"], "models")

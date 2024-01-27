@@ -65,8 +65,8 @@ async def r2_submit(container_id: int, flag: Flag, jwt: RequireJwt, response: Re
         return {"status": True, "action": "defend"}
     else:
         # Valid type error but we dont use this object again
-        team.points = F("points") + round(container.problem.points / 4)  # type: ignore[assignment]
+        team.points = F("points") + round(container.problem.points / 4) # type: ignore[unused-ignore]
         await team.save(update_fields=["points"])
-        team.meta_team.points = F("points") + container.problem.points  # type: ignore[assignment]
+        team.meta_team.points = F("points") + container.problem.points  # type: ignore[unused-ignore]
         await team.meta_team.save(update_fields=["points"])
         return {"status": True, "action": "attack"}
