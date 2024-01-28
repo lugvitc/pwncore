@@ -22,6 +22,7 @@ from pwncore.models.ctf import Problem_Pydantic
 from pwncore.routes.ctf.start import router as start_router
 from pwncore.routes.ctf.pre_event import router as pre_event_router
 from pwncore.routes.auth import RequireJwt
+from pwncore.container import docker_client
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -92,16 +93,29 @@ async def flag_post(
         response.status_code = 401
         return {"msg_code": config.msg_codes["ctf_solved"]}
 
-    check_solved = await Container.exists(
-        team_id=team_id, flag=flag.flag, problem_id=ctf_id
-    )
-    if check_solved:
+    team_container = await Container.get_or_none(team_id=team_id, problem_id=ctf_id)
+    if not team_container:
+        return {"msg_code": config.msg_codes["container_not_found"]}
+
+    if team_container.flag == flag.flag:
         hints = await Hint.filter(
             problem_id=ctf_id,
             viewedhints__team_id=team_id,
             viewedhints__with_points=True,
         )
         pnlt = (100 - sum(map(lambda h: HINTPENALTY[h.order], hints))) / 100
+
+        # Stop container after submitting
+        try:
+            await Container.filter(team_id=team_id, problem_id=ctf_id).delete()
+        except Exception:
+            response.status_code = 500
+            return {"msg_code": config.msg_codes["db_error"]}
+
+        container = await docker_client.containers.get(team_container.docker_id)
+        await container.stop()
+        await container.delete()
+        #
 
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id, penalty=pnlt)
         create_task(update_points(req, ctf_id))
