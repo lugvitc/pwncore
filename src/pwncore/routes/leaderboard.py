@@ -4,7 +4,7 @@ from time import monotonic
 
 from fastapi import APIRouter, Request
 
-from tortoise.expressions import RawSQL
+from tortoise.expressions import RawSQL, Q
 
 from pwncore.models import Team
 
@@ -28,17 +28,18 @@ class ExpiringLBCache:
     async def _do_update(self):
         self.data = (
             await Team.all()
-            .filter(solved_problem__problem__visible=True)
+            .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
             .annotate(
                 tpoints=RawSQL(
-                    'SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
-                    ' + "team"."points"'
+                    'COALESCE((SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
+                    ' + "team"."points"), 0)'
                 )
             )
             .group_by("id", "meta_team__name")
             .order_by("-tpoints")
             .values("name", "tpoints", "meta_team__name")
         )
+
         self.last_update = monotonic()
 
     async def get_lb(self, req: Request):
