@@ -15,8 +15,8 @@ router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
 
 
-@atomic()
 @router.post("/{ctf_id}/start")
+@atomic()
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
@@ -109,8 +109,8 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
     }
 
 
-@atomic()
 @router.post("/stopall")
+@atomic()
 async def stopall_docker_container(response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]  # From JWT
 
@@ -132,8 +132,8 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
     return {"msg_code": config.msg_codes["containers_team_stop"]}
 
 
-@atomic()
 @router.post("/{ctf_id}/stop")
+@atomic()
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     # Let this work on invisible problems incase
     # we mess up the database while making problems visible
