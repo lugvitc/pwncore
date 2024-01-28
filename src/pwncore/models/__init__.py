@@ -37,6 +37,7 @@ from pwncore.models.round2 import (
     R2Problem,
     R2Ports,
     R2Container,
+    R2AttackRecord,
 )
 
 
@@ -65,6 +66,7 @@ __all__ = (
     "R2Ports",
     "R2Container",
     "R2Container_Pydantic",
+    "R2AttackRecord"
 )
 
 

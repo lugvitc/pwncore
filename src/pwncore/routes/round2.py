@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Response
 import tortoise.exceptions
 from tortoise.expressions import F
+from tortoise.transactions import atomic
 
 from pwncore.config import config
 from pwncore.models import (
@@ -12,6 +13,7 @@ from pwncore.models import (
     MetaTeam,
     Team,
 )
+from pwncore.models.round2 import R2AttackRecord
 from pwncore.routes.auth import RequireJwt
 from pwncore.routes.ctf import Flag
 
@@ -36,6 +38,7 @@ async def r2_meta_lb():
 
 
 @router.post("/{container_id}/flag")
+@atomic()
 async def r2_submit(container_id: int, flag: Flag, jwt: RequireJwt, response: Response):
     team_id = jwt["team_id"]
     try:
@@ -62,11 +65,17 @@ async def r2_submit(container_id: int, flag: Flag, jwt: RequireJwt, response: Re
     if team.meta_team == container.meta_team:
         container.solved = True
         await container.save()
+        team.points = F("points") + round(container.problem.points / 6)  # type: ignore[unused-ignore]
+        await team.save(update_fields=["points"])
         return {"status": True, "action": "defend"}
     else:
+        if await R2AttackRecord.exists(container_id=container.pk, meta_team_id=team.meta_team.pk):
+            response.status_code = 401
+            return {"msg_code": config.msg_codes["ctf_solved"]}
         # Valid type error but we dont use this object again
         team.points = F("points") + round(container.problem.points / 4)  # type: ignore[unused-ignore]
         await team.save(update_fields=["points"])
         team.meta_team.points = F("points") + container.problem.points  # type: ignore[unused-ignore]
         await team.meta_team.save(update_fields=["points"])
+        await R2AttackRecord.create(container_id=container.pk, meta_team_id=team.meta_team.pk)
         return {"status": True, "action": "attack"}

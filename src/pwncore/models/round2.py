@@ -4,6 +4,7 @@ from typing import Any
 
 from tortoise import fields
 from tortoise.models import Model
+from pwncore import container
 
 from pwncore.models.ctf import BaseProblem
 from pwncore.models.user import MetaTeam
@@ -12,6 +13,7 @@ __all__ = (
     "R2Problem",
     "R2Container",
     "R2Ports",
+    "R2AttackRecord"
 )
 
 
@@ -50,3 +52,12 @@ class R2Ports(Model):
         "models.R2Container", related_name="ports", on_delete=fields.OnDelete.CASCADE
     )
     port = fields.IntField(pk=True)
+
+class R2AttackRecord(Model):
+    container: fields.ForeignKeyRelation[R2Container] = fields.ForeignKeyField(
+        "models.R2Container", on_delete=fields.OnDelete.CASCADE
+    )
+
+    meta_team: fields.ForeignKeyRelation[MetaTeam] = fields.ForeignKeyField(
+        "models.MetaTeam", on_delete=fields.OnDelete.NO_ACTION
+    )
