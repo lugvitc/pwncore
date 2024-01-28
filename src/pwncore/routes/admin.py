@@ -3,8 +3,10 @@ from datetime import date
 import itertools
 import logging
 import uuid
+
 from fastapi import APIRouter, Response
 from passlib.hash import bcrypt
+from tortoise.transactions import atomic
 
 from pwncore.models import (
     Team,
@@ -40,6 +42,7 @@ async def _del_cont(id: str):
     await container.delete()
 
 
+@atomic()
 async def _create_container(prob: R2Problem, mteam: MetaTeam):
     try:
         container = await docker_client.containers.run(
