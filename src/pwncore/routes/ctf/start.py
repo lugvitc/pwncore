@@ -77,23 +77,23 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         ).start(detach=True)
 
         try:
-            db_container = await Container.create(
-                docker_id=container.id,
-                team_id=team_id,
-                problem_id=ctf_id,
-                flag=container_flag,
-            )
+            async with in_transaction():
+                db_container = await Container.create(
+                    docker_id=container.id,
+                    team_id=team_id,
+                    problem_id=ctf_id,
+                    flag=container_flag,
+                )
 
-            # Get ports and save them
-            ports = []  # List to return back to frontend
-            for guest_port in ctf.image_config["PortBindings"]:
-                # Docker assigns the port to the IPv4 and IPv6 addresses
-                # Since we only require IPv4, we select the zeroth item
-                # from the returned list.
-                port = int((await container.port(guest_port))[0]["HostPort"])
-                ports.append(port)
-                await Ports.create(port=port, container=db_container)
-
+                # Get ports and save them
+                ports = []  # List to return back to frontend
+                for guest_port in ctf.image_config["PortBindings"]:
+                    # Docker assigns the port to the IPv4 and IPv6 addresses
+                    # Since we only require IPv4, we select the zeroth item
+                    # from the returned list.
+                    port = int((await container.port(guest_port))[0]["HostPort"])
+                    ports.append(port)
+                    await Ports.create(port=port, container=db_container)
         except Exception as err:
             # Stop the container if failed to make a DB record
             await container.stop()

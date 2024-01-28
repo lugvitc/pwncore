@@ -35,7 +35,8 @@ class ExpiringLBCache:
                     ' + "team"."points"'
                 )
             )
-            .group_by("id")
+            .group_by("id", "meta_team__name")
+            .order_by("-tpoints")
             .values("name", "tpoints", "meta_team__name")
         )
         self.last_update = monotonic()
