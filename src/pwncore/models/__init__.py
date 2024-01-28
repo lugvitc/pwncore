@@ -66,7 +66,7 @@ __all__ = (
     "R2Ports",
     "R2Container",
     "R2Container_Pydantic",
-    "R2AttackRecord"
+    "R2AttackRecord",
 )
 
 

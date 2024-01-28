@@ -36,7 +36,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         team_id = jwt["team_id"]  # From JWT
         team_container = await Container.get_or_none(team=team_id, problem=ctf_id)
         if team_container:
-            db_ports = await team_container.ports.all().values("port")  # Get ports from DB
+            db_ports = await team_container.ports.all().values(
+                "port"
+            )  # Get ports from DB
             ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
             return {
                 "msg_code": config.msg_codes["container_already_running"],
@@ -70,9 +72,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             },
         )
 
-        await (await container.exec(["/bin/bash", "/root/gen_flag", container_flag])).start(
-            detach=True
-        )
+        await (
+            await container.exec(["/bin/bash", "/root/gen_flag", container_flag])
+        ).start(detach=True)
 
         try:
             db_container = await Container.create(
