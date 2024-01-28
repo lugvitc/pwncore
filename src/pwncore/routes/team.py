@@ -7,6 +7,7 @@ from tortoise.transactions import atomic
 from pwncore.config import config
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
+# from pwncore.routes.leaderboard import gcache
 
 # Metadata at the top for instant accessibility
 metadata = {"name": "team", "description": "Operations with teams"}
@@ -38,6 +39,28 @@ async def team_members(jwt: RequireJwt):
     members = await User_Pydantic.from_queryset(User.filter(team_id=team_id))
     # Incase of no members, it just returns an empty list.
     return members
+
+
+@router.get("/me")
+async def get_self_team(jwt: RequireJwt):
+    team_id = jwt["team_id"]
+
+    team_model = await Team.get(id=team_id).prefetch_related("members")
+    team = dict(await Team_Pydantic.from_tortoise_orm(team_model))
+
+    # Get members
+    team["members"] = [
+        await User_Pydantic.from_tortoise_orm(member) for member in team_model.members
+    ]
+
+    # Get points from leaderboard
+    # would be better is cache stores the values in a dict indexed by team id
+    # for leaderboard_team in gcache.data:
+    #     if leaderboard_team["name"] == team["name"]:
+    #         team["tpoints"] = leaderboard_team["tpoints"]
+    #         break
+
+    return team
 
 
 @atomic()
