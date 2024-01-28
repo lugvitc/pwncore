@@ -38,7 +38,7 @@ class R2Container(Model):
     ports: fields.ReverseRelation[R2Ports]
 
     class PydanticMeta:
-        exclude = ["docker_id", "flag", "meta_team"]
+        exclude = ["docker_id", "flag", "meta_team", "r2attackrecords"]
 
 
 class R2Ports(Model):

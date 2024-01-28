@@ -7,6 +7,7 @@ from tortoise.transactions import atomic
 from pwncore.config import config
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
+
 # from pwncore.routes.leaderboard import gcache
 
 # Metadata at the top for instant accessibility
@@ -45,14 +46,10 @@ async def team_members(jwt: RequireJwt):
 async def get_self_team(jwt: RequireJwt):
     team_id = jwt["team_id"]
 
-    team_model = await Team.get(id=team_id).prefetch_related("members")
+    team_model = await Team.get(id=team_id).prefetch_related("meta_team")
+
     team = dict(await Team_Pydantic.from_tortoise_orm(team_model))
-
-    # Get members
-    team["members"] = [
-        await User_Pydantic.from_tortoise_orm(member) for member in team_model.members
-    ]
-
+    team["meta_team__name"] = team_model.meta_team.name  # type: ignore[arg-type, union-attr]
     # Get points from leaderboard
     # would be better is cache stores the values in a dict indexed by team id
     # for leaderboard_team in gcache.data:

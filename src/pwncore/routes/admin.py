@@ -8,6 +8,7 @@ from fastapi import APIRouter, Response
 from passlib.hash import bcrypt
 from tortoise.transactions import atomic
 from tortoise.expressions import RawSQL, Q
+from tortoise.functions import Sum
 
 from pwncore.models import (
     Team,
@@ -50,6 +51,7 @@ NAMES = [
     "Epimetheus",
     "Pan",
 ]
+
 
 async def _del_cont(id: str):
     container = await docker_client.containers.get(id)
@@ -114,9 +116,10 @@ async def round2(response: Response):
         logging.exception("Error while initing round2")
         return {"msg_code": config.msg_codes["db_error"]}
 
-    mts = await MetaTeam.bulk_create([
-        MetaTeam(name=i) for i in NAMES
-    ])
+    await MetaTeam.all().delete()
+    mts = await MetaTeam.bulk_create(
+        [MetaTeam(name=NAMES[i], id=i + 1) for i in range(12)]
+    )
 
     teams = (
         await Team.all()
@@ -127,15 +130,21 @@ async def round2(response: Response):
                 ' + "team"."points"), 0)'
             )
         )
-        .group_by("id", "meta_team__name")
+        .annotate(
+            tpoints2=Sum(
+                RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')
+            )
+        )
         .order_by("-tpoints")
     )
 
     for i in range(12):
-       for team in teams[i::12]:
-           team.meta_team = mts[i] # type: ignore[assignment]
+        for team in teams[i::12]:
+            team.meta_team_id = i + 1  # type: ignore[unuser-ignore]
+            # print(mts[i].pk, mts)
+            await team.save(update_fields=["meta_team_id"])
 
-    await Team.bulk_update(teams, fields=["meta_team"])
+    # await Team.bulk_update(teams, fields=["meta_team_id"])
 
     problems = await R2Problem.all()
     mteams = await MetaTeam.all()

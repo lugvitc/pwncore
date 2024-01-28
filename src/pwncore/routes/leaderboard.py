@@ -9,8 +9,7 @@ from tortoise.expressions import RawSQL, Q
 from pwncore.models import Team
 
 # Metadata at the top for instant accessibility
-metadata = {"name": "leaderboard",
-            "description": "Operations on the leaderboard"}
+metadata = {"name": "leaderboard", "description": "Operations on the leaderboard"}
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
