@@ -140,7 +140,7 @@ async def round2(response: Response):
 
     for i in range(12):
         for team in teams[i::12]:
-            team.meta_team_id = i + 1  # type: ignore[unuser-ignore]
+            team.meta_team_id = i + 1  # type: ignore[attr-defined]
             # print(mts[i].pk, mts)
             await team.save(update_fields=["meta_team_id"])
 
