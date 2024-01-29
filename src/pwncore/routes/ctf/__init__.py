@@ -125,7 +125,7 @@ async def flag_post(
             return {"msg_code": config.msg_codes["db_error"]}
 
         container = await docker_client.containers.get(team_container.docker_id)
-        await container.stop()
+        await container.kill()
         await container.delete()
         #
 

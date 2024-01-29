@@ -34,12 +34,25 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             return {"msg_code": config.msg_codes["ctf_not_found"]}
 
         team_id = jwt["team_id"]  # From JWT
-        team_container = await Container.get_or_none(team=team_id, problem=ctf_id)
+        team_container = await Container.filter(team=team_id, problem=ctf_id)
         if team_container:
-            db_ports = await team_container.ports.all().values(
+            a, b = team_container[0], team_container[1:]
+            db_ports = await a.ports.all().values(
                 "port"
             )  # Get ports from DB
-            ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
+            ports = [db_port["port"]
+                     for db_port in db_ports]  # Create a list out of it
+
+            for db_container in b:
+                try:
+                    await db_container.delete()
+                except Exception:
+                    pass
+
+                container = await docker_client.containers.get(db_container.docker_id)
+                await container.kill()
+                await container.delete()
+
             return {
                 "msg_code": config.msg_codes["container_already_running"],
                 "ports": ports,
@@ -96,7 +109,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     await Ports.create(port=port, container=db_container)
         except Exception as err:
             # Stop the container if failed to make a DB record
-            await container.stop()
+            await container.kill()
             await container.delete()
             logger.exception("Error while starting", exc_info=err)
 
@@ -127,7 +140,7 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
 
         for db_container in containers:
             container = await docker_client.containers.get(db_container["docker_id"])
-            await container.stop()
+            await container.kill()
             await container.delete()
 
         return {"msg_code": config.msg_codes["containers_team_stop"]}
@@ -157,7 +170,7 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
             return {"msg_code": config.msg_codes["db_error"]}
 
         container = await docker_client.containers.get(team_container.docker_id)
-        await container.stop()
+        await container.kill()
         await container.delete()
 
         return {"msg_code": config.msg_codes["container_stop"]}
