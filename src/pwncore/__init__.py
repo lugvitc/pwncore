@@ -26,7 +26,7 @@ async def app_lifespan(app: FastAPI):
     for db_container in containers:
         try:
             container = await docker_client.containers.get(db_container["docker_id"])
-            await container.stop()
+            await container.kill()
             await container.delete()
         except (
             Exception

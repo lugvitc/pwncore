@@ -56,7 +56,7 @@ NAMES = [
 
 async def _del_cont(id: str):
     container = await docker_client.containers.get(id)
-    await container.stop()
+    await container.kill()
     await container.delete()
 
 
@@ -95,7 +95,7 @@ async def _create_container(prob: R2Problem, mteam: MetaTeam):
         await R2Ports.bulk_create(ports)
     except Exception as err:
         try:
-            await container.stop()
+            await container.kill()
             await container.delete()
         except Exception:
             pass

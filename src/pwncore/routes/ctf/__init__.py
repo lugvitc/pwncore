@@ -69,7 +69,8 @@ async def ctf_list(jwt: RequireJwt):
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
     acc: dict[int, float] = defaultdict(lambda: 1.0)
     for k, v in map(
-        lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),  # type: ignore[attr-defined]
+        # type: ignore[attr-defined]
+        lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),
         await ViewedHint.filter(team_id=team_id, with_points=True).prefetch_related(
             "hint"
         ),
@@ -125,7 +126,7 @@ async def flag_post(
             return {"msg_code": config.msg_codes["db_error"]}
 
         container = await docker_client.containers.get(team_container.docker_id)
-        await container.stop()
+        await container.kill()
         await container.delete()
         #
 
