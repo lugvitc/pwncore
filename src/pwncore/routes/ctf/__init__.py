@@ -69,8 +69,7 @@ async def ctf_list(jwt: RequireJwt):
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
     acc: dict[int, float] = defaultdict(lambda: 1.0)
     for k, v in map(
-        # type: ignore[attr-defined]
-        lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),
+        lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),  # type: ignore[attr-defined]
         await ViewedHint.filter(team_id=team_id, with_points=True).prefetch_related(
             "hint"
         ),
