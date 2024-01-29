@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Response
 import tortoise.exceptions
-from tortoise.expressions import F
+from tortoise.expressions import F, Q, Subquery
 from tortoise.transactions import in_transaction
 
 from pwncore.config import config
@@ -26,9 +26,19 @@ router = APIRouter(prefix="/round2", tags=["round2"])
 
 
 @router.get("/list")
-async def r2ctf_list():
+async def r2ctf_list(jwt: RequireJwt):
     return await R2Container_Pydantic.from_queryset(
-        R2Container.all().prefetch_related("problem", "ports")
+        R2Container.all()
+        .filter(
+            ~Q(
+                id__in=Subquery(
+                    R2AttackRecord.filter(
+                        meta_team_id=(await Team.get(id=jwt["team_id"])).meta_team_id  # type: ignore[attr-defined]
+                    ).values("container_id")
+                )
+            )
+        )
+        .prefetch_related("problem", "ports")
     )
 
 
