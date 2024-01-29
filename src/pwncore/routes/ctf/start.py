@@ -36,8 +36,8 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         team_id = jwt["team_id"]  # From JWT
         team_container = await Container.filter(team=team_id, problem=ctf_id)
         if team_container:
-            team_container, b = team_container[0], team_container[1:]
-            db_ports = await team_container.ports.all().values(
+            a, b = team_container[0], team_container[1:]
+            db_ports = await a.ports.all().values(
                 "port"
             )  # Get ports from DB
             ports = [db_port["port"]
