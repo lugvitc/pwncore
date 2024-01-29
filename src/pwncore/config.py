@@ -67,6 +67,6 @@ config = Config(
     jwt_secret="mysecret",
     jwt_valid_duration=12,  # In hours
     msg_codes=msg_codes,
-    hint_penalty=10,
+    hint_penalty=50,
     max_members_per_team=3,
 )

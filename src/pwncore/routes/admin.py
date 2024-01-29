@@ -4,9 +4,9 @@ import itertools
 import logging
 import uuid
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from passlib.hash import bcrypt
-from tortoise.transactions import atomic
+from tortoise.transactions import atomic, in_transaction
 from tortoise.expressions import RawSQL, Q
 from tortoise.functions import Sum
 
@@ -37,6 +37,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 if config.development:
     logging.basicConfig(level=logging.INFO)
 
+ADMIN_HASH = "$2b$12$K2LsLGS/Mahksh0V6xZYKOviNEHMv3Of5f1zhyF6CWJ8rJIcKnSqu"
 NAMES = [
     "Mimas",
     "Enceladus",
@@ -102,83 +103,95 @@ async def _create_container(prob: R2Problem, mteam: MetaTeam):
 
 
 @router.get("/round2")
-async def round2(response: Response):
+async def round2(response: Response, req: Request):
+    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+        response.status_code = 401
+        return
+
     containers = await Container.all()
 
-    async with asyncio.TaskGroup() as tg:
-        for container in containers:
-            tg.create_task(_del_cont(container.docker_id))
+    async with in_transaction():
+        async with asyncio.TaskGroup() as tg:
+            for container in containers:
+                tg.create_task(_del_cont(container.docker_id))
 
-    try:
-        await Container.all().delete()
-    except Exception:
-        response.status_code = 500
-        logging.exception("Error while initing round2")
-        return {"msg_code": config.msg_codes["db_error"]}
+        try:
+            await Container.all().delete()
+        except Exception:
+            response.status_code = 500
+            logging.exception("Error while initing round2")
+            return {"msg_code": config.msg_codes["db_error"]}
 
-    await MetaTeam.all().delete()
-    mts = await MetaTeam.bulk_create(
-        [MetaTeam(name=NAMES[i], id=i + 1) for i in range(12)]
-    )
-
-    teams = (
-        await Team.all()
-        .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
-        .annotate(
-            tpoints=RawSQL(
-                'COALESCE((SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
-                ' + "team"."points"), 0)'
-            )
+        await MetaTeam.all().delete()
+        mts = await MetaTeam.bulk_create(
+            [MetaTeam(name=NAMES[i], id=i + 1) for i in range(12)]
         )
-        .annotate(
-            tpoints2=Sum(
-                RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')
+
+        teams = (
+            await Team.all()
+            .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
+            .annotate(
+                tpoints=RawSQL(
+                    'COALESCE((SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
+                    ' + "team"."points"), 0)'
+                )
             )
+            .annotate(
+                tpoints2=Sum(
+                    RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')
+                )
+            )
+            .order_by("-tpoints")
         )
-        .order_by("-tpoints")
-    )
 
-    for i in range(12):
-        for team in teams[i::12]:
-            team.meta_team_id = i + 1  # type: ignore[attr-defined]
-            # print(mts[i].pk, mts)
-            await team.save(update_fields=["meta_team_id"])
+        for i in range(12):
+            for team in teams[i::12]:
+                team.meta_team_id = i + 1  # type: ignore[attr-defined]
+                # print(mts[i].pk, mts)
+                await team.save(update_fields=["meta_team_id"])
 
-    # await Team.bulk_update(teams, fields=["meta_team_id"])
+        # await Team.bulk_update(teams, fields=["meta_team_id"])
 
-    problems = await R2Problem.all()
-    mteams = await MetaTeam.all()
+        problems = await R2Problem.all()
+        mteams = await MetaTeam.all()
 
-    async with asyncio.TaskGroup() as tg:
-        for pm in itertools.product(problems, mteams):
-            tg.create_task(_create_container(*pm))
+        async with asyncio.TaskGroup() as tg:
+            for pm in itertools.product(problems, mteams):
+                tg.create_task(_create_container(*pm))
 
 
 @router.get("/union")
-async def calculate_team_coins():  # Inefficient, anyways will be used only once
-    logging.info("Calculating team points form pre-event CTFs:")
-    team_ids = await Team.filter().values_list("id", flat=True)
-    for team_id in team_ids:
-        member_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
+async def calculate_team_coins(response: Response, req: Request): # Inefficient, anyways will be used only once
+    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+        response.status_code = 401
+        return
+    async with in_transaction():
+        logging.info("Calculating team points form pre-event CTFs:")
+        team_ids = await Team.filter().values_list("id", flat=True)
+        for team_id in team_ids:
+            member_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
 
-        if not member_tags:
-            return 0
+            if not member_tags:
+                return 0
 
-        problems_solved = set(
-            await PreEventSolvedProblem.filter(tag__in=member_tags).values_list(
-                "problem_id", flat=True
+            problems_solved = set(
+                await PreEventSolvedProblem.filter(user_id__in=member_tags).values_list(
+                    "problem_id", flat=True
+                )
             )
-        )
 
-        team = await Team.get(id=team_id)
-        for ctf_id in problems_solved:
-            team.coins += (await PreEventProblem.get(id=ctf_id)).points
-        logging.info(f"{team.id}) {team.name}: {team.coins}")
-        await team.save()
+            team = await Team.get(id=team_id)
+            for ctf_id in problems_solved:
+                team.coins += (await PreEventProblem.get(id=ctf_id)).points
+            logging.info(f"{team.id}) {team.name}: {team.coins}")
+            await team.save()
 
 
 @router.get("/create")
-async def init_db():
+async def init_db(response: Response, req: Request): # Inefficient, anyways will be used only once
+    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+        response.status_code = 401
+        return
     await Problem.create(
         name="Invisible-Incursion",
         description="Chod de tujhe se na ho paye",
@@ -238,10 +251,10 @@ async def init_db():
     await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
-    await PreEventUser.create(tag="23bce1000", email="dd@ff.in")
-    await PreEventUser.create(tag="23brs1000", email="d2d@ff.in")
-    await PreEventSolvedProblem.create(user_id="23bce1000", problem_id="1")
-    await PreEventSolvedProblem.create(user_id="23brs1000", problem_id="1")
+    await PreEventUser.create(tag="23BCE1000", email="dd@ff.in")
+    await PreEventUser.create(tag="23BRS1000", email="d2d@ff.in")
+    await PreEventSolvedProblem.create(user_id="23BCE1000", problem_id="1")
+    await PreEventSolvedProblem.create(user_id="23BRS1000", problem_id="1")
     # await PreEventSolvedProblem.create(
     #     tag="23BAI1000",
     #     problem_id="2"

@@ -56,6 +56,7 @@ class Flag(BaseModel):
 @router.get("/completed")
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
+    ViewedHint.filter(team_id=team_id).annotate()
     problems = await Problem_Pydantic.from_queryset(
         Problem.filter(solvedproblems__team_id=team_id, visible=True)
     )
@@ -63,8 +64,14 @@ async def completed_problem_get(jwt: RequireJwt):
 
 
 @router.get("/list")
-async def ctf_list():
+async def ctf_list(jwt: RequireJwt):
+    team_id = jwt["team_id"]
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
+    acc: dict[int, float] = defaultdict(lambda: 1.0)
+    for k, v in map(lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]), await ViewedHint.filter(team_id=team_id, with_points=True).prefetch_related("hint")): # type: ignore[attr-defined]
+        acc[k] -= v / 100
+    for i in problems:
+        i.points = int(acc[i.id] * i.points) # type: ignore[attr-defined]
     return problems
 
 

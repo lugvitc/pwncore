@@ -12,5 +12,6 @@ router.include_router(ctf.router)
 router.include_router(team.router)
 router.include_router(leaderboard.router)
 router.include_router(round2.router)
-if config.development:
-    router.include_router(admin.router)
+router.include_router(admin.router)
+# if config.development:
+    # router.include_router(admin.router)

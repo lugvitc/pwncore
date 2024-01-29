@@ -53,6 +53,7 @@ origins = [
 
 if config.development:
     origins.append("http://localhost:5173")
+    origins.append("http://localhost:4173")
 
 app.add_middleware(
     CORSMiddleware,
