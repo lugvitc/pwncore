@@ -68,10 +68,15 @@ async def ctf_list(jwt: RequireJwt):
     team_id = jwt["team_id"]
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
     acc: dict[int, float] = defaultdict(lambda: 1.0)
-    for k, v in map(lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]), await ViewedHint.filter(team_id=team_id, with_points=True).prefetch_related("hint")): # type: ignore[attr-defined]
+    for k, v in map(
+        lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),  # type: ignore[attr-defined]
+        await ViewedHint.filter(team_id=team_id, with_points=True).prefetch_related(
+            "hint"
+        ),
+    ):
         acc[k] -= v / 100
     for i in problems:
-        i.points = int(acc[i.id] * i.points) # type: ignore[attr-defined]
+        i.points = int(acc[i.id] * i.points)  # type: ignore[attr-defined]
     return problems
 
 

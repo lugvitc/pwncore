@@ -30,7 +30,8 @@ class ExpiringLBCache:
             .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
             .annotate(
                 tpoints=RawSQL(
-                    'COALESCE((SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
+                    'COALESCE((SUM("solvedproblem"."penalty" * '
+                    '"solvedproblem__problem"."points")'
                     ' + "team"."points"), 0)'
                 )
             )

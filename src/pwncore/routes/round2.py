@@ -27,10 +27,18 @@ router = APIRouter(prefix="/round2", tags=["round2"])
 
 @router.get("/list")
 async def r2ctf_list(jwt: RequireJwt):
-    # (await Team.get(id=jwt["team_id"])).meta_team_id
-    # print(await R2AttackRecord.filter(meta_team_id=(await Team.get(id=jwt["team_id"])).meta_team_id).values("container_id"))
     return await R2Container_Pydantic.from_queryset(
-        R2Container.all().filter(~Q(id__in=Subquery(R2AttackRecord.filter(meta_team_id=(await Team.get(id=jwt["team_id"])).meta_team_id).values("container_id")))).prefetch_related("problem", "ports")
+        R2Container.all()
+        .filter(
+            ~Q(
+                id__in=Subquery(
+                    R2AttackRecord.filter(
+                        meta_team_id=(await Team.get(id=jwt["team_id"])).meta_team_id  # type: ignore[attr-defined]
+                    ).values("container_id")
+                )
+            )
+        )
+        .prefetch_related("problem", "ports")
     )
 
 

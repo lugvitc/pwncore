@@ -123,7 +123,7 @@ async def round2(response: Response, req: Request):
             return {"msg_code": config.msg_codes["db_error"]}
 
         await MetaTeam.all().delete()
-        mts = await MetaTeam.bulk_create(
+        await MetaTeam.bulk_create(
             [MetaTeam(name=NAMES[i], id=i + 1) for i in range(12)]
         )
 
@@ -132,13 +132,16 @@ async def round2(response: Response, req: Request):
             .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
             .annotate(
                 tpoints=RawSQL(
-                    'COALESCE((SUM("solvedproblem"."penalty" * "solvedproblem__problem"."points")'
+                    'COALESCE((SUM("solvedproblem"."penalty" * '
+                    '"solvedproblem__problem"."points")'
                     ' + "team"."points"), 0)'
                 )
             )
             .annotate(
                 tpoints2=Sum(
-                    RawSQL('"solvedproblem"."penalty" * "solvedproblem__problem"."points"')
+                    RawSQL(
+                        '"solvedproblem"."penalty" * "solvedproblem__problem"."points"'
+                    )
                 )
             )
             .order_by("-tpoints")
@@ -161,7 +164,9 @@ async def round2(response: Response, req: Request):
 
 
 @router.get("/union")
-async def calculate_team_coins(response: Response, req: Request): # Inefficient, anyways will be used only once
+async def calculate_team_coins(
+    response: Response, req: Request
+):  # Inefficient, anyways will be used only once
     if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
         response.status_code = 401
         return
@@ -169,7 +174,9 @@ async def calculate_team_coins(response: Response, req: Request): # Inefficient,
         logging.info("Calculating team points form pre-event CTFs:")
         team_ids = await Team.filter().values_list("id", flat=True)
         for team_id in team_ids:
-            member_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
+            member_tags = await User.filter(team_id=team_id).values_list(
+                "tag", flat=True
+            )
 
             if not member_tags:
                 return 0
@@ -188,7 +195,9 @@ async def calculate_team_coins(response: Response, req: Request): # Inefficient,
 
 
 @router.get("/create")
-async def init_db(response: Response, req: Request): # Inefficient, anyways will be used only once
+async def init_db(
+    response: Response, req: Request
+):  # Inefficient, anyways will be used only once
     if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
         response.status_code = 401
         return
