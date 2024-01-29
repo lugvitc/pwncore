@@ -109,7 +109,7 @@ async def flag_post(
     if not team_container:
         return {"msg_code": config.msg_codes["container_not_found"]}
 
-    if team_container.flag == flag.flag:
+    if team_container.flag == flag.flag.strip():
         hints = await Hint.filter(
             problem_id=ctf_id,
             viewedhints__team_id=team_id,
