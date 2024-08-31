@@ -9,8 +9,9 @@ A CTF platform backend written in [FastAPI](https://github.com/fastapi/fastapi) 
 3. [Installation](#installation)
 4. [Usage](#usage)
 5. [Project Structure](#project-structure)
-6. [Contributing](#contributing)
-7. [License](#license)
+6. [Documenting](#documenting)
+7. [Contributing](#contributing)
+8. [License](#license)
 
 ## TODO
 
@@ -121,9 +122,46 @@ Before you begin, ensure you have met the following requirements:
 7 directories, 32 files
 ```
 
+## Documenting:
+
+FastAPI generates documentation for the routes using OpenAPI. The documentation is available by default at `/docs` (Swagger UI) and `/redoc` (ReDoc).
+
+There are 2 ways to add documentation for a route:
+
+1. Explicitly mention the summary and description:
+
+```py
+@router.get("/start/{ctf_id}",
+    description="This description supports **Markdown**.",
+    summary="Start the docker container"
+)
+```
+
+2. Let it infer summary from function name and description from comments:
+
+```py
+@router.get("/start/{ctf_id}")
+async def start_the_docker_container(ctf_id: int):       # The function name is inferred for the summary
+    # This is a regular single-line comment.
+    # Will not be displayed in the documentation.
+    '''
+    This is a multi-line comment, and will be displayed
+    in the documentation when the route is expanded.
+
+    The cool thing is that Markdown works here!
+    # See, Markdown works!
+    _Pretty_ **cool** right?
+    '''
+    return {"status": "CTF started"}
+```
+
+Result:
+
+![Result](.github/route_docs.png)
+
 ## Contributing
 
-Follow the following steps while workng on the platform
+Follow the following steps while working on the platform
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/functionality`)
