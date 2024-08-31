@@ -127,10 +127,10 @@ Follow the following steps while workng on the platform
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/functionality`)
-3. Commit your changes (`git commit -m 'Add some functionality'`)
+3. Commit your changes (`git commit -m 'Add some functionality'`). Go through [CONTRIBUTING](/CONTRIBUTING.md) for preferred commit messages
 4. Push to the branch (`git push origin feature/functionality`)
 5. Open a Pull Request
 
 ## License
 
-This project is licensed under the [GNU GENERAL PUBLIC LICENSE] - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [GNU GENERAL PUBLIC LICENSE] - see the [LICENSE](./LICENSE) file for details.
