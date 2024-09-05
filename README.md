@@ -1,66 +1,125 @@
-# CTF Backend
+# pwncore
 
-## Tech Stack:
+A CTF platform backend written in [FastAPI](https://github.com/fastapi/fastapi) using [Tortoise-ORM](https://github.com/tortoise/tortoise-orm), [Tox](https://github.com/tox-dev/tox) and [Pydantic](https://github.com/pydantic/pydantic)
 
--   Framework: **FastAPI**
--   Database: **PostgreSQL (ORM: Tortoise)**
--   Server: **Uvicorn**
--   Test: **TestClient (in FastAPI) / Tox**
--   Containerization: **Docker**
--   CI/CD: **Github Actions** and ship to **Github packages**
+## Table of Contents
 
-## Setup:
+1. [TODO](#todo)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Project Structure](#project-structure)
+6. [Documenting](#documenting)
+7. [Contributing](#contributing)
+8. [License](#license)
 
-```sh
-pip install poetry
-python -m venv .venv                # Create a python virtual environment
-source .venv/bin/activate           # Activate it (This command will differ for Windows)
-poetry install                      # Install the dependencies
+## TODO
+
+- [ ] Remove `round2` logic and paths
+- [ ] feat: Power ups
+- [ ] fix: Leaderboard caching error
+- [ ] Issue identification and Bug fixes
+- [ ] Setup tests using `tox`
+- [ ] feat: Leaderboard graph
+
+## Prerequisites
+
+Before you begin, ensure you have met the following requirements:
+
+- Python 3.7+
+- Docker (optional, for container functionality)
+
+## Installation
+
+1. Clone the repository (or a fork of the repository):
+
+   ```bash
+   git clone https://github.com/lugvitc/pwncore.git
+   cd pwncore
+   ```
+
+2. Set up a virtual environment:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. Install Poetry and project dependencies:
+
+   ```bash
+   pip install poetry
+   poetry install
+   ```
+
+4. Configure the project:
+   - Open `src/pwncore/config.py`
+   - Set `db_url` to a path for persistent storage or continue with in-memory database
+   - Configure `docker_url` as needed (see [Usage](#usage) for details)
+
+## Usage
+
+1. Start:
+
+   ```bash
+   cd src
+   uvicorn pwncore:app --reload
+   ```
+
+2. Access the auto-generated documentation at [http://localhost:8000/docs](http://localhost:8000/docs)
+
+3. Docker configuration:
+   - Enable and start the Docker service on your system, or
+   - Modify `src/pwncore/config.py:62`:
+
+```python
+	docker_url="http://google.com",  # For testing without Docker
 ```
 
-## Run:
-
-```sh
-python -m uvicorn pwncore:app --reload
-```
-
-## Testing:
-
-Take a look at `tests/test_login.py` as an example on writing tests.
-
-A Github Workflow is set to automatically run pytest on all filenames beginning with `test` under tox. Regardless, you might want to run the tests on your machine locally before pushing:
-
-```sh
-tox
-```
-
-## Structure:
-
-To make the API routes clear without having to check each file, we organise the routes in separate python files.
-
-Each file has their own router, eg. `/team`, with endpoints lying under it: `/team/list` `/team/login`
-
-All individual routes (`/team/*`, `/ctf/*`) are then put behind `/api` in the `routes/__init__.py`, so we end up with `/api/team/*` and `/api/ctf*`.
-
-In case a certain route has multiple complex tasks, they can be separated as a submodule. For example, the route `/api/ctf/start` will perform a lot of tasks (interacting with docker etc.), and hence has a separate file for it.
-
-`src/`:
+## Project Structure
 
 ```
-docs.py                     # Takes metadata from each route and compiles it for FastAPI
-config.py                   # Configuration variables
-db.py                       # Database schemas and connector
+.
+├── Dockerfile
+├── LICENSE
+├── OVERVIEW.md
+├── poetry.lock
+├── poetry.toml
+├── pyproject.toml
+├── README.md
+├── src
+│   └── pwncore
+│       ├── config.py
+│       ├── container.py
+│       ├── docs.py
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── models
+│       │   ├── container.py
+│       │   ├── ctf.py
+│       │   ├── __init__.py
+│       │   ├── pre_event.py
+│       │   ├── round2.py
+│       │   └── user.py
+│       ├── py.typed
+│       ├── routes
+│       │   ├── admin.py
+│       │   ├── auth.py
+│       │   ├── ctf
+│       │   │   ├── __init__.py
+│       │   │   ├── pre_event.py
+│       │   │   └── start.py
+│       │   ├── __init__.py
+│       │   ├── leaderboard.py
+│       │   ├── round2.py
+│       │   └── team.py
+│       └── types.py
+├── tests
+│   ├── __init__.py
+│   └── test_login.py
+└── tox.ini
 
-routes/
-    L team.py
-    L ctf/
-        L start.py          # Separate file since it involves much more complex tasks
-        L __init__.py       # Rest of the ctf routes go here
-    L admin.py
-    L leaderboard.py
-    L team.py
-    L __init__.py           # Main router under `/api`, any misc routes go here
-tests/
+7 directories, 32 files
 ```
 
 ## Documenting:
@@ -99,3 +158,17 @@ async def start_the_docker_container(ctf_id: int):       # The function name is 
 Result:
 
 ![Result](.github/route_docs.png)
+
+## Contributing
+
+Follow the following steps while working on the platform
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/functionality`)
+3. Commit your changes (`git commit -m 'Add some functionality'`). Go through [CONTRIBUTING](/CONTRIBUTING.md) for preferred commit messages
+4. Push to the branch (`git push origin feature/functionality`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the [GNU GENERAL PUBLIC LICENSE] - see the [LICENSE](./LICENSE) file for details.
