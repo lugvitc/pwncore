@@ -117,12 +117,6 @@ def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:
         decoded_token: JwtInfo = jwt.decode(
             token, config.jwt_secret, algorithms=["HS256"]
         )
-    except (
-        jwt.exceptions.DecodeError
-    ) as err:  # Will filter for invalid signature/expired tokens
-        logger.warning("Decode error", exc_info=err)
-        raise HTTPException(status_code=401)
-
     except jwt.exceptions.InvalidTokenError as err:
         logger.warning("Invalid token", exc_info=err)
         raise HTTPException(status_code=401)
