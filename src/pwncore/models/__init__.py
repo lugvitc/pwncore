@@ -10,36 +10,31 @@ from tortoise.contrib.pydantic.creator import pydantic_model_creator
 
 from pwncore.models.container import Container, Ports
 from pwncore.models.ctf import (
-    Problem,
-    SolvedProblem,
-    Hint,
-    ViewedHint,
-    Hint_Pydantic,
-    BaseProblem_Pydantic,
-    Problem_Pydantic,
     BaseProblem,
+    BaseProblem_Pydantic,
+    Hint,
+    Hint_Pydantic,
+    Problem,
+    Problem_Pydantic,
+    SolvedProblem,
+    ViewedHint,
 )
-from pwncore.models.user import (
-    User,
-    Team,
-    MetaTeam,
-    Team_Pydantic,
-    User_Pydantic,
-    MetaTeam_Pydantic,
-)
+from pwncore.models.powerups import Powerup, Powerup_Pydantic, PowerupType
 from pwncore.models.pre_event import (
     PreEventProblem,
+    PreEventProblem_Pydantic,
     PreEventSolvedProblem,
     PreEventUser,
-    PreEventProblem_Pydantic,
 )
-from pwncore.models.round2 import (
-    R2Problem,
-    R2Ports,
-    R2Container,
-    R2AttackRecord,
+from pwncore.models.round2 import R2AttackRecord, R2Container, R2Ports, R2Problem
+from pwncore.models.user import (
+    MetaTeam,
+    MetaTeam_Pydantic,
+    Team,
+    Team_Pydantic,
+    User,
+    User_Pydantic,
 )
-
 
 __all__ = (
     "Problem",
@@ -67,6 +62,9 @@ __all__ = (
     "R2Container",
     "R2Container_Pydantic",
     "R2AttackRecord",
+    "Powerup",
+    "PowerupType",
+    "Powerup_Pydantic",
 )
 
 
