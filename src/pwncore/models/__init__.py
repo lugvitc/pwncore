@@ -33,12 +33,6 @@ from pwncore.models.pre_event import (
     PreEventUser,
     PreEventProblem_Pydantic,
 )
-from pwncore.models.round2 import (
-    R2Problem,
-    R2Ports,
-    R2Container,
-    R2AttackRecord,
-)
 
 
 __all__ = (
@@ -62,11 +56,6 @@ __all__ = (
     "PreEventProblem_Pydantic",
     "Problem_Pydantic",
     "BaseProblem",
-    "R2Problem",
-    "R2Ports",
-    "R2Container",
-    "R2Container_Pydantic",
-    "R2AttackRecord",
 )
 
 
@@ -76,7 +65,3 @@ def get_annotations(cls, method=None):
 
 tortoise.contrib.pydantic.utils.get_annotations = get_annotations  # type: ignore[unused-ignore]
 tortoise.contrib.pydantic.creator.get_annotations = get_annotations  # type: ignore[unused-ignore]
-
-
-tortoise.Tortoise.init_models(["pwncore.models.round2"], "models")
-R2Container_Pydantic = pydantic_model_creator(R2Container)

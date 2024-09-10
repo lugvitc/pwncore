@@ -1,14 +1,9 @@
-import asyncio
 from datetime import date
-import itertools
 import logging
-import uuid
 
 from fastapi import APIRouter, Request, Response
 from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
-from tortoise.expressions import RawSQL, Q
-from tortoise.functions import Sum
 
 from pwncore.models import (
     Team,
@@ -19,12 +14,9 @@ from pwncore.models import (
     PreEventProblem,
 )
 from pwncore.config import config
-from pwncore.models.container import Container
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
 from pwncore.container import docker_client
-from pwncore.models.round2 import R2Container, R2Ports, R2Problem
-from pwncore.models.user import MetaTeam
 
 metadata = {
     "name": "admin",
@@ -61,108 +53,6 @@ async def _del_cont(id: str):
 
 
 @atomic()
-async def _create_container(prob: R2Problem, mteam: MetaTeam):
-    try:
-        container = await docker_client.containers.run(
-            name=f"{mteam.name}_{prob.pk}_{uuid.uuid4().hex}",
-            config={
-                "Image": prob.image_name,
-                # Detach stuff
-                "AttachStdin": False,
-                "AttachStdout": False,
-                "AttachStderr": False,
-                "Tty": False,
-                "OpenStdin": False,
-                **prob.image_config,
-            },
-        )
-
-        container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
-
-        await (
-            await container.exec(["/bin/bash", "/root/gen_flag", container_flag])
-        ).start(detach=True)
-
-        db_container = await R2Container.create(
-            docker_id=container.id, problem=prob, meta_tam=mteam, flag=container_flag
-        )
-
-        ports = []
-        for guest_port in prob.image_config["PortBindings"]:
-            port = int((await container.port(guest_port))[0]["HostPort"])
-            ports.append(R2Ports(port=port, container=db_container))
-
-        await R2Ports.bulk_create(ports)
-    except Exception as err:
-        try:
-            await container.kill()
-            await container.delete()
-        except Exception:
-            pass
-        logging.exception("Error while starting", exc_info=err)
-
-
-@router.get("/round2")
-async def round2(response: Response, req: Request):
-    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
-        response.status_code = 401
-        return
-
-    containers = await Container.all()
-
-    async with in_transaction():
-        async with asyncio.TaskGroup() as tg:
-            for container in containers:
-                tg.create_task(_del_cont(container.docker_id))
-
-        try:
-            await Container.all().delete()
-        except Exception:
-            response.status_code = 500
-            logging.exception("Error while initing round2")
-            return {"msg_code": config.msg_codes["db_error"]}
-
-        await MetaTeam.all().delete()
-        await MetaTeam.bulk_create(
-            [MetaTeam(name=NAMES[i], id=i + 1) for i in range(12)]
-        )
-
-        teams = (
-            await Team.all()
-            .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
-            .annotate(
-                tpoints=RawSQL(
-                    'COALESCE((SUM("solvedproblem"."penalty" * '
-                    '"solvedproblem__problem"."points")'
-                    ' + "team"."points"), 0)'
-                )
-            )
-            .annotate(
-                tpoints2=Sum(
-                    RawSQL(
-                        '"solvedproblem"."penalty" * "solvedproblem__problem"."points"'
-                    )
-                )
-            )
-            .order_by("-tpoints")
-        )
-
-        for i in range(12):
-            for team in teams[i::12]:
-                team.meta_team_id = i + 1  # type: ignore[attr-defined]
-                # print(mts[i].pk, mts)
-                await team.save(update_fields=["meta_team_id"])
-
-        # await Team.bulk_update(teams, fields=["meta_team_id"])
-
-        problems = await R2Problem.all()
-        mteams = await MetaTeam.all()
-
-        async with asyncio.TaskGroup() as tg:
-            for pm in itertools.product(problems, mteams):
-                tg.create_task(_create_container(*pm))
-
-
 @router.get("/union")
 async def calculate_team_coins(
     response: Response, req: Request
