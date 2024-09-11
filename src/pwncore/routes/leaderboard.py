@@ -37,7 +37,9 @@ class ExpiringLBCache:
                         ' + "team"."points"), 0)'
                     )
                 )
+                .group_by("id")
                 .order_by("-tpoints")
+                .values("name", "tpoints")
             ),
             separators=(",", ":"),
         ).encode("utf-8")
