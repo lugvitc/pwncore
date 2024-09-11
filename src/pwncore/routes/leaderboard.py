@@ -26,20 +26,21 @@ class ExpiringLBCache:
         self.data = []
 
     async def _do_update(self):
-        self.data = dumps((
-            await Team.all()
-            .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
-            .annotate(
-                tpoints=RawSQL(
-                    'COALESCE((SUM("solvedproblem"."penalty" * '
-                    '"solvedproblem__problem"."points")'
-                    ' + "team"."points"), 0)'
+        self.data = dumps(
+            (
+                await Team.all()
+                .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
+                .annotate(
+                    tpoints=RawSQL(
+                        'COALESCE((SUM("solvedproblem"."penalty" * '
+                        '"solvedproblem__problem"."points")'
+                        ' + "team"."points"), 0)'
+                    )
                 )
-            )
-            .group_by("id", "meta_team__name")
-            .order_by("-tpoints")
-            .values("name", "tpoints", "meta_team__name")
-        ), separators=(",", ":")).encode("utf-8")
+                .order_by("-tpoints")
+            ),
+            separators=(",", ":"),
+        ).encode("utf-8")
         self.last_update = monotonic()
 
     async def get_lb(self, req: Request):
