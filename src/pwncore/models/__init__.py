@@ -22,10 +22,8 @@ from pwncore.models.ctf import (
 from pwncore.models.user import (
     User,
     Team,
-    MetaTeam,
     Team_Pydantic,
     User_Pydantic,
-    MetaTeam_Pydantic,
 )
 from pwncore.models.pre_event import (
     PreEventProblem,
@@ -51,8 +49,6 @@ __all__ = (
     "User_Pydantic",
     "Team",
     "Team_Pydantic",
-    "MetaTeam",
-    "MetaTeam_Pydantic",
     "PreEventProblem_Pydantic",
     "Problem_Pydantic",
     "BaseProblem",
