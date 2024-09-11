@@ -5,13 +5,13 @@ import typing as t
 from logging import getLogger
 
 import jwt
-from fastapi import APIRouter, Header, Response, HTTPException, Depends
+from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
-from pwncore.models import Team, User
 from pwncore.config import config
+from pwncore.models import Team, User
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -117,8 +117,8 @@ def get_jwt(*, authorization: t.Annotated[str, Header()]) -> JwtInfo:
         decoded_token: JwtInfo = jwt.decode(
             token, config.jwt_secret, algorithms=["HS256"]
         )
-    except Exception as err:  # Will filter for invalid signature/expired tokens
-        logger.warning("Invalid login", exc_info=err)
+    except jwt.exceptions.InvalidTokenError as err:
+        logger.warning("Invalid token", exc_info=err)
         raise HTTPException(status_code=401)
     return decoded_token
 
