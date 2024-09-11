@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from json import dumps
 from time import monotonic
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 
 from tortoise.expressions import RawSQL, Q
 
@@ -25,7 +26,7 @@ class ExpiringLBCache:
         self.data = []
 
     async def _do_update(self):
-        self.data = (
+        self.data = dumps((
             await Team.all()
             .filter(Q(solved_problem__problem__visible=True) | Q(points__gte=0))
             .annotate(
@@ -38,8 +39,7 @@ class ExpiringLBCache:
             .group_by("id", "meta_team__name")
             .order_by("-tpoints")
             .values("name", "tpoints", "meta_team__name")
-        )
-
+        ), separators=(",", ":")).encode("utf-8")
         self.last_update = monotonic()
 
     async def get_lb(self, req: Request):
@@ -57,4 +57,4 @@ gcache = ExpiringLBCache(30.0)
 
 @router.get("")
 async def fetch_leaderboard(req: Request):
-    return await gcache.get_lb(req)
+    return Response(content=await gcache.get_lb(req), media_type="application/json")
