@@ -55,6 +55,9 @@ class Team(Model):
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
 
+    class PydanticMeta:
+        exclude = ["secret_hash"]
+
 
 Team_Pydantic = pydantic_model_creator(Team)
 User_Pydantic = pydantic_model_creator(User)
