@@ -46,10 +46,9 @@ async def team_members(jwt: RequireJwt):
 async def get_self_team(jwt: RequireJwt):
     team_id = jwt["team_id"]
 
-    team_model = await Team.get(id=team_id).prefetch_related("meta_team")
+    team_model = await Team.get(id=team_id)
 
     team = dict(await Team_Pydantic.from_tortoise_orm(team_model))
-    team["meta_team__name"] = getattr(team_model.meta_team, "name", None)
     # Get points from leaderboard
     # would be better is cache stores the values in a dict indexed by team id
     # for leaderboard_team in gcache.data:
