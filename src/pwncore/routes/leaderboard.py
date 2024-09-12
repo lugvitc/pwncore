@@ -18,12 +18,12 @@ router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 class ExpiringLBCache:
     period: float
     last_update: float
-    data: list[dict[str, float]]
+    data: bytes
 
     def __init__(self, period: float) -> None:
         self.period = period
         self.last_update = 0
-        self.data = []
+        self.data = b"[]"
 
     async def _do_update(self):
         self.data = dumps((
