@@ -1,0 +1,22 @@
+services:
+  web:
+    image: reg.lugvitc.net/pwncore:latest
+    ports:
+      - "11000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:lugvitcrocks@db:5432/postgres
+      - WORKERS=4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=lugvitcrocks
+      - POSTGRES_DB=pwncore
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - /home/lugvitc/cod3/postgresDB:/var/lib/postgresql/data
