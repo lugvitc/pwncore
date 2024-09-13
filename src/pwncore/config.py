@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 
 """
@@ -58,7 +59,8 @@ class Config:
 
 config = Config(
     development=True,
-    db_url="sqlite://:memory:",
+    # db_url="sqlite://:memory:",
+    db_url=os.environ.get("DATABASE_URL", "sqlite://:memory:"),
     docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
     # docker_url="http://google.com",
