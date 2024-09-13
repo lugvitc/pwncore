@@ -25,6 +25,7 @@ passlib = "^1.7.4"
 pyjwt = "^2.8.0"
 types-passlib = "^1.7.7.13"
 multidict = "^6.0.5"
+gunicorn = "^23.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.6.1"
