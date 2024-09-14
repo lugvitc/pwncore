@@ -1,22 +1,22 @@
-from datetime import date
 import logging
+from datetime import date
 
 from fastapi import APIRouter, Request, Response
 from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
 
-from pwncore.models import (
-    Team,
-    Problem,
-    Hint,
-    User,
-    PreEventSolvedProblem,
-    PreEventProblem,
-)
+import pwncore.containerASD as containerASD
 from pwncore.config import config
+from pwncore.models import (
+    Hint,
+    PreEventProblem,
+    PreEventSolvedProblem,
+    Problem,
+    Team,
+    User,
+)
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
-from pwncore.container import docker_client
 
 metadata = {
     "name": "admin",
@@ -47,7 +47,7 @@ NAMES = [
 
 
 async def _del_cont(id: str):
-    container = await docker_client.containers.get(id)
+    container = await containerASD.docker_client.containers.get(id)
     await container.kill()
     await container.delete()
 

@@ -1,28 +1,28 @@
 from __future__ import annotations
 
 from asyncio import create_task
-from logging import getLogger
 from collections import defaultdict
+from logging import getLogger
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
+import pwncore.containerASD as containerASD
+from pwncore.config import config
 from pwncore.models import (
-    Problem,
-    SolvedProblem,
     Container,
     Hint,
-    ViewedHint,
     Hint_Pydantic,
+    Problem,
+    SolvedProblem,
     Team,
+    ViewedHint,
 )
-from pwncore.config import config
 from pwncore.models.ctf import Problem_Pydantic
-from pwncore.routes.ctf.start import router as start_router
-from pwncore.routes.ctf.pre_event import router as pre_event_router
 from pwncore.routes.auth import RequireJwt
-from pwncore.container import docker_client
+from pwncore.routes.ctf.pre_event import router as pre_event_router
+from pwncore.routes.ctf.start import router as start_router
 
 # Metadata at the top for instant accessibility
 metadata = {
@@ -124,7 +124,9 @@ async def flag_post(
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        container = await docker_client.containers.get(team_container.docker_id)
+        container = await containerASD.docker_client.containers.get(
+            team_container.docker_id
+        )
         await container.kill()
         await container.delete()
         #

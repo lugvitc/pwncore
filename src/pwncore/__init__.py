@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
 
+import aiodocker
+from aiodocker import docker
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
+import pwncore.containerASD as containerASD
 import pwncore.docs as docs
 import pwncore.routes as routes
-
-from pwncore.container import docker_client
 from pwncore.config import config
 from pwncore.models import Container
 
@@ -18,6 +19,8 @@ async def app_lifespan(app: FastAPI):
     await Tortoise.init(db_url=config.db_url, modules={"models": ["pwncore.models"]})
     await Tortoise.generate_schemas()
 
+    containerASD.docker_client = aiodocker.Docker(url=config.docker_url)
+
     yield
     # Shutdown
     # Stop and remove all running containers
@@ -25,7 +28,9 @@ async def app_lifespan(app: FastAPI):
     await Container.all().delete()
     for db_container in containers:
         try:
-            container = await docker_client.containers.get(db_container["docker_id"])
+            container = await containerASD.docker_client.containers.get(
+                db_container["docker_id"]
+            )
             await container.kill()
             await container.delete()
         except (
