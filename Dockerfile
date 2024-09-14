@@ -1,7 +1,5 @@
 FROM python:3.12-slim
 
-ENV DOCKER_HOST=unix:///var/run/docker.sock
-
 WORKDIR /app
 
 RUN pip install poetry

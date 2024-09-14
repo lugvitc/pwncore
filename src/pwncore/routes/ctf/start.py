@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import uuid
 from logging import getLogger
 
 from fastapi import APIRouter, Response
-import uuid
 from tortoise.transactions import in_transaction
 
-from pwncore.models import Problem, Container, Ports
-from pwncore.container import docker_client
+import pwncore.containerASD as containerASD
 from pwncore.config import config
+from pwncore.models import Container, Ports, Problem
 from pwncore.routes.auth import RequireJwt
 
 router = APIRouter(tags=["ctf"])
@@ -37,11 +37,8 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         team_container = await Container.filter(team=team_id, problem=ctf_id)
         if team_container:
             a, b = team_container[0], team_container[1:]
-            db_ports = await a.ports.all().values(
-                "port"
-            )  # Get ports from DB
-            ports = [db_port["port"]
-                     for db_port in db_ports]  # Create a list out of it
+            db_ports = await a.ports.all().values("port")  # Get ports from DB
+            ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
 
             for db_container in b:
                 try:
@@ -49,7 +46,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                 except Exception:
                     pass
 
-                container = await docker_client.containers.get(db_container.docker_id)
+                container = await containerASD.docker_client.containers.get(
+                    db_container.docker_id
+                )
                 await container.kill()
                 await container.delete()
 
@@ -71,7 +70,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
 
         # Run
-        container = await docker_client.containers.run(
+        container = await containerASD.docker_client.containers.run(
             name=container_name,
             config={
                 "Image": ctf.image_name,
@@ -81,7 +80,8 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                 "AttachStderr": False,
                 "Tty": False,
                 "OpenStdin": False,
-                **ctf.image_config,
+                "HostConfig": {"PublishAllPorts": True},
+                # **ctf.image_config,
             },
         )
 
@@ -139,7 +139,9 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
             return {"msg_code": config.msg_codes["db_error"]}
 
         for db_container in containers:
-            container = await docker_client.containers.get(db_container["docker_id"])
+            container = await containerASD.docker_client.containers.get(
+                db_container["docker_id"]
+            )
             await container.kill()
             await container.delete()
 
@@ -169,7 +171,9 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        container = await docker_client.containers.get(team_container.docker_id)
+        container = await containerASD.docker_client.containers.get(
+            team_container.docker_id
+        )
         await container.kill()
         await container.delete()
 
