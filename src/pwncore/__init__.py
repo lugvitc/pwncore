@@ -40,7 +40,7 @@ async def app_lifespan(app: FastAPI):
 
     # close_connections is deprecated, not sure how to use connections.close_all()
     await Tortoise.close_connections()
-    await docker_client.close()
+    await containerASD.docker_client.close()
 
 
 app = FastAPI(
