@@ -52,13 +52,12 @@ app = FastAPI(
 app.include_router(routes.router)
 
 origins = [
-    "http://ctf.lugvitc.org",
-    "https://ctf.lugvitc.org",
+    "http://c0d.lugvitc.net",
+    "https://c0d.lugvitc.net",
 ]
 
 if config.development:
-    origins.append("http://localhost:5173")
-    origins.append("http://localhost:4173")
+    origins.append("*")
 
 app.add_middleware(
     CORSMiddleware,

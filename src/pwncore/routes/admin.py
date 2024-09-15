@@ -29,7 +29,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 if config.development:
     logging.basicConfig(level=logging.INFO)
 
-ADMIN_HASH = "$2b$12$K2LsLGS/Mahksh0V6xZYKOviNEHMv3Of5f1zhyF6CWJ8rJIcKnSqu"
+ADMIN_HASH = "$2b$12$USIGDWgl8WSgSoGauDTKE.ZAKyInaJn84fsZ.ARA6FmntIZeNCTUq"
 NAMES = [
     "Mimas",
     "Enceladus",
@@ -143,8 +143,8 @@ async def init_db(
         description="How to master the art of solving CTFs? Git good nub.",
         author="Aadivishnu and Shoubhit",
         points=300,
-        image_name="test:latest",
-        image_config={"PortBindings": {"22/tcp": [{}], "5000/tcp": [{}]}},
+        image_name="reg.lugvitc.net/key:latest",
+        image_config={"PortBindings": {"22/tcp": [{}]}},
     )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
     await Team.create(
