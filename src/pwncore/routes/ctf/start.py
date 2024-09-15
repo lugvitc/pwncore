@@ -87,7 +87,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         )
 
         await (
-            await container.exec(["/bin/bash", "/root/gen_flag", container_flag])
+            await container.exec(["/root/gen_flag", container_flag])
         ).start(detach=True)
 
         try:
