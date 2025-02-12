@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request, Response, HTTPException
 from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
 
@@ -210,3 +210,25 @@ async def init_db(
     await SolvedProblem.create(team_id=2, problem_id=2)
     await SolvedProblem.create(team_id=1, problem_id=2)
     return {"status": "success", "message": "test db init success"}
+
+
+@router.delete("/team/{team_id}")
+@atomic()
+async def delete_team(
+    team_id: int,
+    response: Response,
+    req: Request
+):
+    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+        response.status_code = 401
+        return
+    
+    async with in_transaction():
+        team = await Team.get(id=team_id)
+        if not team:
+            response.status_code = 404
+            return {"detail": "Team not found"}
+        user_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
+        # TODO: Add container cleanup if teams have active containers
+        await team.delete()
+    return {"status": "success", "message": f"Team {team_id} deleted with all related data"}
