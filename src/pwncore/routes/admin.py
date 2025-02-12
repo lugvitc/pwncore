@@ -29,7 +29,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 if config.development:
     logging.basicConfig(level=logging.INFO)
 
-ADMIN_HASH = "$2b$12$USIGDWgl8WSgSoGauDTKE.ZAKyInaJn84fsZ.ARA6FmntIZeNCTUq"
+ADMIN_HASH = "$2b$12$d8plf7WTbzPbz7bbklwV0.NYEGG5Q9R/n.5n3wmAmASs5Qp/seIO6" #lutest
 NAMES = [
     "Mimas",
     "Enceladus",
@@ -82,6 +82,7 @@ async def calculate_team_coins(
                 team.coins += (await PreEventProblem.get(id=ctf_id)).points
             logging.info(f"{team.id}) {team.name}: {team.coins}")
             await team.save()
+    return {"message": "Team coins calculated successfully"}
 
 
 @router.get("/create")
@@ -208,3 +209,4 @@ async def init_db(
     await SolvedProblem.create(team_id=2, problem_id=1)
     await SolvedProblem.create(team_id=2, problem_id=2)
     await SolvedProblem.create(team_id=1, problem_id=2)
+    return {"status": "success", "message": "test db init success"}

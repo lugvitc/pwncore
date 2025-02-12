@@ -151,6 +151,15 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+# Mac specific
+**/.DS_Store
+# VS Code - ignore tree-wide
+**/.vscode/
+**/*.code-workspace
+**/.history/
+# Project specific
+src/pwnccc.txt
+**/pyvenv.cfg
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
