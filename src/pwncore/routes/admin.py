@@ -17,6 +17,8 @@ from pwncore.models import (
 )
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
+from pwncore.models.user import User, User_Pydantic
+
 
 metadata = {
     "name": "admin",
@@ -232,3 +234,16 @@ async def delete_team(
         # TODO: Add container cleanup if teams have active containers
         await team.delete()
     return {"status": "success", "message": f"Team {team_id} deleted with all related data"}
+
+@router.get("/user/list")
+@atomic()
+async def list_all(
+    response: Response,
+    req: Request
+):
+    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+        response.status_code = 401
+        return
+    
+    users = await User.all()
+    return await User_Pydantic.from_queryset(User.filter(id__in=[user.id for user in users]))
