@@ -18,6 +18,7 @@ from pwncore.models import (
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
 from pwncore.models.user import User, User_Pydantic
+from pwncore.models.container import Container
 
 
 metadata = {
@@ -230,10 +231,21 @@ async def delete_team(
         if not team:
             response.status_code = 404
             return {"detail": "Team not found"}
-        user_tags = await User.filter(team_id=team_id).values_list("tag", flat=True)
-        # TODO: Add container cleanup if teams have active containers
+        
+        #clean related containers
+        containers = await team.containers.all()
+        for c in containers:
+            try:
+                docker_container = await containerASD.docker_client.containers.get(c.docker_id)
+                await docker_container.kill()
+                await docker_container.delete()
+            except Exception as e:
+                logging.error(f"container clean up failed {c.docker_id} team {team_id}: {e}")
+        
         await team.delete()
+        
     return {"status": "success", "message": f"Team {team_id} deleted with all related data"}
+
 
 @router.get("/user/list")
 @atomic()
