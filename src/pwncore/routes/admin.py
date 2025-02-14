@@ -258,7 +258,7 @@ async def list_all(
         return
     
     users = await User.all()
-    return await User_Pydantic.from_queryset(User.filter(id__in=[user.id for user in users]))
+    return await User_Pydantic.from_queryset(User.all())
 
 @router.delete("/user/{user_id}")
 @atomic()
