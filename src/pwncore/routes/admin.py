@@ -260,7 +260,7 @@ async def del_user(
         return
     async with in_transaction():
         user = await User.get(id=user_id)
-        #deleting dependent records first, else error 500
-        await SolvedProblem.filter(team_id=user.team_id).delete()
-        await user.delete()
-        return {"status": "success", "message": f"Team {user_id} deleted with all related data"}
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        await user.delete()  # cascade will automatically delete dependent records 
+        return {"status": "success", "message": f"User {user_id} deleted with all related data"}

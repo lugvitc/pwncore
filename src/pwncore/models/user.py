@@ -27,7 +27,7 @@ class User(Model):
     phone_num = fields.CharField(15)
 
     team: fields.ForeignKeyNullableRelation[Team] = fields.ForeignKeyField(
-        "models.Team", "members", null=True, on_delete=fields.OnDelete.SET_NULL
+        "models.Team", "members", null=True, on_delete=fields.CASCADE
     )
 
     async def save(self, *args, **kwargs):
