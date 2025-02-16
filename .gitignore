@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 src/pwncore/utils.py
+db_data/

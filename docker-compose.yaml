@@ -1,6 +1,8 @@
 services:
     web:
-        image: reg.lugvitc.net/pwncore:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
         ports:
             - ${PORT}:8000
         environment:
@@ -11,6 +13,7 @@ services:
             - ${CONFIG_FILE}:/app/src/pwncore/config.py
         depends_on:
             - db
+
     db:
         image: postgres:14
         user: ${UID}:${GID}
@@ -19,13 +22,27 @@ services:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
             - PGDATA=/var/lib/postgresql/data/pgdata
+        healthcheck: 
+            interval: 10s
+            retries: 10
+            test: "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""
+            timeout: 2s
         volumes:
             - ${DATA_PATH}:/var/lib/postgresql/data
         ports:
             - 5432:5432
-    admin:
-        image: mathesar/mathesar-prod:latest
-        ports:
-            - ${PORT_ADMIN}:8000
-        depends_on:
-            - db
+
+    # admin_db:
+    #     image: nocodb/nocodb:latest
+    #     environment:
+    #         # - NC_DB=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    #         # - NC_DB=postgres://db:5432?u=${POSTGRES_USER}&p={POSTGRES_PASSWORD}&d=${POSTGRES_DB}
+    #     volumes:
+    #         - nc_data:/usr/app/data
+    #     ports:
+    #         - ${PORT_ADMIN}:8080
+    #     depends_on:
+    #         - db
+
+# volumes:
+#     nc_data: {}
