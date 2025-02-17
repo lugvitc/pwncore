@@ -1,5 +1,7 @@
 import os
 from dataclasses import dataclass
+from enum import Enum
+from datetime import timedelta
 
 """
 Sample messages:
@@ -40,8 +42,14 @@ msg_codes = {
     "insufficient_coins": 22,
     "user_or_email_exists": 23,
     "users_not_found": 24,
+    "attack_def_team_not_found": 25
 }
 
+class PowerUpType(str, Enum):
+    SHIELD = "SHIELD"
+    POINT_SIPHON = "POINT_SIPHON"
+    SABOTAGE = "SABOTAGE"
+    UPGRADE = "UPGRADE"
 
 @dataclass
 class Config:
@@ -55,7 +63,7 @@ class Config:
     jwt_valid_duration: int
     hint_penalty: int
     max_members_per_team: int
-
+    powerups: dict[PowerUpType, dict[str, any]]
 
 config = Config(
     development=True,
@@ -71,4 +79,21 @@ config = Config(
     msg_codes=msg_codes,
     hint_penalty=50,
     max_members_per_team=3,
+    powerups={
+        PowerUpType.UPGRADE: {
+            "cost": 100,
+        },
+        PowerUpType.SHIELD: {
+            "duration": timedelta(seconds=10),
+            "cost": 200,
+        },
+        PowerUpType.POINT_SIPHON: {
+            "duration": timedelta(seconds=15),
+            "cost": 150,
+        },
+        PowerUpType.SABOTAGE: {
+            "duration": timedelta(seconds=5),
+            "cost": 500,
+        },
+    }
 )

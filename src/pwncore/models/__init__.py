@@ -25,6 +25,12 @@ from pwncore.models.user import (
     Team_Pydantic,
     User_Pydantic,
 )
+from pwncore.models.round2 import (
+    AttackDefProblem,
+    AttackDefTeam,
+    ActivatedPowerups,
+    ActivatedPowerups_Pydantic
+)
 from pwncore.models.pre_event import (
     PreEventProblem,
     PreEventSolvedProblem,
@@ -52,6 +58,10 @@ __all__ = (
     "PreEventProblem_Pydantic",
     "Problem_Pydantic",
     "BaseProblem",
+    "AttackDefProblem",
+    "AttackDefTeam",
+    "ActivatedPowerups",
+    "ActivatedPowerups_Pydantic"
 )
 
 

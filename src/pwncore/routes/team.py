@@ -5,7 +5,16 @@ from pydantic import BaseModel
 from tortoise.transactions import atomic
 
 from pwncore.config import config
-from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
+from pwncore.models import (
+    Team,
+    User,
+    Team_Pydantic,
+    User_Pydantic,
+    Container,
+    ActivatedPowerups,
+    ActivatedPowerups_Pydantic,
+    AttackDefTeam
+)
 from pwncore.routes.auth import RequireJwt
 
 # from pwncore.routes.leaderboard import gcache
@@ -116,3 +125,13 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
         )
 
     return result
+
+@router.get("/round2/powerups")
+async def get_team_powerups(response: Response, jwt:RequireJwt):
+    team_id = jwt["team_id"]
+    team = await Team.get(id=team_id)
+    attack_def_team = await AttackDefTeam.get(team_id=team_id)
+    if (attack_def_team is None):
+        return {"msg_code": config.msg_codes["attack_def_team_not_found"]}
+    activated_powerups = await ActivatedPowerups_Pydantic.from_queryset(ActivatedPowerups.filter(used_by_id=attack_def_team.id))
+    return activated_powerups    
