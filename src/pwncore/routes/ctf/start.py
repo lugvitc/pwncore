@@ -26,10 +26,10 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             "22/tcp": [{}]      # Let docker randomly assign ports
         }
     }
-    
+
     Notes:
-    - image_config has been commented out in the Problem model for now. 
-    - It's not necessary to pass the ports to expose in image_config, 
+    - image_config has been commented out in the Problem model for now.
+    - It's not necessary to pass the ports to expose in image_config,
       Docker will automatically map a random port to the container's exposed port.
     """
     async with in_transaction():

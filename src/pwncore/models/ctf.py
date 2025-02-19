@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from math import tanh
-from typing import Any
 
 from tortoise.models import Model
 from tortoise import fields
@@ -31,7 +30,7 @@ class BaseProblem(Model):
 
 class Problem(BaseProblem):
     image_name = fields.TextField()
-    
+
     # commenting it for now, may be used later
     # image_config: fields.Field[dict[str, Any]] = fields.JSONField(
     #     null=True
