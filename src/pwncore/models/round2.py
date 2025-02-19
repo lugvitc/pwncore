@@ -16,10 +16,5 @@ class AttackDefProblem(Model):
         "models.Problem", related_name="problems"
     )
 
-    def __repr__(self):
-        return (
-            f"<AttackDefProblem id={self.id} problem_id={self.problem_id} team_id={self.team_id_}>" # team_id_ to access id via relation
-        )
-
 
 AttackDefProblem_Pydantic = pydantic_model_creator(AttackDefProblem)
