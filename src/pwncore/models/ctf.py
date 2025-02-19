@@ -39,7 +39,8 @@ class Problem(BaseProblem):
     ma = fields.IntField(default=500)
     visible = fields.BooleanField(default=True)
     tags = fields.SmallIntField(default=1)  # by default misc, 16 tag limit
-
+    difficulty_level = fields.SmallIntField(default=1)
+    problem_type = fields.TextField(default="jeopardy") #Can use enum too
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
