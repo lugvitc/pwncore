@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 
 import aiodocker
-from aiodocker import docker
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
