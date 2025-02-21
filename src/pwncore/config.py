@@ -55,8 +55,9 @@ class Config:
     jwt_valid_duration: int
     hint_penalty: int
     max_members_per_team: int
-    static_ctf_dir: str
     staticfs_url: str
+    staticfs_data_dir: str
+    staticfs_jwt_secret: str
 
 
 config = Config(
@@ -73,6 +74,7 @@ config = Config(
     msg_codes=msg_codes,
     hint_penalty=50,
     max_members_per_team=3,
-    static_ctf_dir="/d/static_ctfs",  # TODO: PLEASE CHANGE THIS ON YOUR MAHCHINE
     staticfs_url="http://localhost:8080",
+    staticfs_data_dir=os.environ.get("STATIC_DATA_DIR", "/data"),
+    staticfs_jwt_secret="PyMioVKFXHymQd+n7q5geOsT6fSYh3gDVw3GqilW+5U="
 )

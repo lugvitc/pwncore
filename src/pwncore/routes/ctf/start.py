@@ -78,11 +78,10 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         if ctf.static:
             container_id = uuid.uuid4().hex
             payload = {
-                "id": team_id,
+                "id": str(team_id),
                 "containerId": container_id,
-                "exp": config.jwt_valid_duration,
             }
-            token = jwtlib.encode(payload, config.jwt_secret, algorithm="HS256")
+            token = jwtlib.encode(payload, config.staticfs_jwt_secret, algorithm="HS256")
             container = await containerASD.docker_client.containers.run(
                 name=container_name,
                 config={
@@ -94,9 +93,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     "OpenStdin": False,
                     "HostConfig": {
                         "AutoRemove": True,
-                        "Binds": f"{config.static_ctf_dir}/{team_id}/{container_id}:/dist",
+                        "Binds": [f"{config.staticfs_data_dir}/{team_id}/{container_id}:/dist"],
                     },
-                    "Cmd": f"/root/gen_flag {container_flag}",
+                    "Cmd": ["/root/gen_flag", container_flag],
                 },
             )
             try:
