@@ -34,6 +34,7 @@ class Problem(BaseProblem):
     image_config: fields.Field[dict[str, Any]] = fields.JSONField(
         null=True
     )  # type: ignore[assignment]
+    static = fields.BooleanField(default=False)
 
     mi = fields.IntField(default=50)
     ma = fields.IntField(default=500)
