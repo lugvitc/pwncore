@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from math import tanh
-from typing import Any
 
 from tortoise.models import Model
 from tortoise import fields
@@ -31,9 +30,11 @@ class BaseProblem(Model):
 
 class Problem(BaseProblem):
     image_name = fields.TextField()
-    image_config: fields.Field[dict[str, Any]] = fields.JSONField(
-        null=True
-    )  # type: ignore[assignment]
+
+    # commenting it for now, may be used later
+    # image_config: fields.Field[dict[str, Any]] = fields.JSONField(
+    #     null=True
+    # )  # type: ignore[assignment]
     static = fields.BooleanField(default=False)
 
     mi = fields.IntField(default=50)
@@ -44,7 +45,7 @@ class Problem(BaseProblem):
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
-        exclude = ["image_name", "image_config", "mi", "ma", "visible"]
+        exclude = ["image_name", "mi", "ma", "visible"]
 
     async def _solves(self) -> int:
         return await SolvedProblem.filter(problem=self).count()

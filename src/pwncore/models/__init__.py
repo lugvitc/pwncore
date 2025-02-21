@@ -6,7 +6,6 @@ Contains all Pydantic and Tortoise ORM models
 import typing
 
 import tortoise
-from tortoise.contrib.pydantic.creator import pydantic_model_creator
 
 from pwncore.models.container import Container, Ports
 from pwncore.models.ctf import (

@@ -27,6 +27,11 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             "22/tcp": [{}]      # Let docker randomly assign ports
         }
     }
+
+    Notes:
+    - image_config has been commented out in the Problem model for now.
+    - It's not necessary to pass the ports to expose in image_config,
+      Docker will automatically map a random port to the container's exposed port.
     """
     async with in_transaction():
         ctf = await Problem.get_or_none(id=ctf_id, visible=True)
@@ -147,12 +152,13 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                 )
 
                 # Get ports and save them
+                guest_ports = (await container.show())["NetworkSettings"]["Ports"]
                 ports = []  # List to return back to frontend
-                for guest_port in ctf.image_config["PortBindings"]:
+                for guest_port in guest_ports:
                     # Docker assigns the port to the IPv4 and IPv6 addresses
                     # Since we only require IPv4, we select the zeroth item
                     # from the returned list.
-                    port = int((await container.port(guest_port))[0]["HostPort"])
+                    port = int(guest_ports[guest_port][0]["HostPort"])
                     ports.append(port)
                     await Ports.create(port=port, container=db_container)
         except Exception as err:
