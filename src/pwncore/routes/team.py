@@ -27,14 +27,46 @@ class UserRemoveBody(BaseModel):
     tag: str
 
 
-@router.get("/list")
+@router.get("/list",
+    summary="Get all teams",
+    description="""Returns a complete list of registered teams.
+    
+    Example response:
+    ```json
+    [
+        {
+            "id": 1,
+            "name": "Team Alpha",
+            "coins": 100,
+            "points": 250
+        }
+    ]
+    ```
+    """)
 async def team_list():
     teams = await Team_Pydantic.from_queryset(Team.all())
     return teams
 
 
 # Unable to test as adding users returns an error
-@router.get("/members")
+@router.get("/members",
+    summary="Get team members",
+    description="""Returns a list of all members in the authenticated team.
+    
+    Example response:
+    ```json
+    [
+        {
+            "tag": "23BCE1000",
+            "name": "John Doe",
+            "email": "john@example.com",
+            "phone_num": "1234567890"
+        }
+    ]
+    ```
+    
+    Note: Returns an empty list if no members are found.
+    """)
 async def team_members(jwt: RequireJwt):
     team_id = jwt["team_id"]
     members = await User_Pydantic.from_queryset(User.filter(team_id=team_id))
@@ -42,7 +74,20 @@ async def team_members(jwt: RequireJwt):
     return members
 
 
-@router.get("/me")
+@router.get("/me",
+    summary="Get authenticated team details",
+    description="""Returns the details of the currently authenticated team.
+    
+    Example response:
+    ```json
+    {
+        "id": 1,
+        "name": "Team Alpha",
+        "coins": 100,
+        "points": 250
+    }
+    ```
+    """)
 async def get_self_team(jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -60,7 +105,29 @@ async def get_self_team(jwt: RequireJwt):
 
 
 @atomic()
-@router.post("/add")
+@router.post("/add",
+    summary="Add member to team",
+    description="""Add a new member to the authenticated team.
+    
+    Example request:
+    ```json
+    {
+        "tag": "23BCE1000",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone_num": "1234567890"
+    }
+    ```
+    
+    Example response:
+    ```json
+    {
+        "msg_code": 18
+    }
+    ```
+    
+    Note: Returns error 403 if user already exists in a team.
+    """)
 async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -85,7 +152,26 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
 
 
 @atomic()
-@router.post("/remove")
+@router.post("/remove",
+    summary="Remove member from team",
+    description="""Remove an existing member from the authenticated team.
+    
+    Example request:
+    ```json
+    {
+        "tag": "23BCE1000"
+    }
+    ```
+    
+    Example response:
+    ```json
+    {
+        "msg_code": 19
+    }
+    ```
+    
+    Note: Returns error 403 if user is not found in team.
+    """)
 async def remove_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -102,7 +188,20 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
     return {"msg_code": config.msg_codes["user_removed"]}
 
 
-@router.get("/containers")
+@router.get("/containers",
+    summary="Get team containers",
+    description="""Get all containers associated with the authenticated team.
+    
+    Example response:
+    ```json
+    {
+        "1": [8080, 22],
+        "2": [8081]
+    }
+    ```
+    
+    Note: Object keys are problem IDs and values are lists of exposed ports.
+    """)
 async def get_team_containers(response: Response, jwt: RequireJwt):
     containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
         "ports", "problem"

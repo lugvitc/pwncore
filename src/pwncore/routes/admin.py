@@ -53,7 +53,19 @@ async def _del_cont(id: str):
 
 
 @atomic()
-@router.get("/union")
+@router.get("/union",
+    summary="Calculate and update team coins",
+    description="""Calculates team points from pre-event CTFs and updates team coins.
+    
+    Requires admin authentication via request body.
+    
+    Example response on success:
+    ```json
+    null
+    ```
+    
+    Note: Returns 401 if authentication fails.
+    """)
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
@@ -84,7 +96,26 @@ async def calculate_team_coins(
             await team.save()
 
 
-@router.get("/create")
+@router.get("/create",
+    summary="Initialize database with sample data",
+    description="""Creates initial database entries including:
+    - Problems
+    - Pre-event problems
+    - Teams
+    - Users
+    - Hints
+    - Solved problems
+    
+    Requires admin authentication via request body.
+    
+    Example response on success:
+    ```json
+    null
+    ```
+    
+    Note: Returns 401 if authentication fails.
+    This endpoint should only be used in development environment.
+    """)
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once

@@ -53,7 +53,24 @@ class Flag(BaseModel):
     flag: str
 
 
-@router.get("/completed")
+@router.get("/completed",
+    summary="Get completed problems",
+    description="""Retrieve all problems solved by the authenticated team.
+    
+    Example response:
+    ```json
+    [
+        {
+            "id": 1,
+            "name": "Web 101",
+            "description": "Basic web exploitation",
+            "points": 100,
+            "category": "web",
+            "visible": true
+        }
+    ]
+    ```
+    """)
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
     ViewedHint.filter(team_id=team_id).annotate()
@@ -63,7 +80,26 @@ async def completed_problem_get(jwt: RequireJwt):
     return problems
 
 
-@router.get("/list")
+@router.get("/list",
+    summary="List all CTF problems",
+    description="""Get all visible CTF problems with adjusted points based on hints used.
+    
+    Example response:
+    ```json
+    [
+        {
+            "id": 1,
+            "name": "Crypto 101",
+            "description": "Basic cryptography challenge",
+            "points": 90,
+            "category": "crypto",
+            "visible": true
+        }
+    ]
+    ```
+    
+    Note: Points are adjusted based on hints viewed by the team.
+    """)
 async def ctf_list(jwt: RequireJwt):
     team_id = jwt["team_id"]
     problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
@@ -90,7 +126,29 @@ async def update_points(req: Request, ctf_id: int):
 
 
 @atomic()
-@router.post("/{ctf_id}/flag")
+@router.post("/{ctf_id}/flag",
+    summary="Submit flag for problem",
+    description="""Submit a flag for a specific CTF problem.
+    
+    Example request:
+    ```json
+    {
+        "flag": "flag{th1s_1s_4_fl4g}"
+    }
+    ```
+    
+    Example response:
+    ```json
+    {
+        "status": true
+    }
+    ```
+    
+    Note:
+    - Returns 404 if problem not found
+    - Returns 401 if problem already solved
+    - Returns 500 if database error occurs
+    """)
 async def flag_post(
     req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
 ):
@@ -138,7 +196,23 @@ async def flag_post(
 
 
 @atomic()
-@router.get("/{ctf_id}/hint")
+@router.get("/{ctf_id}/hint",
+    summary="Get next available hint",
+    description="""Retrieve the next available hint for a problem.
+    
+    Example response:
+    ```json
+    {
+        "text": "Look at the HTTP headers",
+        "order": 1
+    }
+    ```
+    
+    Note:
+    - Returns 404 if problem not found
+    - Returns 403 if no more hints available
+    - May deduct coins if team has sufficient balance
+    """)
 async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
     problem = await Problem.exists(id=ctf_id, visible=True)
@@ -177,7 +251,22 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     }
 
 
-@router.get("/{ctf_id}/viewed_hints")
+@router.get("/{ctf_id}/viewed_hints",
+    summary="Get viewed hints",
+    description="""Get all hints viewed by the team for a specific problem.
+    
+    Example response:
+    ```json
+    [
+        {
+            "id": 1,
+            "text": "First hint text",
+            "order": 0,
+            "problem_id": 1
+        }
+    ]
+    ```
+    """)
 async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     team_id = jwt["team_id"]
     viewed_hints = await Hint_Pydantic.from_queryset(
@@ -186,7 +275,24 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     return viewed_hints
 
 
-@router.get("/{ctf_id}")
+@router.get("/{ctf_id}",
+    summary="Get problem details",
+    description="""Get details of a specific CTF problem.
+    
+    Example response:
+    ```json
+    {
+        "id": 1,
+        "name": "Binary 101",
+        "description": "Basic binary exploitation",
+        "points": 150,
+        "category": "pwn",
+        "visible": true
+    }
+    ```
+    
+    Note: Returns 404 if problem not found or not visible
+    """)
 async def ctf_get(ctf_id: int, response: Response):
     problem = await Problem_Pydantic.from_queryset(
         Problem.filter(id=ctf_id, visible=True)

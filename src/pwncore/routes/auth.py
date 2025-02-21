@@ -39,7 +39,52 @@ def normalise_tag(tag: str):
 
 
 @atomic()
-@router.post("/signup")
+@router.post("/signup",
+    description="""Create a new team with associated members.
+    
+    Request body example:
+    ```json
+    {
+        "name": "TeamAwesome",
+        "password": "securepassword123",
+        "tags": ["user1", "user2", "user3"]
+    }
+    ```
+    
+    Responses:
+    - 200: Successful signup
+    ```json
+    {
+        "msg_code": 13
+    }
+    ```
+    - 406: Team already exists
+    ```json
+    {
+        "msg_code": 17
+    }
+    ```
+    - 404: Users not found
+    ```json
+    {
+        "msg_code": 24,
+        "tags": ["user2", "user3"]
+    }
+    ```
+    - 401: Users already in team
+    ```json
+    {
+        "msg_code": 20,
+        "tags": ["user1"]
+    }
+    ```
+    - 500: Database error
+    ```json
+    {
+        "msg_code": 0
+    }
+    ```
+    """)
 async def signup_team(team: SignupBody, response: Response):
     team.name = team.name.strip()
     members = set(map(normalise_tag, team.tags))
@@ -83,7 +128,39 @@ async def signup_team(team: SignupBody, response: Response):
     return {"msg_code": config.msg_codes["signup_success"]}
 
 
-@router.post("/login")
+@router.post("/login",
+    description="""Authenticate a team and receive a JWT token.
+    
+    Request body example:
+    ```json
+    {
+        "name": "TeamAwesome",
+        "password": "securepassword123"
+    }
+    ```
+    
+    Responses:
+    - 200: Successful login
+    ```json
+    {
+        "msg_code": 15,
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "token_type": "bearer"
+    }
+    ```
+    - 404: Team not found
+    ```json
+    {
+        "msg_code": 10
+    }
+    ```
+    - 401: Wrong password
+    ```json
+    {
+        "msg_code": 14
+    }
+    ```
+    """)
 async def team_login(team_data: AuthBody, response: Response):
     # TODO: Simplified logic since we're not doing refresh tokens.
 

@@ -15,7 +15,49 @@ router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
 
 
-@router.post("/{ctf_id}/start")
+@router.post("/{ctf_id}/start",
+    summary="Start CTF challenge container",
+    description="""Start a new Docker container for the specified CTF challenge.
+    
+    Example response (success):
+    ```json
+    {
+        "msg_code": 3,
+        "ports": [8080, 22],
+        "ctf_id": 1
+    }
+    ```
+    
+    Error responses:
+    - 404: Challenge not found
+    ```json
+    {
+        "msg_code": 2
+    }
+    ```
+    - 400: Container already running
+    ```json
+    {
+        "msg_code": 7,
+        "ports": [8080, 22],
+        "ctf_id": 1
+    }
+    ```
+    - 400: Container limit reached
+    ```json
+    {
+        "msg_code": 8
+    }
+    ```
+    - 500: Database error
+    ```json
+    {
+        "msg_code": 0
+    }
+    ```
+    
+    Note: Requires JWT authentication token.
+    """)
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
@@ -130,7 +172,27 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         }
 
 
-@router.post("/stopall")
+@router.post("/stopall",
+    summary="Stop all team containers",
+    description="""Stop and remove all Docker containers belonging to the authenticated team.
+    
+    Example response (success):
+    ```json
+    {
+        "msg_code": 5
+    }
+    ```
+    
+    Error response:
+    - 500: Database error
+    ```json
+    {
+        "msg_code": 0
+    }
+    ```
+    
+    Note: Requires JWT authentication token.
+    """)
 async def stopall_docker_container(response: Response, jwt: RequireJwt):
     async with in_transaction():
         team_id = jwt["team_id"]  # From JWT
@@ -155,7 +217,39 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
         return {"msg_code": config.msg_codes["containers_team_stop"]}
 
 
-@router.post("/{ctf_id}/stop")
+@router.post("/{ctf_id}/stop",
+    summary="Stop specific CTF container",
+    description="""Stop and remove a specific CTF challenge container.
+    
+    Example response (success):
+    ```json
+    {
+        "msg_code": 4
+    }
+    ```
+    
+    Error responses:
+    - 404: Challenge not found
+    ```json
+    {
+        "msg_code": 2
+    }
+    ```
+    - 400: Container not found
+    ```json
+    {
+        "msg_code": 6
+    }
+    ```
+    - 500: Database error
+    ```json
+    {
+        "msg_code": 0
+    }
+    ```
+    
+    Note: Requires JWT authentication token.
+    """)
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     async with in_transaction():
         # Let this work on invisible problems incase
