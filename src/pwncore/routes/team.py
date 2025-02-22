@@ -26,6 +26,9 @@ class UserAddBody(BaseModel):
 class UserRemoveBody(BaseModel):
     tag: str
 
+class TableTNBody(BaseModel):
+    table_tn: int | None
+
 
 @router.get("/list")
 async def team_list():
@@ -116,3 +119,27 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
         )
 
     return result
+
+@atomic()
+@router.post("/tabletn/{id}")
+async def upsert_table_tn(id: int, data: TableTNBody, response: Response, jwt: RequireJwt):
+    # Admin-only access
+    if not jwt.get("is_admin", False):
+        response.status_code = 403
+        return {"msg_code": "not_authorized"}
+
+    # Get the team by ID
+    team = await Team.get_or_none(id=id)
+    if not team:
+        response.status_code = 404
+        return {"msg_code": "team_not_found"}
+
+    # Upsert the TableTN value
+    try:
+        team.table_tn = data.table_tn
+        await team.save()
+    except Exception:
+        response.status_code = 500
+        return {"msg_code": "db_error"}
+
+    return {"msg_code": "tabletn_upserted"}
