@@ -51,7 +51,8 @@ class Team(Model):
     secret_hash = fields.TextField()
     coins = fields.IntField(default=0)
     points = fields.IntField(default=0)
-
+    table_tn = fields.IntField(null=True)
+    
     members: fields.ReverseRelation[User]
     containers: fields.ReverseRelation[Container]
 

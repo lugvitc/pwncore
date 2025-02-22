@@ -121,7 +121,7 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
     return result
 
 @atomic()
-@router.post("/tabletn/{id}")
+@router.post("/team/{id}")
 async def upsert_table_tn(id: int, data: TableTNBody, response: Response, jwt: RequireJwt):
     # Admin-only access
     if not jwt.get("is_admin", False):
