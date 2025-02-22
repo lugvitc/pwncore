@@ -1,10 +1,9 @@
-
 from tortoise import fields
 from tortoise.models import Model
 from tortoise.contrib.pydantic import pydantic_model_creator
 
-from ctf import Problem
-from user import Team
+from pwncore.models.ctf import Problem
+from pwncore.models.user import Team
 
 
 class AttackDefProblem(Model):
