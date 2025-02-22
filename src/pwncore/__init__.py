@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
 
+import shutil
 import aiodocker
+from logging import getLogger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
@@ -11,6 +13,7 @@ import pwncore.routes as routes
 from pwncore.config import config
 from pwncore.models import Container
 
+logger = getLogger(__name__)
 
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
@@ -36,6 +39,10 @@ async def app_lifespan(app: FastAPI):
             Exception
         ):  # Raises DockerError if container does not exist, just pass for now.
             pass
+    try:
+        shutil.rmtree(config.staticfs_data_dir)
+    except Exception as err:
+        logger.exception("Failed to delete static files", exc_info=err)
 
     # close_connections is deprecated, not sure how to use connections.close_all()
     await Tortoise.close_connections()

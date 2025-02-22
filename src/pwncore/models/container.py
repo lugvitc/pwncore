@@ -20,7 +20,8 @@ class Container(Model):
     )
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
     flag = fields.TextField()
-
+    
+    token = fields.TextField()
     ports: fields.ReverseRelation[Ports]
 
 
