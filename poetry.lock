@@ -933,7 +933,7 @@ files = [
 
 [package.extras]
 argon2 = ["argon2-cffi (>=18.2.0)"]
-bcrypt = ["bcrypt (>=4.0.1)"]
+bcrypt = ["bcrypt (>=3.1.0)"]
 build-docs = ["cloud-sptheme (>=1.10.1)", "sphinx (>=1.6)", "sphinxcontrib-fulltoc (>=1.2.0)"]
 totp = ["cryptography"]
 
