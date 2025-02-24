@@ -26,7 +26,7 @@ A CTF platform backend written in [FastAPI](https://github.com/fastapi/fastapi) 
 
 Before you begin, ensure you have met the following requirements:
 
-- Python 3.7+
+- Python 3.7+ (< Python 3.13)
 - Docker (optional, for container functionality)
 
 ## Installation
@@ -41,7 +41,7 @@ Before you begin, ensure you have met the following requirements:
 2. Set up a virtual environment:
 
    ```bash
-   python3 -m venv .venv
+   python3.12 -m venv .venv
    source .venv/bin/activate
    ```
 
@@ -62,11 +62,14 @@ Before you begin, ensure you have met the following requirements:
 1. Start:
 
    ```bash
-   cd src
    uvicorn pwncore:app --reload
+
+   # OR
+
+   poetry run dev
    ```
 
-2. Access the auto-generated documentation at [http://localhost:8000/docs](http://localhost:8000/docs)
+2. Access the auto-generated documentation at [http://localhost:8080/docs](http://localhost:8080/docs)
 
 3. Docker configuration:
    - Enable and start the Docker service on your system, or

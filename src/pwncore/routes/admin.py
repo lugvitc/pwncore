@@ -97,7 +97,7 @@ async def init_db(
         author="Meetesh Saini",
         points=300,
         image_name="key:latest",
-        image_config={"PortBindings": {"22/tcp": [{}]}},
+        # image_config={"PortBindings": {"22/tcp": [{}]}},
         mi=200,
         ma=400,
     )
@@ -134,7 +134,7 @@ async def init_db(
         author="KreativeThinker",
         points=300,
         image_name="key:latest",
-        image_config={"PortBindings": {"22/tcp": [{}]}},
+        # image_config={"PortBindings": {"22/tcp": [{}]}},
         mi=200,
         ma=400,
     )
@@ -144,7 +144,7 @@ async def init_db(
         author="Aadivishnu and Shoubhit",
         points=300,
         image_name="reg.lugvitc.net/key:latest",
-        image_config={"PortBindings": {"22/tcp": [{}]}},
+        # image_config={"PortBindings": {"22/tcp": [{}]}},
     )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
     await Team.create(
