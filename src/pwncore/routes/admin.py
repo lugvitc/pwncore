@@ -6,7 +6,7 @@ from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
 
 import pwncore.containerASD as containerASD
-from pwncore.config import config
+from pwncore.config import config, PowerUpType
 from pwncore.models import (
     Hint,
     PreEventProblem,
@@ -14,6 +14,9 @@ from pwncore.models import (
     Problem,
     Team,
     User,
+    AttackDefTeam,
+    AttackDefProblem,
+    ActivatedPowerups
 )
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
@@ -146,10 +149,37 @@ async def init_db(
         image_name="reg.lugvitc.net/key:latest",
         # image_config={"PortBindings": {"22/tcp": [{}]}},
     )
+    await Problem.create(
+        name="GitGood2",
+        description="How to master the art of solving CTFs? Git good nub.",
+        author="Aadivishnu and Shoubhit",
+        points=300,
+        image_name="reg.lugvitc.net/key:latest",
+        image_config={"PortBindings": {"22/tcp": [{}]}},
+    )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
-    await Team.create(
+    triple_a_battery = await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
+    triple_b_battery = await Team.create(
+        name="Triple B battery", secret_hash=bcrypt.hash("chotiwali2"), coins=20
+    )
+    await AttackDefTeam.create(
+        team_id=(await Team.get(name="Triple A battery")).id
+    )
+    await AttackDefTeam.create(
+        team_id=(await Team.get(name="Triple B battery")).id
+    )
+    await AttackDefProblem.create(
+        problem_id=(await Problem.get(name="GitGood2")).id,
+        attack_def_team_id=(await AttackDefTeam.get(team_id=triple_b_battery.id)).id
+    )
+    await ActivatedPowerups.create(
+        used_by_id=(await AttackDefTeam.get(team_id=triple_b_battery.id)).id,
+        used_on_id = (await AttackDefTeam.get(team_id=triple_a_battery.id)).id,
+        powerup_type = PowerUpType.SABOTAGE
+    )
+
     await PreEventUser.create(tag="23BCE1000", email="dd@ff.in")
     await PreEventUser.create(tag="23BRS1000", email="d2d@ff.in")
     await PreEventSolvedProblem.create(user_id="23BCE1000", problem_id="1")
