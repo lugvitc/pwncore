@@ -120,7 +120,7 @@ async def coins_get(tag: str):
     except DoesNotExist:
         return 0
 
-
+@atomic()
 @router.post(
     "/{ctf_id}/flag",
     summary="Submit flag for pre-event CTF",
@@ -164,7 +164,7 @@ async def coins_get(tag: str):
     }
     ```
     """)
-@atomic()
+
 async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
     problem = await PreEventProblem.get_or_none(id=ctf_id)
 
