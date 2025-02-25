@@ -53,9 +53,11 @@ class Flag(BaseModel):
     flag: str
 
 
-@router.get("/completed",
+@router.get(
+    "/completed",
     summary="Get completed problems",
-    description="""Retrieve all problems solved by the authenticated team.
+    response_model=list[Problem_Pydantic],
+    response_description="""Returns all problems solved by the authenticated team.
     
     Example response:
     ```json
@@ -80,9 +82,11 @@ async def completed_problem_get(jwt: RequireJwt):
     return problems
 
 
-@router.get("/list",
+@router.get(
+    "/list",
     summary="List all CTF problems",
-    description="""Get all visible CTF problems with adjusted points based on hints used.
+    response_model=list[Problem_Pydantic],
+    response_description="""Returns all visible CTF problems with adjusted points based on hints used.
     
     Example response:
     ```json
@@ -126,9 +130,11 @@ async def update_points(req: Request, ctf_id: int):
 
 
 @atomic()
-@router.post("/{ctf_id}/flag",
+@router.post(
+    "/{ctf_id}/flag",
     summary="Submit flag for problem",
-    description="""Submit a flag for a specific CTF problem.
+    response_model=dict[str, bool | str],
+    response_description="""Submit a flag for a specific CTF problem.
     
     Example request:
     ```json
@@ -144,10 +150,11 @@ async def update_points(req: Request, ctf_id: int):
     }
     ```
     
-    Note:
-    - Returns 404 if problem not found
-    - Returns 401 if problem already solved
-    - Returns 500 if database error occurs
+    Error responses:
+    - 404: {"msg_code": 2} - ctf_not_found
+    - 401: {"msg_code": 12} - ctf_solved
+    - 500: {"msg_code": 0} - db_error
+    - 400: {"msg_code": 6} - container_not_found
     """)
 async def flag_post(
     req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
@@ -196,9 +203,11 @@ async def flag_post(
 
 
 @atomic()
-@router.get("/{ctf_id}/hint",
+@router.get(
+    "/{ctf_id}/hint",
     summary="Get next available hint",
-    description="""Retrieve the next available hint for a problem.
+    response_model=dict[str, str | int],
+    response_description="""Retrieve the next available hint for a problem.
     
     Example response:
     ```json
@@ -208,10 +217,10 @@ async def flag_post(
     }
     ```
     
-    Note:
-    - Returns 404 if problem not found
-    - Returns 403 if no more hints available
-    - May deduct coins if team has sufficient balance
+    Error responses:
+    - 404: {"msg_code": 2} - ctf_not_found
+    - 403: {"msg_code": 9} - hint_limit_reached
+    - 400: {"msg_code": 22} - Insufficient coins
     """)
 async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     team_id = jwt["team_id"]
@@ -251,9 +260,11 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
     }
 
 
-@router.get("/{ctf_id}/viewed_hints",
+@router.get(
+    "/{ctf_id}/viewed_hints",
     summary="Get viewed hints",
-    description="""Get all hints viewed by the team for a specific problem.
+    response_model=list[Hint_Pydantic],
+    response_description="""Get all hints viewed by the team for a specific problem.
     
     Example response:
     ```json
@@ -275,9 +286,11 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     return viewed_hints
 
 
-@router.get("/{ctf_id}",
+@router.get(
+    "/{ctf_id}",
     summary="Get problem details",
-    description="""Get details of a specific CTF problem.
+    response_model=Problem_Pydantic,
+    response_description="""Get details of a specific CTF problem.
     
     Example response:
     ```json
@@ -291,7 +304,8 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     }
     ```
     
-    Note: Returns 404 if problem not found or not visible
+    Error responses:
+    - 404: {"msg_code": 2} - ctf_not_found or not visible
     """)
 async def ctf_get(ctf_id: int, response: Response):
     problem = await Problem_Pydantic.from_queryset(

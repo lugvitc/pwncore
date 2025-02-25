@@ -10,6 +10,7 @@ import pwncore.containerASD as containerASD
 from pwncore.config import config
 from pwncore.models import Container, Ports, Problem
 from pwncore.routes.auth import RequireJwt
+from pwncore.routes.ctf.response_models import ContainerStartResponse, ContainerStopResponse, ErrorResponse
 
 router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
@@ -17,9 +18,15 @@ logger = getLogger(__name__)
 
 @router.post("/{ctf_id}/start",
     summary="Start CTF challenge container",
-    description="""Start a new Docker container for the specified CTF challenge.
+    response_model=ContainerStartResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        400: {"model": ContainerStartResponse},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Start a new Docker container for the specified CTF challenge.
     
-    Example response (success):
+    Example response (container_start successful):
     ```json
     {
         "msg_code": 3,
@@ -27,15 +34,13 @@ logger = getLogger(__name__)
         "ctf_id": 1
     }
     ```
-    
-    Error responses:
-    - 404: Challenge not found
+    Example response (fail - ctf_not_found)
     ```json
     {
-        "msg_code": 2
+        "msg_code" : 2
     }
     ```
-    - 400: Container already running
+    Example response (fail - container_already_running):
     ```json
     {
         "msg_code": 7,
@@ -43,20 +48,12 @@ logger = getLogger(__name__)
         "ctf_id": 1
     }
     ```
-    - 400: Container limit reached
-    ```json
-    {
-        "msg_code": 8
-    }
-    ```
-    - 500: Database error
+    Example response (failure due to exception - container_stop because of db_error):
     ```json
     {
         "msg_code": 0
     }
     ```
-    
-    Note: Requires JWT authentication token.
     """)
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
@@ -174,24 +171,19 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
 
 @router.post("/stopall",
     summary="Stop all team containers",
-    description="""Stop and remove all Docker containers belonging to the authenticated team.
+    response_model=ContainerStopResponse,
+    responses={
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Stop and remove all Docker containers belonging to the authenticated team.
     
-    Example response (success):
+    Example response (containers_team_stop successful):
     ```json
     {
         "msg_code": 5
     }
     ```
-    
-    Error response:
-    - 500: Database error
-    ```json
-    {
-        "msg_code": 0
-    }
-    ```
-    
-    Note: Requires JWT authentication token.
+    Example response (failure due to exception - db_error) `{ "msg_code" : 0 }`
     """)
 async def stopall_docker_container(response: Response, jwt: RequireJwt):
     async with in_transaction():
@@ -219,36 +211,38 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
 
 @router.post("/{ctf_id}/stop",
     summary="Stop specific CTF container",
-    description="""Stop and remove a specific CTF challenge container.
+    response_model=ContainerStopResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Stop and remove a specific CTF challenge container.
     
-    Example response (success):
+    Example response (container_stop successful):
     ```json
     {
         "msg_code": 4
     }
     ```
-    
-    Error responses:
-    - 404: Challenge not found
+    Example response (fail - ctf_not_found)
     ```json
     {
         "msg_code": 2
     }
     ```
-    - 400: Container not found
+    Example response (fail - container_not_found)
     ```json
     {
         "msg_code": 6
     }
     ```
-    - 500: Database error
+    Example response (failure due to exception - db_error)
     ```json
     {
         "msg_code": 0
     }
     ```
-    
-    Note: Requires JWT authentication token.
     """)
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     async with in_transaction():

@@ -4,6 +4,8 @@ from datetime import date
 from fastapi import APIRouter, Request, Response
 from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
+from pydantic import BaseModel
+from typing import Optional
 
 import pwncore.containerASD as containerASD
 from pwncore.config import config
@@ -52,16 +54,23 @@ async def _del_cont(id: str):
     await container.delete()
 
 
+class AdminResponse(BaseModel):
+    success: bool
+    message: Optional[str] = None
+
+
 @atomic()
 @router.get("/union",
     summary="Calculate and update team coins",
-    description="""Calculates team points from pre-event CTFs and updates team coins.
+    response_model=AdminResponse,
+    response_description="""Successful calculation of team points and coin updates.
     
-    Requires admin authentication via request body.
-    
-    Example response on success:
+    Example response:
     ```json
-    null
+    {
+        "success": true,
+        "message": "Team coins updated successfully"
+    }
     ```
     
     Note: Returns 401 if authentication fails.
@@ -71,7 +80,7 @@ async def calculate_team_coins(
 ):  # Inefficient, anyways will be used only once
     if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
         response.status_code = 401
-        return
+        return AdminResponse(success=False, message="Authentication failed")
     async with in_transaction():
         logging.info("Calculating team points form pre-event CTFs:")
         team_ids = await Team.filter().values_list("id", flat=True)
@@ -95,22 +104,20 @@ async def calculate_team_coins(
             logging.info(f"{team.id}) {team.name}: {team.coins}")
             await team.save()
 
+    return AdminResponse(success=True, message="Team coins updated successfully")
+
 
 @router.get("/create",
     summary="Initialize database with sample data",
-    description="""Creates initial database entries including:
-    - Problems
-    - Pre-event problems
-    - Teams
-    - Users
-    - Hints
-    - Solved problems
+    response_model=AdminResponse,
+    response_description="""Database initialization with sample data.
     
-    Requires admin authentication via request body.
-    
-    Example response on success:
+    Example response:
     ```json
-    null
+    {
+        "success": true,
+        "message": "Database initialized with sample data"
+    }
     ```
     
     Note: Returns 401 if authentication fails.
@@ -121,7 +128,7 @@ async def init_db(
 ):  # Inefficient, anyways will be used only once
     if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
         response.status_code = 401
-        return
+        return AdminResponse(success=False, message="Authentication failed")
     await Problem.create(
         name="Invisible-Incursion",
         description="Chod de tujhe se na ho paye",
@@ -239,3 +246,5 @@ async def init_db(
     await SolvedProblem.create(team_id=2, problem_id=1)
     await SolvedProblem.create(team_id=2, problem_id=2)
     await SolvedProblem.create(team_id=1, problem_id=2)
+
+    return AdminResponse(success=True, message="Database initialized with sample data")

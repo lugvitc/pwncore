@@ -4,7 +4,7 @@ from json import dumps
 from time import monotonic
 
 from fastapi import APIRouter, Request, Response
-
+from pydantic import BaseModel
 from tortoise.expressions import RawSQL, Q
 
 from pwncore.models import Team
@@ -57,9 +57,14 @@ class ExpiringLBCache:
 
 gcache = ExpiringLBCache(30.0)
 
+# defining Pydantic response model
+class LeaderboardEntry(BaseModel):
+    name: str
+    tpoints: int
 
 @router.get("",
-    description="""Returns the current CTF leaderboard sorted by total points.
+    response_model=list[LeaderboardEntry],
+    response_description=u"""Returns the current CTF leaderboard sorted by total points.
     
     Example response:
     ```json

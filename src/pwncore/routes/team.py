@@ -27,9 +27,17 @@ class UserRemoveBody(BaseModel):
     tag: str
 
 
+class MessageResponse(BaseModel):
+    msg_code: int
+
+class ContainerPortsResponse(BaseModel):
+    __root__: dict[int, list[int]]
+
+
 @router.get("/list",
     summary="Get all teams",
-    description="""Returns a complete list of registered teams.
+    response_model=list[Team_Pydantic],
+    response_description="""Returns a complete list of registered teams.
     
     Example response:
     ```json
@@ -51,7 +59,8 @@ async def team_list():
 # Unable to test as adding users returns an error
 @router.get("/members",
     summary="Get team members",
-    description="""Returns a list of all members in the authenticated team.
+    response_model=list[User_Pydantic],
+    response_description="""Returns a list of all members in the authenticated team.
     
     Example response:
     ```json
@@ -76,7 +85,8 @@ async def team_members(jwt: RequireJwt):
 
 @router.get("/me",
     summary="Get authenticated team details",
-    description="""Returns the details of the currently authenticated team.
+    response_model=Team_Pydantic,
+    response_description="""Returns the details of the currently authenticated team.
     
     Example response:
     ```json
@@ -107,7 +117,8 @@ async def get_self_team(jwt: RequireJwt):
 @atomic()
 @router.post("/add",
     summary="Add member to team",
-    description="""Add a new member to the authenticated team.
+    response_model=MessageResponse,
+    response_description="""Add a new member to the authenticated team.
     
     Example request:
     ```json
@@ -154,7 +165,8 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
 @atomic()
 @router.post("/remove",
     summary="Remove member from team",
-    description="""Remove an existing member from the authenticated team.
+    response_model=MessageResponse,
+    response_description="""Remove an existing member from the authenticated team.
     
     Example request:
     ```json
@@ -190,7 +202,8 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
 
 @router.get("/containers",
     summary="Get team containers",
-    description="""Get all containers associated with the authenticated team.
+    response_model=ContainerPortsResponse,
+    response_description="""Get all containers associated with the authenticated team.
     
     Example response:
     ```json

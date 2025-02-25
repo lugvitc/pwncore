@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
 
+from typing import Union
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel
 from tortoise.transactions import atomic
@@ -19,7 +21,7 @@ from pwncore.config import config
 router = APIRouter(prefix="/pre", tags=["ctf"])
 _IST = timezone(timedelta(hours=5, minutes=30))
 
-
+# pydantic response models 
 class PreEventFlag(BaseModel):
     tag: str
     flag: str
@@ -29,10 +31,22 @@ class PreEventFlag(BaseModel):
 class CoinsQuery(BaseModel):
     tag: str
 
+class CoinsResponse(BaseModel):
+    coins: int
 
-@router.get("/list",
+class FlagSubmissionResponse(BaseModel):
+    status: bool
+    coins: int
+
+class ErrorResponse(BaseModel):
+    msg_code: int
+
+
+@router.get(
+    "/list",
     summary="Get all pre-event CTF problems",
-    description="""Returns a list of all available pre-event CTF problems.
+    response_model=list[PreEventProblem_Pydantic],
+    response_description="""Returns a list of all available pre-event CTF problems.
     
     Example response:
     ```json
@@ -54,9 +68,11 @@ async def ctf_list():
     return problems
 
 
-@router.get("/today",
+@router.get(
+    "/today",
     summary="Get today's pre-event CTF problems",
-    description="""Returns list of CTF problems scheduled for current date.
+    response_model=list[PreEventProblem_Pydantic],
+    response_description="""Returns list of CTF problems scheduled for current date.
     
     Example response:
     ```json
@@ -79,9 +95,11 @@ async def ctf_today():
     )
 
 
-@router.get("/coins/{tag}",
+@router.get(
+    "/coins/{tag}",
     summary="Get user's total coins",
-    description="""Get total coins earned by a user in pre-event CTFs.
+    response_model=CoinsResponse,
+    response_description="""Get total coins earned by a user in pre-event CTFs.
     
     Example response:
     ```json
@@ -103,9 +121,11 @@ async def coins_get(tag: str):
         return 0
 
 
-@router.post("/{ctf_id}/flag",
+@router.post(
+    "/{ctf_id}/flag",
     summary="Submit flag for pre-event CTF",
-    description="""Submit a solution flag for a pre-event CTF problem.
+    response_model=Union[FlagSubmissionResponse, ErrorResponse],
+    response_description="""Submit a solution flag for a pre-event CTF problem.
     
     Example request:
     ```json
@@ -125,19 +145,19 @@ async def coins_get(tag: str):
     ```
     
     Error responses:
-    - 404: Problem not found or not for current date
+    - 404: if ctf_not_found or not for current date
     ```json
     {
         "msg_code": 2
     }
     ```
-    - 401: Problem already solved
+    - 401: if ctf_solved already
     ```json
     {
         "msg_code": 12
     }
     ```
-    - 401: User/email conflict
+    - 401: user_or_email_exists
     ```json
     {
         "msg_code": 23
@@ -184,9 +204,11 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
     return {"status": status, "coins": coins}
 
 
-@router.get("/{ctf_id}",
-    summary="Get specific CTF problem details", 
-    description="""Get complete details of a specific pre-event CTF problem.
+@router.get(
+    "/{ctf_id}",
+    summary="Get specific CTF problem details",
+    response_model=Union[list[PreEventProblem_Pydantic], ErrorResponse],
+    response_description="""Get complete details of a specific pre-event CTF problem.
     
     Example response:
     ```json
@@ -200,7 +222,7 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
     ```
     
     Error response:
-    - 404: Problem not found
+    - 404: ctf_not_found
     ```json
     {
         "msg_code": 2
