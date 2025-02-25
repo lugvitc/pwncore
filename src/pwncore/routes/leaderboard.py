@@ -4,7 +4,7 @@ from json import dumps
 from time import monotonic
 
 from fastapi import APIRouter, Request, Response
-
+from pydantic import BaseModel
 from tortoise.expressions import RawSQL, Q
 
 from pwncore.models import Team
@@ -57,7 +57,37 @@ class ExpiringLBCache:
 
 gcache = ExpiringLBCache(30.0)
 
+# defining Pydantic response model
+class LeaderboardEntry(BaseModel):
+    name: str
+    tpoints: int
 
-@router.get("")
+@router.get("",
+    response_model=list[LeaderboardEntry],
+    response_description=u"""Returns the current CTF leaderboard sorted by total points.
+    
+    Example response:
+    ```json
+    [
+        {
+            "name": "Team Alpha",
+            "tpoints": 450
+        },
+        {
+            "name": "Team Beta",
+            "tpoints": 300
+        },
+        {
+            "name": "Team Gamma", 
+            "tpoints": 150
+        }
+    ]
+    ```
+    
+    Notes:
+    - tpoints = sum of (problem points × penalty multiplier) + team points
+    - Results are cached for 30 seconds
+    - Cache is force-expired when problems are solved
+    """)
 async def fetch_leaderboard(req: Request):
     return Response(content=await gcache.get_lb(req), media_type="application/json")

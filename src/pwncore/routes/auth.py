@@ -23,6 +23,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 logger = getLogger(__name__)
 
 
+# defining Pydantic response models
 class AuthBody(BaseModel):
     name: str
     password: str
@@ -34,12 +35,104 @@ class SignupBody(BaseModel):
     tags: set[str]
 
 
+# Response Models
+class SignupResponse(BaseModel):
+    """
+    msg_code: 13 (signup_success)
+    """
+    msg_code: t.Literal[13]
+
+class SignupErrorUsersNotFound(BaseModel):
+    """
+    msg_code: 24 (users_not_found)
+    """
+    msg_code: t.Literal[24]
+    tags: list[str]
+
+class SignupErrorUsersInTeam(BaseModel):
+    """
+    msg_code: 20 (user_already_in_team)
+    """
+    msg_code: t.Literal[20]
+    tags: list[str]
+
+class LoginResponse(BaseModel):
+    """
+    msg_code: 15 (login_success)
+    """
+    msg_code: t.Literal[15]
+    access_token: str
+    token_type: str
+
+class ErrorResponse(BaseModel):
+    """
+    msg_code can be:
+    0 (db_error)
+    17 (team_exists)
+    10 (team_not_found)
+    14 (wrong_password)
+    """
+    msg_code: t.Literal[0, 17, 10, 14]
+
+
 def normalise_tag(tag: str):
     return tag.strip().casefold()
 
 
 @atomic()
-@router.post("/signup")
+@router.post("/signup",
+    response_model=SignupResponse,
+    responses={
+        406: {"model": ErrorResponse},
+        404: {"model": SignupErrorUsersNotFound},
+        401: {"model": SignupErrorUsersInTeam},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Create a new team with associated members.
+    
+    Request body example:
+    ```json
+    {
+        "name": "TeamAwesome",
+        "password": "securepassword123",
+        "tags": ["user1", "user2", "user3"]
+    }
+    ```
+    
+    Responses:
+    - 200: Successful signup
+    ```json
+    {
+        "msg_code": 13
+    }
+    ```
+    - 406: Team already exists
+    ```json
+    {
+        "msg_code": 17
+    }
+    ```
+    - 404: Users not found
+    ```json
+    {
+        "msg_code": 24,
+        "tags": ["user2", "user3"]
+    }
+    ```
+    - 401: Users already in team
+    ```json
+    {
+        "msg_code": 20,
+        "tags": ["user1"]
+    }
+    ```
+    - 500: Database error
+    ```json
+    {
+        "msg_code": 0
+    }
+    ```
+    """)
 async def signup_team(team: SignupBody, response: Response):
     team.name = team.name.strip()
     members = set(map(normalise_tag, team.tags))
@@ -83,7 +176,44 @@ async def signup_team(team: SignupBody, response: Response):
     return {"msg_code": config.msg_codes["signup_success"]}
 
 
-@router.post("/login")
+@router.post("/login",
+    response_model=LoginResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        401: {"model": ErrorResponse}
+    },
+    response_description="""Authenticate a team and receive a JWT token.
+    
+    Request body example:
+    ```json
+    {
+        "name": "TeamAwesome",
+        "password": "securepassword123"
+    }
+    ```
+    
+    Responses:
+    - 200: Successful login
+    ```json
+    {
+        "msg_code": 15,
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "token_type": "bearer"
+    }
+    ```
+    - 404: Team not found
+    ```json
+    {
+        "msg_code": 10
+    }
+    ```
+    - 401: Wrong password
+    ```json
+    {
+        "msg_code": 14
+    }
+    ```
+    """)
 async def team_login(team_data: AuthBody, response: Response):
     # TODO: Simplified logic since we're not doing refresh tokens.
 
