@@ -44,7 +44,7 @@ msg_codes = {
     "users_not_found": 24,
 }
 
-raw_admin_hash = os.environ.get("PWNCORE_ADMIN_HASH")
+raw_admin_hash = os.environ.get("PWNCORE_ADMIN_HASH",  "sqlite://:memory:")
 if raw_admin_hash is None:
     admin_hash_value = "$2b$12$ZA/l9O96A34QQOlUD48LkesLukw4IAMDih1oV8l.GoEa7TewfeOP2"
     using_default_admin = True
