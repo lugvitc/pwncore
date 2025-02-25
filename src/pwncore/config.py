@@ -3,11 +3,6 @@ from dataclasses import dataclass
 import warnings
 from dotenv import load_dotenv
 
-# Put .env in root of pwncore
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
-if not load_dotenv(dotenv_path):
-    warnings.warn(f".env file not loaded from {dotenv_path}", RuntimeWarning)
-
 """
 Sample messages:
 "db_error": "An error occurred, please try again.",
@@ -50,8 +45,8 @@ msg_codes = {
 }
 
 raw_admin_hash = os.environ.get("PWNCORE_ADMIN_HASH")
-if (raw_admin_hash is None):
-    admin_hash_value = "$2b$12$BjtKkihGhQlOZuLD/KrmuOP27mJ04ldXyzBgtbrNzD9JoPN/DKN1u"
+if raw_admin_hash is None:
+    admin_hash_value = "$2b$12$ZA/l9O96A34QQOlUD48LkesLukw4IAMDih1oV8l.GoEa7TewfeOP2"
     using_default_admin = True
 else:
     admin_hash_value = raw_admin_hash
