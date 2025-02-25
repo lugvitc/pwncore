@@ -1,5 +1,7 @@
 import os
 from dataclasses import dataclass
+import warnings
+from dotenv import load_dotenv
 
 """
 Sample messages:
@@ -42,6 +44,13 @@ msg_codes = {
     "users_not_found": 24,
 }
 
+raw_admin_hash = os.environ.get("PWNCORE_ADMIN_HASH",  "sqlite://:memory:")
+if raw_admin_hash is None:
+    admin_hash_value = "$2b$12$ZA/l9O96A34QQOlUD48LkesLukw4IAMDih1oV8l.GoEa7TewfeOP2"
+    using_default_admin = True
+else:
+    admin_hash_value = raw_admin_hash
+    using_default_admin = False
 
 @dataclass
 class Config:
@@ -55,10 +64,10 @@ class Config:
     jwt_valid_duration: int
     hint_penalty: int
     max_members_per_team: int
-
+    admin_hash: str  
 
 config = Config(
-    development=True,
+    development=False,
     # db_url="sqlite://:memory:",
     db_url=os.environ.get("DATABASE_URL", "sqlite://:memory:"),
     docker_url=None,  # None for default system docker
@@ -71,4 +80,9 @@ config = Config(
     msg_codes=msg_codes,
     hint_penalty=50,
     max_members_per_team=3,
+    admin_hash=admin_hash_value,
 )
+
+# Warn in production if env not loaded
+if not config.development and using_default_admin:
+    warnings.warn("Default admin hash being used in production!", RuntimeWarning)
