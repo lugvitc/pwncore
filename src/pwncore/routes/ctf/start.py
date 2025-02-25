@@ -54,7 +54,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     pass
                 # containers won't exist for static ctfs
                 if ctf.static:
-                    staticLocation = f"{config.static_ctf_dir}/{team_id}/{db_container.docker_id}"
+                    staticLocation = f"{config.staticfs_data_dir}/{team_id}/{db_container.docker_id}"
                     if os.path.exists(staticLocation):
                         shutil.rmtree(staticLocation) 
                 else:
@@ -200,7 +200,7 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
         
-        team_path = f"{config.static_ctf_dir}/{team_id}"
+        team_path = f"{config.staticfs_data_dir}/{team_id}"
         if os.path.exists(team_path):
             shutil.rmtree(team_path)
             
