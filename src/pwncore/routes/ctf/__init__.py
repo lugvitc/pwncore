@@ -3,6 +3,7 @@ from __future__ import annotations
 from asyncio import create_task
 from collections import defaultdict
 from logging import getLogger
+import shutil
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
@@ -124,16 +125,21 @@ async def flag_post(
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        container = await containerASD.docker_client.containers.get(
-            team_container.docker_id
-        )
-        await container.kill()
-        await container.delete()
-        #
+        if problem.static:
+            shutil.rmtree(
+                f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
+            )
+        else:
+            container = await containerASD.docker_client.containers.get(
+                team_container.docker_id
+            )
+            await container.kill()
+            await container.delete()
 
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id, penalty=pnlt)
         create_task(update_points(req, ctf_id))
         return {"status": True}
+
     return {"status": False}
 
 

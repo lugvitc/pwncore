@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import uuid
+import shutil
 from logging import getLogger
-
+import jwt as jwtlib
 from fastapi import APIRouter, Response
 from tortoise.transactions import in_transaction
 
@@ -43,24 +45,29 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         if team_container:
             a, b = team_container[0], team_container[1:]
             db_ports = await a.ports.all().values("port")  # Get ports from DB
-            ports = [db_port["port"]
-                     for db_port in db_ports]  # Create a list out of it
-
+            ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
+            static_url = f"{config.staticfs_url}/{a.token}" if ctf.static else None
             for db_container in b:
                 try:
                     await db_container.delete()
                 except Exception:
                     pass
-
-                container = await containerASD.docker_client.containers.get(
-                    db_container.docker_id
-                )
-                await container.kill()
-                await container.delete()
+                # containers won't exist for static ctfs
+                if ctf.static:
+                    staticLocation = f"{config.staticfs_data_dir}/{team_id}/{db_container.docker_id}"
+                    if os.path.exists(staticLocation):
+                        shutil.rmtree(staticLocation) 
+                else:
+                    container = await containerASD.docker_client.containers.get(
+                        db_container.docker_id
+                    )
+                    await container.kill()
+                    await container.delete()
 
             return {
                 "msg_code": config.msg_codes["container_already_running"],
                 "ports": ports,
+                "static_url": static_url,
                 "ctf_id": ctf_id,
             }
 
@@ -74,6 +81,53 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         # Start a new container
         container_name = f"{team_id}_{ctf_id}_{uuid.uuid4().hex}"
         container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
+
+        if ctf.static:
+            container_id = uuid.uuid4().hex
+            payload = {
+                "id": str(team_id),
+                "containerId": container_id,
+            }
+            token = jwtlib.encode(payload, config.staticfs_jwt_secret, algorithm="HS256")
+            container = await containerASD.docker_client.containers.run(
+                name=container_name,
+                config={
+                    "Image": ctf.image_name,
+                    "AttachStdin": False,
+                    "AttachStdout": False,
+                    "AttachStderr": False,
+                    "Tty": False,
+                    "OpenStdin": False,
+                    "HostConfig": {
+                        "AutoRemove": True,
+                        "Binds": [f"{config.staticfs_data_dir}/{team_id}/{container_id}:/dist"],
+                    },
+                    "Cmd": ["/root/gen_flag", container_flag],
+                },
+            )
+            try:
+                async with in_transaction():
+                    db_container = await Container.create(
+                        docker_id=container_id,
+                        team_id=team_id,
+                        problem_id=ctf_id,
+                        flag=container_flag,
+                        token=token,
+                    )
+            except Exception as err:
+                # Stop the container if failed to make a DB record
+                await container.kill()
+                await container.delete()
+                logger.exception("Error while starting", exc_info=err)
+
+                response.status_code = 500
+                return {"msg_code": config.msg_codes["db_error"]}
+            return {
+                "msg_code": config.msg_codes["container_start"],
+                "ports": [],
+                "static_url": f"{config.staticfs_url}/{token}",
+                "ctf_id": ctf_id,
+            }
 
         # Run
         container = await containerASD.docker_client.containers.run(
@@ -91,9 +145,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             },
         )
 
-        await (
-            await container.exec(["/root/gen_flag", container_flag])
-        ).start(detach=True)
+        await (await container.exec(["/root/gen_flag", container_flag])).start(
+            detach=True
+        )
 
         try:
             async with in_transaction():
@@ -126,6 +180,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
         return {
             "msg_code": config.msg_codes["container_start"],
             "ports": ports,
+            "static_url": None,
             "ctf_id": ctf_id,
         }
 
@@ -144,7 +199,11 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
         except Exception:
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
-
+        
+        team_path = f"{config.staticfs_data_dir}/{team_id}"
+        if os.path.exists(team_path):
+            shutil.rmtree(team_path)
+            
         for db_container in containers:
             container = await containerASD.docker_client.containers.get(
                 db_container["docker_id"]
@@ -177,6 +236,12 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
         except Exception:
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
+
+        if ctf.static:
+            shutil.rmtree(
+                f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
+            )
+            return {"msg_code": config.msg_codes["container_stop"]}
 
         container = await containerASD.docker_client.containers.get(
             team_container.docker_id
