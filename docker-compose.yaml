@@ -32,17 +32,16 @@ services:
         ports:
             - 5432:5432
 
-    # admin_db:
-    #     image: nocodb/nocodb:latest
-    #     environment:
-    #         # - NC_DB=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    #         # - NC_DB=postgres://db:5432?u=${POSTGRES_USER}&p={POSTGRES_PASSWORD}&d=${POSTGRES_DB}
-    #     volumes:
-    #         - nc_data:/usr/app/data
-    #     ports:
-    #         - ${PORT_ADMIN}:8080
-    #     depends_on:
-    #         - db
+#     admin_db:
+#         image: nocodb/nocodb:latest
+#         environment:
+#             NC_DB: pg://db:5432?u=${POSTGRES_USER}&p=${POSTGRES_PASSWORD}&d=${POSTGRES_DB}
+#         volumes:
+#             - nc_data:/usr/app/data
+#         ports:
+#             - ${PORT_ADMIN}:8080
+#         depends_on:
+#             - db
 
 # volumes:
 #     nc_data: {}

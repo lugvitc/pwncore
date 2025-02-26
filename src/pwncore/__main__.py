@@ -1,4 +1,9 @@
-from pwncore import app  # noqa
+import uvicorn
 
-# I do not trust my self to call uvicorn from here for debugging and
-# not use that in production
+
+def run_dev():
+    uvicorn.run("pwncore:app", host="127.0.0.1", port=8080, reload=True)
+
+
+if __name__ == "__main__":
+    run_dev()
