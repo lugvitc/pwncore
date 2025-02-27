@@ -1,7 +1,7 @@
 import os
+import bcrypt
 from dataclasses import dataclass
 import warnings
-from dotenv import load_dotenv
 
 """
 Sample messages:
@@ -44,13 +44,8 @@ msg_codes = {
     "users_not_found": 24,
 }
 
-raw_admin_hash = os.environ.get("PWNCORE_ADMIN_HASH",  "sqlite://:memory:")
-if raw_admin_hash is None:
-    admin_hash_value = "$2b$12$ZA/l9O96A34QQOlUD48LkesLukw4IAMDih1oV8l.GoEa7TewfeOP2"
-    using_default_admin = True
-else:
-    admin_hash_value = raw_admin_hash
-    using_default_admin = False
+admin_hash_value = os.environ.get("PWNCORE_ADMIN_HASH", bcrypt.hashpw('pwncore'.encode(), bcrypt.gensalt()).decode())
+using_default_admin = os.environ.get("PWNCORE_ADMIN_HASH") is None
 
 @dataclass
 class Config:
@@ -70,9 +65,9 @@ config = Config(
     development=False,
     # db_url="sqlite://:memory:",
     db_url=os.environ.get("DATABASE_URL", "sqlite://:memory:"),
-    docker_url=None,  # None for default system docker
+    # docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
-    # docker_url="http://google.com",
+    docker_url="http://google.com",
     flag="C0D",
     max_containers_per_team=3,
     jwt_secret="mysecret",
