@@ -3,6 +3,7 @@ from tortoise import fields
 from tortoise.models import Model
 __all__ = (
     "AttackDefProblem",
+    "AttackDefTeam",
     "Problem",
 )
 #TODO: Actually implement this.
@@ -14,3 +15,9 @@ class AttackDefProblem(Model):
     attack_def_team: fields.ForeignKeyRelation[AttackDefTeam] = fields.ForeignKeyField(
         "models.AttackDefTeam", related_name="assigned_attack_def_problem"
     )
+
+class AttackDefTeam(Model):
+    team: fields.OneToOneRelation[Team] = fields.OneToOneField(
+        "models.Team", null=False
+    )
+    assigned_attack_def_problem: fields.ReverseRelation(AttackDefProblem)

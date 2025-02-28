@@ -148,8 +148,16 @@ async def init_db(
         image_name="reg.lugvitc.net/key:latest",
         # image_config={"PortBindings": {"22/tcp": [{}]}},
     )
+    await Problem.create(
+        name="GitGood2",
+        description="How to master the art of solving CTFs? Git good nub.",
+        author="Aadivishnu and Shoubhit",
+        points=300,
+        image_name="reg.lugvitc.net/key:latest",
+        # image_config={"PortBindings": {"22/tcp": [{}]}},
+    )
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
-    await Team.create(
+    triple_a_battery = await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
     )
     triple_b_battery = await Team.create(
