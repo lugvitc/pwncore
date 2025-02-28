@@ -14,6 +14,8 @@ from pwncore.models import (
     Problem,
     Team,
     User,
+    AttackDefTeam,
+    AttackDefProblem,
 )
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
@@ -149,6 +151,19 @@ async def init_db(
     await Team.create(name="CID Squad", secret_hash=bcrypt.hash("veryverysecret"))
     await Team.create(
         name="Triple A battery", secret_hash=bcrypt.hash("chotiwali"), coins=20
+    )
+    triple_b_battery = await Team.create(
+        name="Triple B battery", secret_hash=bcrypt.hash("chotiwali2"), coins=20
+    )
+    await AttackDefTeam.create(
+        team_id=(await Team.get(name="Triple A battery")).id
+    )
+    await AttackDefTeam.create(
+        team_id=(await Team.get(name="Triple B battery")).id
+    )
+    await AttackDefProblem.create(
+        problem_id=(await Problem.get(name="GitGood2")).id,
+        attack_def_team_id=(await AttackDefTeam.get(team_id=triple_b_battery.id)).id
     )
     await PreEventUser.create(tag="23BCE1000", email="dd@ff.in")
     await PreEventUser.create(tag="23BRS1000", email="d2d@ff.in")
