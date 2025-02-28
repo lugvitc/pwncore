@@ -58,20 +58,13 @@ class AdminResponse(BaseModel):
     success: bool
     message: Optional[str] = None
 
-
+# shorten response_description
 @atomic()
 @router.get("/union",
-    summary="Calculate and update team coins",
     response_model=AdminResponse,
     response_description="""Successful calculation of team points and coin updates.
     
-    Example response:
-    ```json
-    {
-        "success": true,
-        "message": "Team coins updated successfully"
-    }
-    ```
+    Response parameters: boolean `success`, `message`
     
     Note: Returns 401 if authentication fails.
     """)
@@ -106,20 +99,13 @@ async def calculate_team_coins(
 
     return AdminResponse(success=True, message="Team coins updated successfully")
 
-
+# shorten response_description
 @router.get("/create",
-    summary="Initialize database with sample data",
     response_model=AdminResponse,
     response_description="""Database initialization with sample data.
     
-    Example response:
-    ```json
-    {
-        "success": true,
-        "message": "Database initialized with sample data"
-    }
-    ```
-    
+    Response parameters: boolean `success`, `message`
+
     Note: Returns 401 if authentication fails.
     This endpoint should only be used in development environment.
     """)

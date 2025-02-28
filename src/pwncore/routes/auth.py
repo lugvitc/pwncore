@@ -78,7 +78,7 @@ class ErrorResponse(BaseModel):
 def normalise_tag(tag: str):
     return tag.strip().casefold()
 
-
+# shorten response_description
 @atomic()
 @router.post("/signup",
     response_model=SignupResponse,
@@ -90,48 +90,16 @@ def normalise_tag(tag: str):
     },
     response_description="""Create a new team with associated members.
     
-    Request body example:
-    ```json
-    {
-        "name": "TeamAwesome",
-        "password": "securepassword123",
-        "tags": ["user1", "user2", "user3"]
-    }
-    ```
-    
-    Responses:
-    - 200: Successful signup
-    ```json
-    {
-        "msg_code": 13
-    }
-    ```
-    - 406: Team already exists
-    ```json
-    {
-        "msg_code": 17
-    }
-    ```
-    - 404: Users not found
-    ```json
-    {
-        "msg_code": 24,
-        "tags": ["user2", "user3"]
-    }
-    ```
-    - 401: Users already in team
-    ```json
-    {
-        "msg_code": 20,
-        "tags": ["user1"]
-    }
-    ```
-    - 500: Database error
-    ```json
-    {
-        "msg_code": 0
-    }
-    ```
+    Parameters:
+        - in request: `name`, `password`, `tags`
+        - in response: `msg_code`, `tags` _only in error responses_
+
+    msg_codes for Responses:
+    - 200: Successful signup : 13
+    - 406: Team already exists: 17
+    - 404: Users not found: 24
+    - 401: Users already in team: 20
+    - 500: Database error: 0
     """)
 async def signup_team(team: SignupBody, response: Response):
     team.name = team.name.strip()
@@ -175,7 +143,7 @@ async def signup_team(team: SignupBody, response: Response):
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["signup_success"]}
 
-
+# shorten response_description
 @router.post("/login",
     response_model=LoginResponse,
     responses={
@@ -184,35 +152,15 @@ async def signup_team(team: SignupBody, response: Response):
     },
     response_description="""Authenticate a team and receive a JWT token.
     
-    Request body example:
-    ```json
-    {
-        "name": "TeamAwesome",
-        "password": "securepassword123"
-    }
-    ```
+    Parameters:
+        - in request: `name`, `password`
+        - in successful response: `msg_code`, `access_token`,`token_type`
+        - in error responses: `msg_code`
     
-    Responses:
-    - 200: Successful login
-    ```json
-    {
-        "msg_code": 15,
-        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "token_type": "bearer"
-    }
-    ```
-    - 404: Team not found
-    ```json
-    {
-        "msg_code": 10
-    }
-    ```
-    - 401: Wrong password
-    ```json
-    {
-        "msg_code": 14
-    }
-    ```
+    msg_codes for Responses:
+    - 200: Successful login: 15
+    - 404: Team not found: 10
+    - 401: Wrong password: 14
     """)
 async def team_login(team_data: AuthBody, response: Response):
     # TODO: Simplified logic since we're not doing refresh tokens.

@@ -41,25 +41,13 @@ class FlagSubmissionResponse(BaseModel):
 class ErrorResponse(BaseModel):
     msg_code: int
 
-
+# shorten response_description
 @router.get(
     "/list",
-    summary="Get all pre-event CTF problems",
     response_model=list[PreEventProblem_Pydantic],
     response_description="""Returns a list of all available pre-event CTF problems.
-    
-    Example response:
-    ```json
-    [
-        {
-            "id": 1,
-            "name": "Web Basic",
-            "description": "Find the flag in website",
-            "points": 100,
-            "date": "2024-01-15"
-        }
-    ]
-    ```
+
+    Parameters = (5): `id`,`name`,`description`,`points`,`date`    
     
     Note: Flag field is excluded from response for security.
     """)
@@ -67,25 +55,13 @@ async def ctf_list():
     problems = await PreEventProblem_Pydantic.from_queryset(PreEventProblem.all())
     return problems
 
-
+# shorten response_description
 @router.get(
     "/today",
-    summary="Get today's pre-event CTF problems",
     response_model=list[PreEventProblem_Pydantic],
     response_description="""Returns list of CTF problems scheduled for current date.
     
-    Example response:
-    ```json
-    [
-        {
-            "id": 1,
-            "name": "Web Basic",
-            "description": "Find the flag in website", 
-            "points": 100,
-            "date": "2024-01-15"
-        }
-    ]
-    ```
+    Parameters = (5): `id`,`name`,`description`,`points`,`date`    
     
     Note: Returns empty list if no problems are scheduled for today.
     """)
@@ -94,21 +70,13 @@ async def ctf_today():
         PreEventProblem().filter(date=datetime.now(_IST).date())
     )
 
-
+# shorten response_description
 @router.get(
     "/coins/{tag}",
-    summary="Get user's total coins",
     response_model=CoinsResponse,
     response_description="""Get total coins earned by a user in pre-event CTFs.
     
-    Example response:
-    ```json
-    {
-        "coins": 300 
-    }
-    ```
-    
-    Note: Returns 0 if user not found (msg_code: 11).
+    Note: Returns msg_code : 11 if user_not_found.
     """)
 async def coins_get(tag: str):
     try:
@@ -120,49 +88,21 @@ async def coins_get(tag: str):
     except DoesNotExist:
         return 0
 
+# shorten response_description
 @atomic()
 @router.post(
     "/{ctf_id}/flag",
-    summary="Submit flag for pre-event CTF",
     response_model=Union[FlagSubmissionResponse, ErrorResponse],
     response_description="""Submit a solution flag for a pre-event CTF problem.
     
-    Example request:
-    ```json
-    {
-        "tag": "23BCE1001",
-        "flag": "flag{solution}",
-        "email": "user@example.com"
-    }
-    ```
-    
-    Success response:
-    ```json
-    {
-        "status": true,
-        "coins": 300
-    }
-    ```
-    
-    Error responses:
-    - 404: if ctf_not_found or not for current date
-    ```json
-    {
-        "msg_code": 2
-    }
-    ```
-    - 401: if ctf_solved already
-    ```json
-    {
-        "msg_code": 12
-    }
-    ```
-    - 401: user_or_email_exists
-    ```json
-    {
-        "msg_code": 23
-    }
-    ```
+    Request parameters: `tag`, `flag`,`email`
+    Parameters in response: `status`, `coins`
+    Note: status may be true or false
+
+    Msg_codes for Error responses:
+    - 404: if ctf_not_found or not for current date: 2
+    - 401: if ctf_solved already: 12
+    - 401: (exception) if user_or_email_exists : 23
     """)
 
 async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
@@ -203,31 +143,16 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
 
     return {"status": status, "coins": coins}
 
-
+# shorten response_description     
 @router.get(
     "/{ctf_id}",
-    summary="Get specific CTF problem details",
     response_model=Union[list[PreEventProblem_Pydantic], ErrorResponse],
     response_description="""Get complete details of a specific pre-event CTF problem.
     
-    Example response:
-    ```json
-    {
-        "id": 1,
-        "name": "Web Basic",
-        "description": "Find the flag in website",
-        "points": 100,
-        "date": "2024-01-15"
-    }
-    ```
-    
-    Error response:
-    - 404: ctf_not_found
-    ```json
-    {
-        "msg_code": 2
-    }
-    ```
+    Response Parameters = (5): `id`,`name`,`description`,`points`,`date`    
+
+    msg_code for Error response:
+    - if ctf_not_found : 2
     """)
 async def ctf_get(ctf_id: int, response: Response):
     problem = await PreEventProblem_Pydantic.from_queryset(

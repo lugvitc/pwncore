@@ -14,7 +14,6 @@ metadata = {"name": "leaderboard", "description": "Operations on the leaderboard
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
-
 class ExpiringLBCache:
     period: float
     last_update: float
@@ -62,27 +61,12 @@ class LeaderboardEntry(BaseModel):
     name: str
     tpoints: int
 
+# shorten response_description
 @router.get("",
     response_model=list[LeaderboardEntry],
     response_description=u"""Returns the current CTF leaderboard sorted by total points.
     
-    Example response:
-    ```json
-    [
-        {
-            "name": "Team Alpha",
-            "tpoints": 450
-        },
-        {
-            "name": "Team Beta",
-            "tpoints": 300
-        },
-        {
-            "name": "Team Gamma", 
-            "tpoints": 150
-        }
-    ]
-    ```
+    Response Parameters: `name`, `tpoints`
     
     Notes:
     - tpoints = sum of (problem points × penalty multiplier) + team points

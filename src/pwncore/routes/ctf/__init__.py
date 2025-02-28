@@ -52,26 +52,13 @@ HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 5, 2: 10})
 class Flag(BaseModel):
     flag: str
 
-
+# shorten response_description
 @router.get(
     "/completed",
-    summary="Get completed problems",
     response_model=list[Problem_Pydantic],
     response_description="""Returns all problems solved by the authenticated team.
     
-    Example response:
-    ```json
-    [
-        {
-            "id": 1,
-            "name": "Web 101",
-            "description": "Basic web exploitation",
-            "points": 100,
-            "category": "web",
-            "visible": true
-        }
-    ]
-    ```
+    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
     """)
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
@@ -81,26 +68,13 @@ async def completed_problem_get(jwt: RequireJwt):
     )
     return problems
 
-
+# shorten response_description
 @router.get(
     "/list",
-    summary="List all CTF problems",
     response_model=list[Problem_Pydantic],
     response_description="""Returns all visible CTF problems with adjusted points based on hints used.
     
-    Example response:
-    ```json
-    [
-        {
-            "id": 1,
-            "name": "Crypto 101",
-            "description": "Basic cryptography challenge",
-            "points": 90,
-            "category": "crypto",
-            "visible": true
-        }
-    ]
-    ```
+    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
     
     Note: Points are adjusted based on hints viewed by the team.
     """)
@@ -128,33 +102,22 @@ async def update_points(req: Request, ctf_id: int):
     except Exception:
         logger.exception("An error occured while updating points")
 
-
+# shorten response_description
 @atomic()
 @router.post(
     "/{ctf_id}/flag",
-    summary="Submit flag for problem",
     response_model=dict[str, bool | str],
     response_description="""Submit a flag for a specific CTF problem.
     
-    Example request:
-    ```json
-    {
-        "flag": "flag{th1s_1s_4_fl4g}"
-    }
-    ```
+    Parameters:
+        - in request: string `flag`
+        - in response: boolean `status`
     
-    Example response:
-    ```json
-    {
-        "status": true
-    }
-    ```
-    
-    Error responses:
-    - 404: {"msg_code": 2} - ctf_not_found
-    - 401: {"msg_code": 12} - ctf_solved
-    - 500: {"msg_code": 0} - db_error
-    - 400: {"msg_code": 6} - container_not_found
+    msg_codes for Error responses:
+    - 404: ctf_not_found : 2 
+    - 401: ctf_solved : 12 
+    - 500: db_error : 0
+    - 400: container_not_found : 6 
     """)
 async def flag_post(
     req: Request, ctf_id: int, flag: Flag, response: Response, jwt: RequireJwt
@@ -201,23 +164,16 @@ async def flag_post(
         return {"status": True}
     return {"status": False}
 
-
+# shorten response_description
 @atomic()
 @router.get(
     "/{ctf_id}/hint",
-    summary="Get next available hint",
     response_model=dict[str, str | int],
     response_description="""Retrieve the next available hint for a problem.
     
-    Example response:
-    ```json
-    {
-        "text": "Look at the HTTP headers",
-        "order": 1
-    }
-    ```
-    
-    Error responses:
+    Response Parameters: `text`, `order`
+
+    msg_code for Error responses:
     - 404: {"msg_code": 2} - ctf_not_found
     - 403: {"msg_code": 9} - hint_limit_reached
     - 400: {"msg_code": 22} - Insufficient coins
@@ -259,24 +215,13 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
         "order": hint.order,
     }
 
-
+# shorten response_description
 @router.get(
     "/{ctf_id}/viewed_hints",
-    summary="Get viewed hints",
     response_model=list[Hint_Pydantic],
     response_description="""Get all hints viewed by the team for a specific problem.
     
-    Example response:
-    ```json
-    [
-        {
-            "id": 1,
-            "text": "First hint text",
-            "order": 0,
-            "problem_id": 1
-        }
-    ]
-    ```
+    Response Parameters: `id`, `text`, `order`, `problem_id`
     """)
 async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     team_id = jwt["team_id"]
@@ -285,27 +230,16 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     )
     return viewed_hints
 
-
+# shorten response_description
 @router.get(
     "/{ctf_id}",
-    summary="Get problem details",
     response_model=Problem_Pydantic,
     response_description="""Get details of a specific CTF problem.
     
-    Example response:
-    ```json
-    {
-        "id": 1,
-        "name": "Binary 101",
-        "description": "Basic binary exploitation",
-        "points": 150,
-        "category": "pwn",
-        "visible": true
-    }
-    ```
+    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
     
-    Error responses:
-    - 404: {"msg_code": 2} - ctf_not_found or not visible
+    msg_code:
+    - if ctf_not_found or not visible : 2
     """)
 async def ctf_get(ctf_id: int, response: Response):
     problem = await Problem_Pydantic.from_queryset(
