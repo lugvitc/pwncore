@@ -18,6 +18,8 @@ from pwncore.models import (
     SolvedProblem,
     Team,
     ViewedHint,
+    AttackDefProblem,
+    AttackDefTeam
 )
 from pwncore.models.ctf import Problem_Pydantic
 from pwncore.routes.auth import RequireJwt
@@ -62,11 +64,7 @@ async def completed_problem_get(jwt: RequireJwt):
     )
     return problems
 
-
-@router.get("/list")
-async def ctf_list(jwt: RequireJwt):
-    team_id = jwt["team_id"]
-    problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
+async def calculate_problem_points(problems: [Problem_Pydantic], team_id: int) -> [Problem_Pydantic]:
     acc: dict[int, float] = defaultdict(lambda: 1.0)
     for k, v in map(
         lambda x: (x.hint.problem_id, HINTPENALTY[x.hint.order]),  # type: ignore[attr-defined]
@@ -79,6 +77,20 @@ async def ctf_list(jwt: RequireJwt):
         i.points = int(acc[i.id] * i.points)  # type: ignore[attr-defined]
     return problems
 
+@router.get("/list")
+async def ctf_list(jwt: RequireJwt):
+    team_id = jwt["team_id"]
+    problems = await Problem_Pydantic.from_queryset(Problem.filter(visible=True))
+    return await calculate_problem_points(problems, team_id)
+
+@router.get("/round2/list")
+async def ctf_list(jwt: RequireJwt):
+    team_id = jwt["team_id"]
+    attack_def_team = await AttackDefTeam.get(team_id=team_id)
+    if (attack_def_team is None):
+        return {"msg_code": config.msg_codes["attack_def_team_not_found"]}
+    problems = await Problem_Pydantic.from_queryset(Problem.filter(attackdefproblem__attack_def_team__id=attack_def_team.id))
+    return await calculate_problem_points(problems, team_id)
 
 async def update_points(req: Request, ctf_id: int):
     try:
@@ -88,6 +100,9 @@ async def update_points(req: Request, ctf_id: int):
     except Exception:
         logger.exception("An error occured while updating points")
 
+@router.get("/round2/list_all")
+async def ctf_list():
+    return await Problem_Pydantic.from_queryset(Problem.all())
 
 @atomic()
 @router.post("/{ctf_id}/flag")

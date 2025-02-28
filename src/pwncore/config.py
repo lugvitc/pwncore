@@ -40,6 +40,7 @@ msg_codes = {
     "insufficient_coins": 22,
     "user_or_email_exists": 23,
     "users_not_found": 24,
+    "attack_def_team_not_found": 25
 }
 
 
