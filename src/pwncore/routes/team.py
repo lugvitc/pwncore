@@ -10,7 +10,7 @@ from pwncore.routes.auth import RequireJwt
 
 # from pwncore.routes.leaderboard import gcache
 
-# Metadata at the top for instant accessibility
+# Metadata at the top for instant caccessibility
 metadata = {"name": "team", "description": "Operations with teams"}
 
 router = APIRouter(prefix="/team", tags=["team"])
@@ -121,20 +121,52 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
     return result
 
 @atomic()
-@router.post("/team/{id}")
-async def upsert_table_tn(id: int, data: TableTNBody, response: Response, jwt: RequireJwt):
-    # Admin-only access
-    if not jwt.get("is_admin", False):
+@router.post("/remove")
+async def remove_member(user_info: UserRemoveBody, response: Response, jwt: RequireJwt):
+    team_id = jwt["team_id"]
+    user = await User.get_or_none(team_id=team_id, tag=user_info.tag)
+
+    if not user:
         response.status_code = 403
+        return {"msg_code": config.msg_codes["user_not_in_team"]}
+
+    try:
+        await user.delete()
+    except Exception:
+        response.status_code = 500
+        return {"msg_code": config.msg_codes["db_error"]}
+
+    return {"msg_code": config.msg_codes["user_removed"]}
+
+
+@router.get("/containers")
+async def get_team_containers(response: Response, jwt: RequireJwt):
+    containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
+        "ports", "problem"
+    )
+
+    result = {
+        container.problem.id: await container.ports.all().values_list("port", flat=True)
+        for container in containers
+    }
+
+    return result
+
+
+@atomic()
+@router.post("team/{id}")
+async def upsert_table_tn(id: int, data: TableTNBody, request: Request, response: Response):
+    admin_password = (await request.body()).strip()
+
+    if not bcrypt.verify(admin_password, ADMIN_HASH):
+        response.status_code = 401
         return {"msg_code": "not_authorized"}
 
-    # Get the team by ID
     team = await Team.get_or_none(id=id)
     if not team:
         response.status_code = 404
         return {"msg_code": "team_not_found"}
 
-    # Upsert the TableTN value
     try:
         team.table_tn = data.table_tn
         await team.save()
