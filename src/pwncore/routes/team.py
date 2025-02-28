@@ -31,7 +31,7 @@ class MessageResponse(BaseModel):
     msg_code: int
 
 class ContainerPortsResponse(BaseModel):
-    __root__: dict[int, list[int]]
+    ports: dict[int, list[int]]
 
 # shorten response_description
 @router.get("/list",
@@ -152,7 +152,7 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["user_removed"]}
 
-
+# shorten response_description
 @router.get("/containers",
     response_model=ContainerPortsResponse,
     response_description="""Get all containers associated with the authenticated team.
