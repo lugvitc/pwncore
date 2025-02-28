@@ -16,9 +16,15 @@ from pwncore.models import (
     User,
     AttackDefTeam,
     AttackDefProblem,
+    Powerup,
+    UsedPowerup
 )
 from pwncore.models.ctf import SolvedProblem
 from pwncore.models.pre_event import PreEventUser
+from pwncore.models.powerups import (
+    Sabotage,
+    Shield
+)
 
 metadata = {
     "name": "admin",
@@ -173,6 +179,18 @@ async def init_db(
         problem_id=(await Problem.get(name="GitGood2")).id,
         attack_def_team_id=(await AttackDefTeam.get(team_id=triple_b_battery.id)).id
     )
+    await Powerup.create(
+        attack_def_team = (await AttackDefTeam.get(team__id=triple_b_battery.id)),
+        powerup_type = Sabotage
+    )
+    shield = await Powerup.create(
+        attack_def_team = (await AttackDefTeam.get(team__id=triple_b_battery.id)),
+        powerup_type = Shield
+    )
+    await UsedPowerup.create(
+        powerup = shield
+    )
+
     await PreEventUser.create(tag="23BCE1000", email="dd@ff.in")
     await PreEventUser.create(tag="23BRS1000", email="d2d@ff.in")
     await PreEventSolvedProblem.create(user_id="23BCE1000", problem_id="1")

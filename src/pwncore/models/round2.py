@@ -1,10 +1,13 @@
 from __future__ import annotations
 from tortoise import fields
 from tortoise.models import Model
+from tortoise.expressions import F
+
 __all__ = (
     "AttackDefProblem",
     "AttackDefTeam",
     "Problem",
+    "Powerup",
 )
 #TODO: Actually implement this.
 # For now this is a dummy class for testing AttackDefTeam.
@@ -21,3 +24,5 @@ class AttackDefTeam(Model):
         "models.Team", null=False
     )
     assigned_attack_def_problem: fields.ReverseRelation(AttackDefProblem)
+    async def remaining_powerups(self):
+        return self.powerups.filter(used_count__lt=F('max_uses'))

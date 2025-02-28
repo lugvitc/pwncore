@@ -29,6 +29,12 @@ from pwncore.models.round2 import (
     AttackDefTeam
 )
 
+from pwncore.models.powerups import (
+    Powerup,
+    PowerupType,
+    UsedPowerup,
+    Powerup_Pydantic,
+)
 from pwncore.models.pre_event import (
     PreEventProblem,
     PreEventSolvedProblem,
@@ -58,6 +64,9 @@ __all__ = (
     "BaseProblem",
     "AttackDefProblem",
     "AttackDefTeam",
+    "Powerup",
+    "UsedPowerup",
+    "Powerup_Pydantic",
 )
 
 
