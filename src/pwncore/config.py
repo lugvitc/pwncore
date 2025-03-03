@@ -2,6 +2,7 @@ import os
 import bcrypt
 from dataclasses import dataclass
 import warnings
+from passlib.hash import bcrypt_sha256
 
 """
 Sample messages:
@@ -44,7 +45,7 @@ msg_codes = {
     "users_not_found": 24,
 }
 
-admin_hash_value = os.environ.get("PWNCORE_ADMIN_HASH", bcrypt.hashpw('pwncore'.encode(), bcrypt.gensalt()).decode())
+admin_hash_value = os.environ.get("PWNCORE_ADMIN_HASH", bcrypt_sha256.hash('pwncore'))
 using_default_admin = os.environ.get("PWNCORE_ADMIN_HASH") is None
 
 @dataclass
