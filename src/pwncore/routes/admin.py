@@ -61,10 +61,7 @@ class AdminResponse(BaseModel):
 @atomic()
 @router.get("/union",
     response_model=AdminResponse,
-    response_description="""Successful calculation of team points and coin updates.
-    
-    Note: Returns msg_code 401 if authentication fails.
-    """)
+    )
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
@@ -98,12 +95,8 @@ async def calculate_team_coins(
 
      
 @router.get("/create",
-    response_model=AdminResponse,
-    response_description="""Database initialization with sample data.
-    
-    Note: Returns msg_code 401 if authentication fails.
-    This endpoint should only be used in development environment.
-    """)
+    response_model=AdminResponse
+    )
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
