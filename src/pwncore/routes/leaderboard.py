@@ -60,12 +60,6 @@ gcache = ExpiringLBCache(30.0)
    
 @router.get("",
     response_model=list[LeaderboardEntry],
-    response_description=u"""Returns the current CTF leaderboard sorted by total points.
-    
-    Notes:
-    - tpoints = sum of (problem points × penalty multiplier) + team points
-    - Results are cached for 30 seconds
-    - Cache is force-expired when problems are solved
-    """)
+    )
 async def fetch_leaderboard(req: Request):
     return Response(content=await gcache.get_lb(req), media_type="application/json")

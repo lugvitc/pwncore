@@ -33,9 +33,7 @@ _IST = timezone(timedelta(hours=5, minutes=30))
 @router.get(
     "/list",
     response_model=list[PreEventProblem_Pydantic],
-    response_description="""Returns a list of all available pre-event CTF problems.
-    Flag field is excluded from response for security.
-    """)
+    )
 async def ctf_list():
     problems = await PreEventProblem_Pydantic.from_queryset(PreEventProblem.all())
     return problems
@@ -44,9 +42,7 @@ async def ctf_list():
 @router.get(
     "/today",
     response_model=list[PreEventProblem_Pydantic],
-    response_description="""Returns list of CTF problems scheduled for current date.
-    Returns empty list if no problems are scheduled for today.
-    """)
+    )
 async def ctf_today():
     return await PreEventProblem_Pydantic.from_queryset(
         PreEventProblem().filter(date=datetime.now(_IST).date())
@@ -56,10 +52,7 @@ async def ctf_today():
 @router.get(
     "/coins/{tag}",
     response_model=CoinsResponse,
-    response_description="""Get total coins earned by a user in pre-event CTFs.
-    
-    Note: Returns msg_code : 11 if user_not_found.
-    """)
+    )
 async def coins_get(tag: str):
     try:
         return {
