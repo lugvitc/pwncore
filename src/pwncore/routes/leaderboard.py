@@ -57,10 +57,7 @@ class ExpiringLBCache:
 
 
 gcache = ExpiringLBCache(30.0)
-
-
-
-     
+   
 @router.get("",
     response_model=list[LeaderboardEntry],
     response_description=u"""Returns the current CTF leaderboard sorted by total points.

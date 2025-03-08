@@ -11,7 +11,15 @@ from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
-from pwncore.models.responseModels.teamAuthResponse import AuthBody, SignupBody, SignupResponse, SignupErrorUsersNotFound, SignupErrorUsersInTeam, LoginResponse, Auth_ErrorResponse as ErrorResponse
+from pwncore.models.responseModels.teamAuthResponse import (
+    AuthBody, 
+    SignupBody, 
+    SignupResponse, 
+    SignupErrorUsersNotFound, 
+    SignupErrorUsersInTeam, 
+    LoginResponse, 
+    Auth_ErrorResponse as ErrorResponse
+)
 from pwncore.config import config
 from pwncore.models import Team, User
 

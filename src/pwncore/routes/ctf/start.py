@@ -10,7 +10,11 @@ import pwncore.containerASD as containerASD
 from pwncore.config import config
 from pwncore.models import Container, Ports, Problem
 from pwncore.routes.auth import RequireJwt
-from pwncore.models.responseModels.ctf_ContainerStatusResponse import ContainerStartResponse, ContainerStopResponse, CTF_ErrorResponse
+from pwncore.models.responseModels.ctf_ContainerStatusResponse import (
+    ContainerStartResponse, 
+    ContainerStopResponse, 
+    CTF_ErrorResponse as ErrorResponse
+)
 
 router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
@@ -19,9 +23,9 @@ logger = getLogger(__name__)
 @router.post("/{ctf_id}/start",
     response_model=ContainerStartResponse,
     responses={
-        404: {"model": CTF_ErrorResponse},
+        404: {"model": ErrorResponse},
         400: {"model": ContainerStartResponse},
-        500: {"model": CTF_ErrorResponse}
+        500: {"model": ErrorResponse}
     },
     response_description="""Start a new Docker container for the specified CTF challenge.
     
@@ -148,7 +152,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
 @router.post("/stopall",
     response_model=ContainerStopResponse,
     responses={
-        500: {"model": CTF_ErrorResponse}
+        500: {"model": ErrorResponse}
     },
     response_description="""Stop and remove all Docker containers belonging to the authenticated team.
     
@@ -184,9 +188,9 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
 @router.post("/{ctf_id}/stop",
     response_model=ContainerStopResponse,
     responses={
-        404: {"model": CTF_ErrorResponse},
-        400: {"model": CTF_ErrorResponse},
-        500: {"model": CTF_ErrorResponse}
+        404: {"model": ErrorResponse},
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
     },
     response_description="""Stop and remove a specific CTF challenge container.
     

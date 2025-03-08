@@ -8,7 +8,11 @@ from pwncore.config import config
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 
 from pwncore.models.responseModels.ctf_ContainerStatusResponse import ContainerPortsResponse
-from pwncore.models.responseModels.user_mgmtResponse import UserAddBody, UserRemoveBody, MessageResponse
+from pwncore.models.responseModels.userManagementResponse import (
+    UserAddBody, 
+    UserRemoveBody, 
+    MessageResponse
+)
 
 from pwncore.routes.auth import RequireJwt
 
