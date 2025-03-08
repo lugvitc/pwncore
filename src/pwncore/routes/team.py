@@ -31,11 +31,7 @@ async def team_list():
 # Unable to test as adding users returns an error
      
 @router.get("/members",
-    response_model=list[User_Pydantic],
-    response_description="""Returns a list of all members in the authenticated team.
-    
-    Note: Returns an empty list if no members are found.
-    """)
+    response_model=list[User_Pydantic])
 async def team_members(jwt: RequireJwt):
     team_id = jwt["team_id"]
     members = await User_Pydantic.from_queryset(User.filter(team_id=team_id))
@@ -44,10 +40,7 @@ async def team_members(jwt: RequireJwt):
 
      
 @router.get("/me",
-    response_model=Team_Pydantic,
-    response_description="""Returns the details of the currently authenticated team.
-
-    """)
+    response_model=Team_Pydantic)
 async def get_self_team(jwt: RequireJwt):
     team_id = jwt["team_id"]
 
@@ -126,11 +119,7 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
 
      
 @router.get("/containers",
-    response_model=ContainerPortsResponse,
-    response_description="""Get all containers associated with the authenticated team.
-    
-    Note: Object keys are problem IDs and values are lists of the containers' exposed ports.
-    """)
+    response_model=ContainerPortsResponse)
 async def get_team_containers(response: Response, jwt: RequireJwt):
     containers = await Container.filter(team_id=jwt["team_id"]).prefetch_related(
         "ports", "problem"
