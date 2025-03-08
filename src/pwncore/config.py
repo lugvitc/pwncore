@@ -1,5 +1,8 @@
 import os
+import bcrypt
 from dataclasses import dataclass
+import warnings
+from passlib.hash import bcrypt_sha256
 
 """
 Sample messages:
@@ -42,6 +45,8 @@ msg_codes = {
     "users_not_found": 24,
 }
 
+admin_hash_value = os.environ.get("PWNCORE_ADMIN_HASH", bcrypt_sha256.hash('pwncore'))
+using_default_admin = os.environ.get("PWNCORE_ADMIN_HASH") is None
 
 @dataclass
 class Config:
@@ -55,15 +60,18 @@ class Config:
     jwt_valid_duration: int
     hint_penalty: int
     max_members_per_team: int
-
+    staticfs_url: str
+    staticfs_data_dir: str
+    staticfs_jwt_secret: str
+    admin_hash: str  
 
 config = Config(
-    development=True,
+    development=False,
     # db_url="sqlite://:memory:",
     db_url=os.environ.get("DATABASE_URL", "sqlite://:memory:"),
-    docker_url=None,  # None for default system docker
+    # docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
-    # docker_url="http://google.com",
+    docker_url="http://google.com",
     flag="C0D",
     max_containers_per_team=3,
     jwt_secret="mysecret",
@@ -71,4 +79,12 @@ config = Config(
     msg_codes=msg_codes,
     hint_penalty=50,
     max_members_per_team=3,
+    staticfs_url="http://localhost:8080",
+    staticfs_data_dir=os.environ.get("STATIC_DATA_DIR", "/data"),
+    staticfs_jwt_secret="PyMioVKFXHymQd+n7q5geOsT6fSYh3gDVw3GqilW+5U="
+    admin_hash=admin_hash_value,
 )
+
+# Warn in production if env not loaded
+if not config.development and using_default_admin:
+    warnings.warn("Default admin hash being used in production!", RuntimeWarning)

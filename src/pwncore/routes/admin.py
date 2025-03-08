@@ -2,7 +2,7 @@ import logging
 from datetime import date
 
 from fastapi import APIRouter, Request, Response
-from passlib.hash import bcrypt
+from passlib.hash import bcrypt, bcrypt_sha256
 from tortoise.transactions import atomic, in_transaction
 from pydantic import BaseModel
 from typing import Optional
@@ -31,7 +31,6 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 if config.development:
     logging.basicConfig(level=logging.INFO)
 
-ADMIN_HASH = "$2b$12$USIGDWgl8WSgSoGauDTKE.ZAKyInaJn84fsZ.ARA6FmntIZeNCTUq"
 NAMES = [
     "Mimas",
     "Enceladus",
@@ -69,7 +68,7 @@ class AdminResponse(BaseModel):
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  # Use config.admin_hash
         response.status_code = 401
         return AdminResponse(success=False, message="Authentication failed")
     async with in_transaction():
@@ -108,7 +107,7 @@ async def calculate_team_coins(
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt.verify((await req.body()).strip(), ADMIN_HASH):
+    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  
         response.status_code = 401
         return AdminResponse(success=False, message="Authentication failed")
     await Problem.create(
