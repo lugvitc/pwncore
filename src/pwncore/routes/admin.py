@@ -64,9 +64,7 @@ class AdminResponse(BaseModel):
     response_model=AdminResponse,
     response_description="""Successful calculation of team points and coin updates.
     
-    Response parameters: boolean `success`, `message`
-    
-    Note: Returns 401 if authentication fails.
+    Note: Returns msg_code 401 if authentication fails.
     """)
 async def calculate_team_coins(
     response: Response, req: Request
@@ -104,9 +102,7 @@ async def calculate_team_coins(
     response_model=AdminResponse,
     response_description="""Database initialization with sample data.
     
-    Response parameters: boolean `success`, `message`
-
-    Note: Returns 401 if authentication fails.
+    Note: Returns msg_code 401 if authentication fails.
     This endpoint should only be used in development environment.
     """)
 async def init_db(

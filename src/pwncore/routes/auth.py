@@ -24,9 +24,6 @@ metadata = {
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = getLogger(__name__)
 
-
-
-
 def normalise_tag(tag: str):
     return tag.strip().casefold()
 
@@ -41,10 +38,6 @@ def normalise_tag(tag: str):
         500: {"model": ErrorResponse}
     },
     response_description="""Create a new team with associated members.
-    
-    Parameters:
-        - in request: `name`, `password`, `tags`
-        - in response: `msg_code`, `tags` _only in error responses_
 
     msg_codes for Responses:
     - 200: Successful signup : 13
@@ -103,11 +96,6 @@ async def signup_team(team: SignupBody, response: Response):
         401: {"model": ErrorResponse}
     },
     response_description="""Authenticate a team and receive a JWT token.
-    
-    Parameters:
-        - in request: `name`, `password`
-        - in successful response: `msg_code`, `access_token`,`token_type`
-        - in error responses: `msg_code`
     
     msg_codes for Responses:
     - 200: Successful login: 15

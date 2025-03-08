@@ -65,8 +65,6 @@ gcache = ExpiringLBCache(30.0)
     response_model=list[LeaderboardEntry],
     response_description=u"""Returns the current CTF leaderboard sorted by total points.
     
-    Response Parameters: `name`, `tpoints`
-    
     Notes:
     - tpoints = sum of (problem points × penalty multiplier) + team points
     - Results are cached for 30 seconds

@@ -34,10 +34,7 @@ _IST = timezone(timedelta(hours=5, minutes=30))
     "/list",
     response_model=list[PreEventProblem_Pydantic],
     response_description="""Returns a list of all available pre-event CTF problems.
-
-    Parameters = (5): `id`,`name`,`description`,`points`,`date`    
-    
-    Note: Flag field is excluded from response for security.
+    Flag field is excluded from response for security.
     """)
 async def ctf_list():
     problems = await PreEventProblem_Pydantic.from_queryset(PreEventProblem.all())
@@ -48,10 +45,7 @@ async def ctf_list():
     "/today",
     response_model=list[PreEventProblem_Pydantic],
     response_description="""Returns list of CTF problems scheduled for current date.
-    
-    Parameters = (5): `id`,`name`,`description`,`points`,`date`    
-    
-    Note: Returns empty list if no problems are scheduled for today.
+    Returns empty list if no problems are scheduled for today.
     """)
 async def ctf_today():
     return await PreEventProblem_Pydantic.from_queryset(
@@ -82,10 +76,6 @@ async def coins_get(tag: str):
     "/{ctf_id}/flag",
     response_model=Union[FlagSubmissionResponse, ErrorResponse],
     response_description="""Submit a solution flag for a pre-event CTF problem.
-    
-    Request parameters: `tag`, `flag`,`email`
-    Parameters in response: `status`, `coins`
-    Note: status may be true or false
 
     Msg_codes for Error responses:
     - 404: if ctf_not_found or not for current date: 2
@@ -137,8 +127,6 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
     response_model=Union[list[PreEventProblem_Pydantic], ErrorResponse],
     response_description="""Get complete details of a specific pre-event CTF problem.
     
-    Response Parameters = (5): `id`,`name`,`description`,`points`,`date`    
-
     msg_code for Error response:
     - if ctf_not_found : 2
     """)

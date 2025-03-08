@@ -22,12 +22,7 @@ router = APIRouter(prefix="/team", tags=["team"])
 
      
 @router.get("/list",
-    response_model=list[Team_Pydantic],
-    response_description="""Returns a complete list of registered teams.
-    
-    Response Parameters: `id`, `name`, `coins`, `points`
-
-    """)
+    response_model=list[Team_Pydantic])
 async def team_list():
     teams = await Team_Pydantic.from_queryset(Team.all())
     return teams
@@ -38,8 +33,6 @@ async def team_list():
 @router.get("/members",
     response_model=list[User_Pydantic],
     response_description="""Returns a list of all members in the authenticated team.
-    
-    Response Parameters: `tag`, `name`, `email`, `phone_num`
     
     Note: Returns an empty list if no members are found.
     """)
@@ -53,8 +46,6 @@ async def team_members(jwt: RequireJwt):
 @router.get("/me",
     response_model=Team_Pydantic,
     response_description="""Returns the details of the currently authenticated team.
-    
-    Response Parameters: `id`, `name`, `coins`, `points`
 
     """)
 async def get_self_team(jwt: RequireJwt):
@@ -77,8 +68,6 @@ async def get_self_team(jwt: RequireJwt):
 @router.post("/add",
     response_model=MessageResponse,
     response_description="""Add a new member to the authenticated team.
-    
-    Request Parameters: `tag`, `name`, `email`, `phone_num`
     
     msg_code for response:
     - (success) user_added: 18
@@ -113,10 +102,6 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
 @router.post("/remove",
     response_model=MessageResponse,
     response_description="""Remove an existing member from the authenticated team.
-    
-    Parameters:
-        - for request: `tag`
-        - for response: `msg_code`
 
     Msg_code for response:
     - (success) user_removed: 19

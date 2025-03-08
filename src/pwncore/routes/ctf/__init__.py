@@ -55,11 +55,7 @@ class Flag(BaseModel):
      
 @router.get(
     "/completed",
-    response_model=list[Problem_Pydantic],
-    response_description="""Returns all problems solved by the authenticated team.
-    
-    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
-    """)
+    response_model=list[Problem_Pydantic])
 async def completed_problem_get(jwt: RequireJwt):
     team_id = jwt["team_id"]
     ViewedHint.filter(team_id=team_id).annotate()
@@ -72,11 +68,7 @@ async def completed_problem_get(jwt: RequireJwt):
 @router.get(
     "/list",
     response_model=list[Problem_Pydantic],
-    response_description="""Returns all visible CTF problems with adjusted points based on hints used.
-    
-    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
-    
-    Note: Points are adjusted based on hints viewed by the team.
+    response_description="""Returns all visible CTF problems with points adjusted based on hints used by the team.
     """)
 async def ctf_list(jwt: RequireJwt):
     team_id = jwt["team_id"]
@@ -108,11 +100,7 @@ async def update_points(req: Request, ctf_id: int):
     "/{ctf_id}/flag",
     response_model=dict[str, bool | str],
     response_description="""Submit a flag for a specific CTF problem.
-    
-    Parameters:
-        - in request: string `flag`
-        - in response: boolean `status`
-    
+
     msg_codes for Error responses:
     - 404: ctf_not_found : 2 
     - 401: ctf_solved : 12 
@@ -170,8 +158,6 @@ async def flag_post(
     "/{ctf_id}/hint",
     response_model=dict[str, str | int],
     response_description="""Retrieve the next available hint for a problem.
-    
-    Response Parameters: `text`, `order`
 
     msg_code for Error responses:
     - 404: {"msg_code": 2} - ctf_not_found
@@ -218,11 +204,7 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
      
 @router.get(
     "/{ctf_id}/viewed_hints",
-    response_model=list[Hint_Pydantic],
-    response_description="""Get all hints viewed by the team for a specific problem.
-    
-    Response Parameters: `id`, `text`, `order`, `problem_id`
-    """)
+    response_model=list[Hint_Pydantic])
 async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     team_id = jwt["team_id"]
     viewed_hints = await Hint_Pydantic.from_queryset(
@@ -235,9 +217,7 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     "/{ctf_id}",
     response_model=Problem_Pydantic,
     response_description="""Get details of a specific CTF problem.
-    
-    Response Parameters: (6) `id`, `name`, `description`, `points`, `category`, `visible`
-    
+
     msg_code:
     - if ctf_not_found or not visible : 2
     """)
