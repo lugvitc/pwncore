@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
 
+from typing import Union
+
 from fastapi import APIRouter, Response
-from pydantic import BaseModel
 from tortoise.transactions import atomic
 from tortoise.functions import Sum
 from tortoise.exceptions import DoesNotExist, IntegrityError
@@ -16,34 +17,42 @@ from pwncore.models import (
 )
 from pwncore.config import config
 
+from pwncore.models.responseModels.preEventCTF_response import (
+    CoinsResponse,
+    FlagSubmissionResponse,
+    preEventCTF_ErrorResponse as ErrorResponse,
+    PreEventFlag,
+    CoinsQuery
+)   
+
 router = APIRouter(prefix="/pre", tags=["ctf"])
 _IST = timezone(timedelta(hours=5, minutes=30))
 
 
-class PreEventFlag(BaseModel):
-    tag: str
-    flag: str
-    email: str
-
-
-class CoinsQuery(BaseModel):
-    tag: str
-
-
-@router.get("/list")
+     
+@router.get(
+    "/list",
+    response_model=list[PreEventProblem_Pydantic],
+    )
 async def ctf_list():
     problems = await PreEventProblem_Pydantic.from_queryset(PreEventProblem.all())
     return problems
 
-
-@router.get("/today")
+     
+@router.get(
+    "/today",
+    response_model=list[PreEventProblem_Pydantic],
+    )
 async def ctf_today():
     return await PreEventProblem_Pydantic.from_queryset(
         PreEventProblem().filter(date=datetime.now(_IST).date())
     )
 
-
-@router.get("/coins/{tag}")
+     
+@router.get(
+    "/coins/{tag}",
+    response_model=CoinsResponse,
+    )
 async def coins_get(tag: str):
     try:
         return {
@@ -54,9 +63,19 @@ async def coins_get(tag: str):
     except DoesNotExist:
         return 0
 
-
+     
 @atomic()
-@router.post("/{ctf_id}/flag")
+@router.post(
+    "/{ctf_id}/flag",
+    response_model=Union[FlagSubmissionResponse, ErrorResponse],
+    response_description="""Submit a solution flag for a pre-event CTF problem.
+
+    Msg_codes for Error responses:
+    - 404: if ctf_not_found or not for current date: 2
+    - 401: if ctf_solved already: 12
+    - 401: (exception) if user_or_email_exists : 23
+    """)
+
 async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Response):
     problem = await PreEventProblem.get_or_none(id=ctf_id)
 
@@ -95,8 +114,15 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
 
     return {"status": status, "coins": coins}
 
-
-@router.get("/{ctf_id}")
+          
+@router.get(
+    "/{ctf_id}",
+    response_model=Union[list[PreEventProblem_Pydantic], ErrorResponse],
+    response_description="""Get complete details of a specific pre-event CTF problem.
+    
+    msg_code for Error response:
+    - if ctf_not_found : 2
+    """)
 async def ctf_get(ctf_id: int, response: Response):
     problem = await PreEventProblem_Pydantic.from_queryset(
         PreEventProblem.filter(id=ctf_id)

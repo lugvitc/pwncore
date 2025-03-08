@@ -5,11 +5,21 @@ import typing as t
 from logging import getLogger
 
 import jwt
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
+from pwncore.models.responseModels.teamAuthResponse import (
+    AuthBody, 
+    SignupBody, 
+    SignupResponse, 
+    SignupErrorUsersNotFound, 
+    SignupErrorUsersInTeam, 
+    LoginResponse, 
+    Auth_ErrorResponse as ErrorResponse
+)
 from pwncore.config import config
 from pwncore.models import Team, User
 
@@ -22,24 +32,28 @@ metadata = {
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = getLogger(__name__)
 
-
-class AuthBody(BaseModel):
-    name: str
-    password: str
-
-
-class SignupBody(BaseModel):
-    name: str
-    password: str
-    tags: set[str]
-
-
 def normalise_tag(tag: str):
     return tag.strip().casefold()
 
-
+    
 @atomic()
-@router.post("/signup")
+@router.post("/signup",
+    response_model=SignupResponse,
+    responses={
+        406: {"model": ErrorResponse},
+        404: {"model": SignupErrorUsersNotFound},
+        401: {"model": SignupErrorUsersInTeam},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Create a new team with associated members.
+
+    msg_codes for Responses:
+    - 200: Successful signup : 13
+    - 406: Team already exists: 17
+    - 404: Users not found: 24
+    - 401: Users already in team: 20
+    - 500: Database error: 0
+    """)
 async def signup_team(team: SignupBody, response: Response):
     team.name = team.name.strip()
     members = set(map(normalise_tag, team.tags))
@@ -82,8 +96,20 @@ async def signup_team(team: SignupBody, response: Response):
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["signup_success"]}
 
-
-@router.post("/login")
+    
+@router.post("/login",
+    response_model=LoginResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        401: {"model": ErrorResponse}
+    },
+    response_description="""Authenticate a team and receive a JWT token.
+    
+    msg_codes for Responses:
+    - 200: Successful login: 15
+    - 404: Team not found: 10
+    - 401: Wrong password: 14
+    """)
 async def team_login(team_data: AuthBody, response: Response):
     # TODO: Simplified logic since we're not doing refresh tokens.
 

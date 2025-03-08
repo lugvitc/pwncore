@@ -4,6 +4,8 @@ from datetime import date
 from fastapi import APIRouter, Request, Response
 from passlib.hash import bcrypt, bcrypt_sha256
 from tortoise.transactions import atomic, in_transaction
+from pydantic import BaseModel
+from typing import Optional
 
 import pwncore.containerASD as containerASD
 from pwncore.config import config
@@ -51,14 +53,21 @@ async def _del_cont(id: str):
     await container.delete()
 
 
+class AdminResponse(BaseModel):
+    success: bool
+    message: Optional[str] = None
+
+     
 @atomic()
-@router.get("/union")
+@router.get("/union",
+    response_model=AdminResponse,
+    )
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
     if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  # Use config.admin_hash
         response.status_code = 401
-        return
+        return AdminResponse(success=False, message="Authentication failed")
     async with in_transaction():
         logging.info("Calculating team points form pre-event CTFs:")
         team_ids = await Team.filter().values_list("id", flat=True)
@@ -82,14 +91,18 @@ async def calculate_team_coins(
             logging.info(f"{team.id}) {team.name}: {team.coins}")
             await team.save()
 
+    return AdminResponse(success=True, message="Team coins updated successfully")
 
-@router.get("/create")
+     
+@router.get("/create",
+    response_model=AdminResponse
+    )
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
     if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  
         response.status_code = 401
-        return
+        return AdminResponse(success=False, message="Authentication failed")
     await Problem.create(
         name="Invisible-Incursion",
         description="Chod de tujhe se na ho paye",
@@ -207,3 +220,5 @@ async def init_db(
     await SolvedProblem.create(team_id=2, problem_id=1)
     await SolvedProblem.create(team_id=2, problem_id=2)
     await SolvedProblem.create(team_id=1, problem_id=2)
+
+    return AdminResponse(success=True, message="Database initialized with sample data")

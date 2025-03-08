@@ -7,17 +7,36 @@ from logging import getLogger
 import jwt as jwtlib
 from fastapi import APIRouter, Response
 from tortoise.transactions import in_transaction
-
 import pwncore.containerASD as containerASD
+
 from pwncore.config import config
 from pwncore.models import Container, Ports, Problem
 from pwncore.routes.auth import RequireJwt
+from pwncore.models.responseModels.ctf_ContainerStatusResponse import (
+    ContainerStartResponse, 
+    ContainerStopResponse, 
+    CTF_ErrorResponse as ErrorResponse
+)
 
 router = APIRouter(tags=["ctf"])
 logger = getLogger(__name__)
 
-
-@router.post("/{ctf_id}/start")
+     
+@router.post("/{ctf_id}/start",
+    response_model=ContainerStartResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        400: {"model": ContainerStartResponse},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Start a new Docker container for the specified CTF challenge.
+    
+    msg_codes:
+    - (success) container_start : 3
+    - (fail) ctf_not_found : 2
+    - (fail) container_already_running : 7
+    - (fail) db_error : 0
+    """)
 async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     """
     image_config contains the raw POST data that gets sent to the Docker Remote API.
@@ -184,8 +203,18 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             "ctf_id": ctf_id,
         }
 
-
-@router.post("/stopall")
+     
+@router.post("/stopall",
+    response_model=ContainerStopResponse,
+    responses={
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Stop and remove all Docker containers belonging to the authenticated team.
+    
+    msg_codes:
+    - (success) containers_team_stop : 5
+    - (fail) db_error : 0 
+    """)
 async def stopall_docker_container(response: Response, jwt: RequireJwt):
     async with in_transaction():
         team_id = jwt["team_id"]  # From JWT
@@ -214,7 +243,24 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
         return {"msg_code": config.msg_codes["containers_team_stop"]}
 
 
-@router.post("/{ctf_id}/stop")
+     
+@router.post("/{ctf_id}/stop",
+    response_model=ContainerStopResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    },
+    response_description="""Stop and remove a specific CTF challenge container.
+    
+    msg_codes:
+    - (success) container_stop : 4
+    - (fail) 
+        - ctf_not_found : 2
+        - container_not_found  : 6
+        - db_error : 0 
+    
+    """)
 async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt):
     async with in_transaction():
         # Let this work on invisible problems incase
