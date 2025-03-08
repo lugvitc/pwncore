@@ -5,7 +5,6 @@ from datetime import datetime, timezone, timedelta
 from typing import Union
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel
 from tortoise.transactions import atomic
 from tortoise.functions import Sum
 from tortoise.exceptions import DoesNotExist, IntegrityError
@@ -18,30 +17,19 @@ from pwncore.models import (
 )
 from pwncore.config import config
 
+from pwncore.models.responseModels.preEventCTF_response import (
+    CoinsResponse,
+    FlagSubmissionResponse,
+    preEventCTF_ErrorResponse as ErrorResponse,
+    PreEventFlag,
+    CoinsQuery
+)   
+
 router = APIRouter(prefix="/pre", tags=["ctf"])
 _IST = timezone(timedelta(hours=5, minutes=30))
 
-# pydantic response models 
-class PreEventFlag(BaseModel):
-    tag: str
-    flag: str
-    email: str
 
-
-class CoinsQuery(BaseModel):
-    tag: str
-
-class CoinsResponse(BaseModel):
-    coins: int
-
-class FlagSubmissionResponse(BaseModel):
-    status: bool
-    coins: int
-
-class ErrorResponse(BaseModel):
-    msg_code: int
-
-# shorten response_description
+     
 @router.get(
     "/list",
     response_model=list[PreEventProblem_Pydantic],
@@ -55,7 +43,7 @@ async def ctf_list():
     problems = await PreEventProblem_Pydantic.from_queryset(PreEventProblem.all())
     return problems
 
-# shorten response_description
+     
 @router.get(
     "/today",
     response_model=list[PreEventProblem_Pydantic],
@@ -70,7 +58,7 @@ async def ctf_today():
         PreEventProblem().filter(date=datetime.now(_IST).date())
     )
 
-# shorten response_description
+     
 @router.get(
     "/coins/{tag}",
     response_model=CoinsResponse,
@@ -88,7 +76,7 @@ async def coins_get(tag: str):
     except DoesNotExist:
         return 0
 
-# shorten response_description
+     
 @atomic()
 @router.post(
     "/{ctf_id}/flag",
@@ -143,7 +131,7 @@ async def pre_event_flag_post(ctf_id: int, post_body: PreEventFlag, response: Re
 
     return {"status": status, "coins": coins}
 
-# shorten response_description     
+          
 @router.get(
     "/{ctf_id}",
     response_model=Union[list[PreEventProblem_Pydantic], ErrorResponse],

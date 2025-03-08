@@ -52,7 +52,7 @@ HINTPENALTY = defaultdict(_invalid_order, {0: 10, 1: 5, 2: 10})
 class Flag(BaseModel):
     flag: str
 
-# shorten response_description
+     
 @router.get(
     "/completed",
     response_model=list[Problem_Pydantic],
@@ -68,7 +68,7 @@ async def completed_problem_get(jwt: RequireJwt):
     )
     return problems
 
-# shorten response_description
+     
 @router.get(
     "/list",
     response_model=list[Problem_Pydantic],
@@ -102,7 +102,7 @@ async def update_points(req: Request, ctf_id: int):
     except Exception:
         logger.exception("An error occured while updating points")
 
-# shorten response_description
+     
 @atomic()
 @router.post(
     "/{ctf_id}/flag",
@@ -164,7 +164,7 @@ async def flag_post(
         return {"status": True}
     return {"status": False}
 
-# shorten response_description
+     
 @atomic()
 @router.get(
     "/{ctf_id}/hint",
@@ -215,7 +215,7 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
         "order": hint.order,
     }
 
-# shorten response_description
+     
 @router.get(
     "/{ctf_id}/viewed_hints",
     response_model=list[Hint_Pydantic],
@@ -230,7 +230,7 @@ async def viewed_problem_hints_get(ctf_id: int, jwt: RequireJwt):
     )
     return viewed_hints
 
-# shorten response_description
+     
 @router.get(
     "/{ctf_id}",
     response_model=Problem_Pydantic,

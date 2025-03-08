@@ -58,7 +58,7 @@ class AdminResponse(BaseModel):
     success: bool
     message: Optional[str] = None
 
-# shorten response_description
+     
 @atomic()
 @router.get("/union",
     response_model=AdminResponse,
@@ -99,7 +99,7 @@ async def calculate_team_coins(
 
     return AdminResponse(success=True, message="Team coins updated successfully")
 
-# shorten response_description
+     
 @router.get("/create",
     response_model=AdminResponse,
     response_description="""Database initialization with sample data.

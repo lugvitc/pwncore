@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel
 from tortoise.transactions import atomic
 
 from pwncore.config import config
+
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
+
+from pwncore.models.responseModels.ctf_ContainerStatusResponse import ContainerPortsResponse
+from pwncore.models.responseModels.user_mgmtResponse import UserAddBody, UserRemoveBody, MessageResponse
+
 from pwncore.routes.auth import RequireJwt
+
 
 # from pwncore.routes.leaderboard import gcache
 
@@ -15,25 +20,7 @@ metadata = {"name": "team", "description": "Operations with teams"}
 
 router = APIRouter(prefix="/team", tags=["team"])
 
-
-class UserAddBody(BaseModel):
-    tag: str
-    name: str
-    email: str
-    phone_num: str
-
-
-class UserRemoveBody(BaseModel):
-    tag: str
-
-
-class MessageResponse(BaseModel):
-    msg_code: int
-
-class ContainerPortsResponse(BaseModel):
-    ports: dict[int, list[int]]
-
-# shorten response_description
+     
 @router.get("/list",
     response_model=list[Team_Pydantic],
     response_description="""Returns a complete list of registered teams.
@@ -47,7 +34,7 @@ async def team_list():
 
 
 # Unable to test as adding users returns an error
-# shorten response_description
+     
 @router.get("/members",
     response_model=list[User_Pydantic],
     response_description="""Returns a list of all members in the authenticated team.
@@ -62,7 +49,7 @@ async def team_members(jwt: RequireJwt):
     # Incase of no members, it just returns an empty list.
     return members
 
-# shorten response_description
+     
 @router.get("/me",
     response_model=Team_Pydantic,
     response_description="""Returns the details of the currently authenticated team.
@@ -85,7 +72,7 @@ async def get_self_team(jwt: RequireJwt):
 
     return team
 
-# shorten response_description
+     
 @atomic()
 @router.post("/add",
     response_model=MessageResponse,
@@ -121,7 +108,7 @@ async def add_member(user: UserAddBody, response: Response, jwt: RequireJwt):
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["user_added"]}
 
-# shorten response_description
+     
 @atomic()
 @router.post("/remove",
     response_model=MessageResponse,
@@ -152,7 +139,7 @@ async def remove_member(user_info: UserRemoveBody, response: Response, jwt: Requ
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["user_removed"]}
 
-# shorten response_description
+     
 @router.get("/containers",
     response_model=ContainerPortsResponse,
     response_description="""Get all containers associated with the authenticated team.

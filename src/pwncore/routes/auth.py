@@ -5,11 +5,13 @@ import typing as t
 from logging import getLogger
 
 import jwt
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from passlib.hash import bcrypt
 from pydantic import BaseModel
 from tortoise.transactions import atomic
 
+from pwncore.models.responseModels.teamAuthResponse import AuthBody, SignupBody, SignupResponse, SignupErrorUsersNotFound, SignupErrorUsersInTeam, LoginResponse, Auth_ErrorResponse as ErrorResponse
 from pwncore.config import config
 from pwncore.models import Team, User
 
@@ -23,62 +25,12 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 logger = getLogger(__name__)
 
 
-# defining Pydantic response models
-class AuthBody(BaseModel):
-    name: str
-    password: str
-
-
-class SignupBody(BaseModel):
-    name: str
-    password: str
-    tags: set[str]
-
-
-# Response Models
-class SignupResponse(BaseModel):
-    """
-    msg_code: 13 (signup_success)
-    """
-    msg_code: t.Literal[13]
-
-class SignupErrorUsersNotFound(BaseModel):
-    """
-    msg_code: 24 (users_not_found)
-    """
-    msg_code: t.Literal[24]
-    tags: list[str]
-
-class SignupErrorUsersInTeam(BaseModel):
-    """
-    msg_code: 20 (user_already_in_team)
-    """
-    msg_code: t.Literal[20]
-    tags: list[str]
-
-class LoginResponse(BaseModel):
-    """
-    msg_code: 15 (login_success)
-    """
-    msg_code: t.Literal[15]
-    access_token: str
-    token_type: str
-
-class ErrorResponse(BaseModel):
-    """
-    msg_code can be:
-    0 (db_error)
-    17 (team_exists)
-    10 (team_not_found)
-    14 (wrong_password)
-    """
-    msg_code: t.Literal[0, 17, 10, 14]
 
 
 def normalise_tag(tag: str):
     return tag.strip().casefold()
 
-# shorten response_description
+    
 @atomic()
 @router.post("/signup",
     response_model=SignupResponse,
@@ -143,7 +95,7 @@ async def signup_team(team: SignupBody, response: Response):
         return {"msg_code": config.msg_codes["db_error"]}
     return {"msg_code": config.msg_codes["signup_success"]}
 
-# shorten response_description
+    
 @router.post("/login",
     response_model=LoginResponse,
     responses={

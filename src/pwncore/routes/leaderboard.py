@@ -9,6 +9,8 @@ from tortoise.expressions import RawSQL, Q
 
 from pwncore.models import Team
 
+from pwncore.models.responseModels.leaderboard_response import LeaderboardEntry
+
 # Metadata at the top for instant accessibility
 metadata = {"name": "leaderboard", "description": "Operations on the leaderboard"}
 
@@ -56,12 +58,9 @@ class ExpiringLBCache:
 
 gcache = ExpiringLBCache(30.0)
 
-# defining Pydantic response model
-class LeaderboardEntry(BaseModel):
-    name: str
-    tpoints: int
 
-# shorten response_description
+
+     
 @router.get("",
     response_model=list[LeaderboardEntry],
     response_description=u"""Returns the current CTF leaderboard sorted by total points.
