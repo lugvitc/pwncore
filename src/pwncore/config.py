@@ -60,6 +60,9 @@ class Config:
     jwt_valid_duration: int
     hint_penalty: int
     max_members_per_team: int
+    staticfs_url: str
+    staticfs_data_dir: str
+    staticfs_jwt_secret: str
     admin_hash: str  
 
 config = Config(
@@ -76,6 +79,9 @@ config = Config(
     msg_codes=msg_codes,
     hint_penalty=50,
     max_members_per_team=3,
+    staticfs_url="http://localhost:8080",
+    staticfs_data_dir=os.environ.get("STATIC_DATA_DIR", "/data"),
+    staticfs_jwt_secret="PyMioVKFXHymQd+n7q5geOsT6fSYh3gDVw3GqilW+5U="
     admin_hash=admin_hash_value,
 )
 
