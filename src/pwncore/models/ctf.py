@@ -5,7 +5,7 @@ from math import tanh
 from tortoise.models import Model
 from tortoise import fields
 from tortoise.contrib.pydantic import pydantic_model_creator
-
+from pydantic import BaseModel
 from pwncore.models.user import Team
 
 __all__ = (
@@ -19,6 +19,8 @@ __all__ = (
     "BaseProblem",
 )
 
+class Flag(BaseModel):
+    flag: str
 
 class BaseProblem(Model):
     name = fields.TextField()

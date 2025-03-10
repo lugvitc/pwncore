@@ -4,16 +4,17 @@ from json import dumps
 from time import monotonic
 
 from fastapi import APIRouter, Request, Response
-
+from pydantic import BaseModel
 from tortoise.expressions import RawSQL, Q
 
 from pwncore.models import Team
+
+from pwncore.models.responseModels.leaderboard_response import LeaderboardEntry
 
 # Metadata at the top for instant accessibility
 metadata = {"name": "leaderboard", "description": "Operations on the leaderboard"}
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
-
 
 class ExpiringLBCache:
     period: float
@@ -56,8 +57,9 @@ class ExpiringLBCache:
 
 
 gcache = ExpiringLBCache(30.0)
-
-
-@router.get("")
+   
+@router.get("",
+    response_model=list[LeaderboardEntry],
+    )
 async def fetch_leaderboard(req: Request):
     return Response(content=await gcache.get_lb(req), media_type="application/json")
