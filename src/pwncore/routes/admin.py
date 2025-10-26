@@ -4,9 +4,9 @@ import shutil
 from datetime import date
 
 import psutil
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status, Depends
 from fastapi.responses import JSONResponse
-from passlib.hash import bcrypt
+from passlib.hash import bcrypt, bcrypt_sha256
 from tortoise.transactions import atomic, in_transaction
 
 import pwncore.containerASD as containerASD
@@ -28,8 +28,22 @@ metadata = {
     "description": "Admin routes (currently only running when development on)",
 }
 
+
+async def validate_password(req: Request) -> None:
+    """Validate admin password hash."""
+    try:
+        if not bcrypt_sha256.verify((req.cookies["password"]).strip(), config.admin_hash):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    except KeyError as err:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from err
+
+
 # TODO: Make this protected
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(validate_password)],
+)
 
 if config.development:
     logging.basicConfig(level=logging.INFO)

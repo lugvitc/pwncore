@@ -92,11 +92,8 @@ async def check_blacklist(
             algorithms=["HS256"],
         )
         team_id = decoded_token["team_id"]
-        print(decoded_token)
-        print(request.headers)
-        print(config.blacklist)
         if team_id in config.blacklist:
             return Response(status_code=status.HTTP_403_FORBIDDEN)
     except KeyError:
-        print(request.headers)
+        pass
     return await call_next(request)
