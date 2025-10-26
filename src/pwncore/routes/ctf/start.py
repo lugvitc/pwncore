@@ -45,7 +45,11 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             if existing_container:
                 db_ports = await existing_container.ports.all().values("port")
                 ports = [db_port["port"] for db_port in db_ports]
-                static_url = f"{config.staticfs_url}/{existing_container.token}" if ctf.static_files else None
+                static_url = (
+                    f"{config.staticfs_url}/{existing_container.token}"
+                    if ctf.static_files
+                    else None
+                )
                 return {
                     "msg_code": config.msg_codes["container_already_running"],
                     "ports": ports,
@@ -59,7 +63,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             a, b = team_container[0], team_container[1:]
             db_ports = await a.ports.all().values("port")  # Get ports from DB
             ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
-            static_url = f"{config.staticfs_url}/{a.token}" if ctf.static_files else None
+            static_url = (
+                f"{config.staticfs_url}/{a.token}" if ctf.static_files else None
+            )
             for db_container in b:
                 try:
                     await db_container.delete()
@@ -67,9 +73,11 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     pass
                 # containers won't exist for static ctfs
                 if ctf.static_files:
-                    staticLocation = f"{config.staticfs_data_dir}/{team_id}/{db_container.docker_id}"
+                    staticLocation = (
+                        f"{config.staticfs_data_dir}/{team_id}/{db_container.docker_id}"
+                    )
                     if os.path.exists(staticLocation):
-                        shutil.rmtree(staticLocation) 
+                        shutil.rmtree(staticLocation)
                 else:
                     container = await containerASD.docker_client.containers.get(
                         db_container.docker_id
@@ -108,7 +116,9 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                 "id": str(team_id),
                 "containerId": container_id,
             }
-            token = jwtlib.encode(payload, config.staticfs_jwt_secret, algorithm="HS256")
+            token = jwtlib.encode(
+                payload, config.staticfs_jwt_secret, algorithm="HS256"
+            )
             container = await containerASD.docker_client.containers.run(
                 name=container_name,
                 config={
@@ -120,9 +130,15 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     "OpenStdin": False,
                     "HostConfig": {
                         "AutoRemove": True,
-                        "Binds": [f"{config.staticfs_data_dir}/{team_id}/{container_id}:/dist"],
+                        "Binds": [
+                            f"{config.staticfs_data_dir}/{team_id}/{container_id}:/dist"
+                        ],
                     },
-                    **({"Cmd": ["/root/gen_flag", container_flag]} if not ctf.static_flag else {}),
+                    **(
+                        {"Cmd": ["/root/gen_flag", container_flag]}
+                        if not ctf.static_flag
+                        else {}
+                    ),
                 },
             )
             try:
@@ -220,11 +236,11 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
         except Exception:
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
-        
+
         team_path = f"{config.staticfs_data_dir}/{team_id}"
         if os.path.exists(team_path):
             shutil.rmtree(team_path)
-            
+
         for db_container in containers:
             container = await containerASD.docker_client.containers.get(
                 db_container["docker_id"]

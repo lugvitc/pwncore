@@ -1,13 +1,12 @@
 import logging
 import os
-import psutil
 import shutil
 from datetime import date
 
 import psutil
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Request, Response, status
 from fastapi.responses import JSONResponse
-from passlib.hash import bcrypt, bcrypt_sha256
+from passlib.hash import bcrypt
 from tortoise.transactions import atomic, in_transaction
 
 import pwncore.containerASD as containerASD
@@ -225,24 +224,24 @@ async def get_resource_usage(response: Response, req: Request):
 
     for db_container in db_containers:
         ports = [port.port for port in await db_container.ports.all()]
-        
+
         try:
             container = await containerASD.docker_client.containers.get(
                 db_container.docker_id
             )
             stats = await container.stats(stream=False)
-            
+
             # Handle case where stats might be a list (take first element)
             if isinstance(stats, list):
                 stats = stats[0] if stats else {}
 
             cpu_delta = (
                 stats["cpu_stats"]["cpu_usage"]["total_usage"]
-                - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+                - stats["precpu_stats"]["cpu_usage"]["total_usage"]  # noqa: W503
             )
             system_delta = (
                 stats["cpu_stats"]["system_cpu_usage"]
-                - stats["precpu_stats"]["system_cpu_usage"]
+                - stats["precpu_stats"]["system_cpu_usage"]  # noqa: W503
             )
             cpu_usage = 0.0
             if system_delta > 0 and cpu_delta > 0:
@@ -294,17 +293,30 @@ async def get_resource_usage(response: Response, req: Request):
             containers_info.append(container_info)
 
         except Exception as e:
-            logging.error(f"Error getting stats for container {db_container.docker_id[:12]}: {str(e)}")
-            containers_info.append({
-                "container_id": db_container.docker_id[:12],
-                "team_id": db_container.team_id,
-                "team_name": (await db_container.team).name if db_container.team else "Unknown",
-                "problem_id": db_container.problem_id,
-                "problem_name": (await db_container.problem).name if db_container.problem else "Unknown",
-                "ports": ports,
-                "status": "error",
-                "error": str(e),
-            })
+            logging.error(
+                f"Error getting stats for container\
+                      {db_container.docker_id[:12]}: {str(e)}"
+            )
+            containers_info.append(
+                {
+                    "container_id": db_container.docker_id[:12],
+                    "team_id": db_container.team_id,
+                    "team_name": (
+                        (await db_container.team).name
+                        if db_container.team
+                        else "Unknown"
+                    ),
+                    "problem_id": db_container.problem_id,
+                    "problem_name": (
+                        (await db_container.problem).name
+                        if db_container.problem
+                        else "Unknown"
+                    ),
+                    "ports": ports,
+                    "status": "error",
+                    "error": str(e),
+                }
+            )
 
     return {
         "system": {
@@ -392,7 +404,8 @@ async def stop_containers_for_ctf(ctf_id: int, response: Response, req: Request)
 
         for db_container in containers:
             if ctf.static_files:
-                static_path = f"{config.staticfs_data_dir}/{db_container['team_id']}/{db_container['docker_id']}"
+                static_path = f"{config.staticfs_data_dir}/\
+                    {db_container['team_id']}/{db_container['docker_id']}"
                 if os.path.exists(static_path):
                     shutil.rmtree(static_path)
             else:
@@ -402,6 +415,7 @@ async def stop_containers_for_ctf(ctf_id: int, response: Response, req: Request)
                     pass
 
         return {"msg_code": config.msg_codes["container_stop"]}
+
 
 @router.post("/docker/stop/{docker_id}")
 async def stop_docker_container(docker_id: str, response: Response, req: Request):

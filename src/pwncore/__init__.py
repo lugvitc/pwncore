@@ -4,7 +4,7 @@ from logging import getLogger
 
 import aiodocker
 import jwt
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 

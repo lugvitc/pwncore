@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from pwncore.routes import ctf, team, auth, admin, leaderboard
+from pwncore.routes import ctf, team, auth, leaderboard
 
 # from pwncore.config import config
 

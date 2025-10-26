@@ -4,12 +4,11 @@ from logging import getLogger
 
 import aiodocker
 import jwt
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
 import pwncore.containerASD as containerASD
-import pwncore.docs as docs
 from pwncore.config import config
 from pwncore.models import Container
 from pwncore.routes.admin import router as admin_router

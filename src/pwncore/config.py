@@ -2,7 +2,6 @@ import os
 import warnings
 from dataclasses import dataclass
 
-import bcrypt
 from passlib.hash import bcrypt_sha256
 
 """
@@ -92,4 +91,8 @@ config = Config(
 
 # Warn in production if env not loaded
 if not config.development and using_default_admin:
-    warnings.warn("Default admin hash being used in production!", RuntimeWarning)
+    warnings.warn(
+        "Default admin hash being used in production!",
+        RuntimeWarning,
+        stacklevel=2,
+    )
