@@ -18,10 +18,12 @@ class Container(Model):
     problem: fields.ForeignKeyRelation[Problem] = fields.ForeignKeyField(
         "models.Problem", on_delete=fields.OnDelete.NO_ACTION
     )
+    problem_id = fields.IntField()
     team: fields.ForeignKeyRelation[Team] = fields.ForeignKeyField("models.Team")
+    team_id = fields.IntField()
     flag = fields.TextField()
-    
-    token = fields.TextField()
+
+    token = fields.TextField(null=True)
     ports: fields.ReverseRelation[Ports]
 
 

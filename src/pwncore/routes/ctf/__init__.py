@@ -125,7 +125,7 @@ async def flag_post(
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        if problem.static:
+        if problem.static_files:
             shutil.rmtree(
                 f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
             )

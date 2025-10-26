@@ -29,13 +29,15 @@ class BaseProblem(Model):
 
 
 class Problem(BaseProblem):
+    id = fields.IntField(pk=True)
     image_name = fields.TextField()
 
     # commenting it for now, may be used later
     # image_config: fields.Field[dict[str, Any]] = fields.JSONField(
     #     null=True
     # )  # type: ignore[assignment]
-    static = fields.BooleanField(default=False)
+    static_files = fields.BooleanField(default=False)
+    static_flag = fields.TextField(null=True)
 
     mi = fields.IntField(default=50)
     ma = fields.IntField(default=500)
@@ -45,7 +47,7 @@ class Problem(BaseProblem):
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
-        exclude = ["image_name", "static", "mi", "ma", "visible"]
+        exclude = ["image_name", "static_files", "mi", "ma", "visible"]
 
     async def _solves(self) -> int:
         return await SolvedProblem.filter(problem=self).count()
