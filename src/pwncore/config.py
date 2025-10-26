@@ -73,7 +73,7 @@ config = Config(
     db_url=os.environ.get("DATABASE_URL", "sqlite://:memory:"),
     # docker_url=None,  # None for default system docker
     # Or set it to an arbitrary URL for testing without Docker
-    docker_url="http://google.com",
+    docker_url=None,
     flag="C0D",
     max_containers_per_team=3,
     jwt_secret="mysecret",

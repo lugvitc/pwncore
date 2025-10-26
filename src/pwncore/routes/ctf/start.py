@@ -40,20 +40,33 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             response.status_code = 404
             return {"msg_code": config.msg_codes["ctf_not_found"]}
 
+        if ctf.static_flag:
+            existing_container = await Container.get_or_none(problem=ctf_id)
+            if existing_container:
+                db_ports = await existing_container.ports.all().values("port")
+                ports = [db_port["port"] for db_port in db_ports]
+                static_url = f"{config.staticfs_url}/{existing_container.token}" if ctf.static_files else None
+                return {
+                    "msg_code": config.msg_codes["container_already_running"],
+                    "ports": ports,
+                    "static_url": static_url,
+                    "ctf_id": ctf_id,
+                }
+
         team_id = jwt["team_id"]  # From JWT
         team_container = await Container.filter(team=team_id, problem=ctf_id)
         if team_container:
             a, b = team_container[0], team_container[1:]
             db_ports = await a.ports.all().values("port")  # Get ports from DB
             ports = [db_port["port"] for db_port in db_ports]  # Create a list out of it
-            static_url = f"{config.staticfs_url}/{a.token}" if ctf.static else None
+            static_url = f"{config.staticfs_url}/{a.token}" if ctf.static_files else None
             for db_container in b:
                 try:
                     await db_container.delete()
                 except Exception:
                     pass
                 # containers won't exist for static ctfs
-                if ctf.static:
+                if ctf.static_files:
                     staticLocation = f"{config.staticfs_data_dir}/{team_id}/{db_container.docker_id}"
                     if os.path.exists(staticLocation):
                         shutil.rmtree(staticLocation) 
@@ -80,10 +93,17 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
 
         # Start a new container
         container_name = f"{team_id}_{ctf_id}_{uuid.uuid4().hex}"
-        container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
+        if ctf.static_flag:
+            container_flag = ctf.static_flag
+        else:
+            container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
 
-        if ctf.static:
+        if ctf.static_files:
             container_id = uuid.uuid4().hex
+            if ctf.static_flag:
+                container_flag = ctf.static_flag
+            else:
+                container_flag = f"{config.flag}{{{uuid.uuid4().hex}}}"
             payload = {
                 "id": str(team_id),
                 "containerId": container_id,
@@ -102,7 +122,7 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                         "AutoRemove": True,
                         "Binds": [f"{config.staticfs_data_dir}/{team_id}/{container_id}:/dist"],
                     },
-                    "Cmd": ["/root/gen_flag", container_flag],
+                    **({"Cmd": ["/root/gen_flag", container_flag]} if not ctf.static_flag else {}),
                 },
             )
             try:
@@ -145,9 +165,10 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             },
         )
 
-        await (await container.exec(["/root/gen_flag", container_flag])).start(
-            detach=True
-        )
+        if not ctf.static_flag:
+            await (await container.exec(["/root/gen_flag", container_flag])).start(
+                detach=True
+            )
 
         try:
             async with in_transaction():
@@ -237,7 +258,7 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        if ctf.static:
+        if ctf.static_files:
             shutil.rmtree(
                 f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
             )
