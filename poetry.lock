@@ -1781,18 +1781,6 @@ files = [
 ]
 
 [[package]]
-name = "types-psutil"
-version = "7.0.0.20251001"
-description = "Typing stubs for psutil"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "types_psutil-7.0.0.20251001-py3-none-any.whl", hash = "sha256:adc31de8386d31c61bd4123112fd51e2c700c7502a001cad72a3d56ba6b463d1"},
-    {file = "types_psutil-7.0.0.20251001.tar.gz", hash = "sha256:60d696200ddae28677e7d88cdebd6e960294e85adefbaafe0f6e5d0e7b4c1963"},
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -2036,4 +2024,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "44c395f14922c7034e390d63bfb7ea4b2ff951cc7339ec33706abeb76bc59787"
+content-hash = "7a1f4c06d8314db8e141670c82141135a66437a3728d7a566f2ad0c2453c7203"

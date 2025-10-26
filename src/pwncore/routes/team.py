@@ -110,9 +110,9 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
 
     result = {}
     for container in containers:
-        if container.problem is not None:
-            result[container.problem.id] = await container.ports.all().values_list(
-                "port", flat=True
-            )
+        # mypy complains id doesnt exist in Problem
+        result[container.problem.id] = await container.ports.all().values_list(  # type: ignore[attr-defined]
+            "port", flat=True
+        )
 
     return result
