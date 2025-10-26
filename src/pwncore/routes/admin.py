@@ -278,15 +278,9 @@ async def get_resource_usage(response: Response, req: Request):
             container_info = {
                 "container_id": db_container.docker_id[:12],
                 "team_id": db_container.team_id,
-                "team_name": (
-                    (await db_container.team).name if db_container.team else "Unknown"
-                ),
+                "team_name": (await db_container.team).name,
                 "problem_id": db_container.problem_id,
-                "problem_name": (
-                    (await db_container.problem).name
-                    if db_container.problem
-                    else "Unknown"
-                ),
+                "problem_name": (await db_container.problem).name,
                 "ports": ports,
                 "cpu_percent": round(cpu_usage, 2),
                 "memory": {
@@ -317,14 +311,10 @@ async def get_resource_usage(response: Response, req: Request):
                     "team_id": db_container.team_id,
                     "team_name": (
                         (await db_container.team).name
-                        if db_container.team
-                        else "Unknown"
                     ),
                     "problem_id": db_container.problem_id,
                     "problem_name": (
                         (await db_container.problem).name
-                        if db_container.problem
-                        else "Unknown"
                     ),
                     "ports": ports,
                     "status": "error",
@@ -355,9 +345,9 @@ async def list_docker_containers(response: Response, req: Request):
         container_info = {
             "docker_id": container.docker_id,
             "team_id": container.team_id,
-            "team_name": container.team.name if container.team else "Unknown",
+            "team_name": container.team.name,
             "problem_id": container.problem_id,
-            "problem_name": container.problem.name if container.problem else "Unknown",
+            "problem_name": container.problem.name,
             "ports": ports,
         }
         container_list.append(container_info)
@@ -441,7 +431,7 @@ async def stop_docker_container(docker_id: str, response: Response, req: Request
     try:
         await Container.filter(docker_id=docker_id).delete()
         ctf = await container.problem
-        if ctf and ctf.static_files:
+        if ctf.static_files:
             static_path = f"{config.staticfs_data_dir}/{container.team_id}/{docker_id}"
             if os.path.exists(static_path):
                 shutil.rmtree(static_path)
@@ -460,7 +450,7 @@ async def stop_docker_container(docker_id: str, response: Response, req: Request
 @router.get("/ban/list")
 async def get_ban_list(request: Request, response: Response) -> JSONResponse:
     """Get banned tags list."""
-    return {"banned": config.blacklist}
+    return JSONResponse({"banned": config.blacklist})
 
 
 @router.post("/ban/{team_id}", status_code=status.HTTP_204_NO_CONTENT)

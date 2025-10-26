@@ -35,9 +35,9 @@ services:
             - 5432:5432
 
 
-    admin_db:
-        image: nocodb/nocodb:latest
-        volumes:
-            - ./data:/usr/app/data
-        ports:
-            - 8001:8080
+    # admin_db:
+    #     image: nocodb/nocodb:latest
+    #     volumes:
+    #         - ./data:/usr/app/data
+    #     ports:
+    #         - 8001:8080
