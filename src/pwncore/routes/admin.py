@@ -32,7 +32,10 @@ metadata = {
 async def validate_password(req: Request) -> None:
     """Validate admin password hash."""
     try:
-        if not bcrypt_sha256.verify((req.cookies["password"]).strip(), config.admin_hash):
+        if not bcrypt_sha256.verify(
+            req.cookies["password"].strip(),
+            config.admin_hash,
+        ):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     except KeyError as err:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from err
