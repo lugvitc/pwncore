@@ -29,7 +29,6 @@ class BaseProblem(Model):
 
 
 class Problem(BaseProblem):
-    id = fields.IntField(pk=True)
     image_name = fields.TextField()
 
     # commenting it for now, may be used later
