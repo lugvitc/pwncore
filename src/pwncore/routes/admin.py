@@ -1,5 +1,7 @@
 import logging
+import os
 import psutil
+import shutil
 from datetime import date
 
 from fastapi import APIRouter, Request, Response
@@ -230,6 +232,8 @@ async def get_resource_usage(response: Response, req: Request):
     total_container_cpu = 0.0
 
     for db_container in db_containers:
+        ports = [port.port for port in await db_container.ports.all()]
+        
         try:
             container = await containerASD.docker_client.containers.get(db_container.docker_id)
             stats = await container.stats(stream=False)
@@ -255,8 +259,6 @@ async def get_resource_usage(response: Response, req: Request):
 
             total_container_memory += memory_usage
             total_container_cpu += cpu_usage
-
-            ports = [port.port for port in await db_container.ports.all()]
 
             container_info = {
                 "container_id": db_container.docker_id[:12],
@@ -284,7 +286,7 @@ async def get_resource_usage(response: Response, req: Request):
             containers_info.append(container_info)
 
         except Exception as e:
-            ports = [port.port for port in await db_container.ports.all()]
+            logging.error(f"Error getting stats for container {db_container.docker_id[:12]}: {str(e)}")
             containers_info.append({
                 "container_id": db_container.docker_id[:12],
                 "team_id": db_container.team_id,
@@ -304,8 +306,7 @@ async def get_resource_usage(response: Response, req: Request):
         },
         "containers": {
             "count": len(containers_info),
-            "total_cpu_percent": round(total_container_cpu, 2),
-            "total_memory_mb": round(total_container_memory / (1024**2), 2),
+            "details": containers_info,
         },
     }
 
@@ -320,7 +321,7 @@ async def list_docker_containers(response: Response, req: Request):
     container_list = []
     
     for container in containers:
-        ports = [port.port for port in container.ports]
+        ports = [port.port for port in await container.ports.all()]
         container_info = {
             "docker_id": container.docker_id,
             "team_id": container.team_id,
@@ -347,4 +348,66 @@ async def get_docker_container_log(docker_id: str, response: Response, req: Requ
     except Exception as e:
         response.status_code = 404
         return {"error": f"Container not found or error retrieving logs: {str(e)}"}
+
+
+@router.post("/stopall")
+async def stopall_containers(response: Response, req: Request):
+    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
+        response.status_code = 401
+        return {"error": "Unauthorized"}
+
+    async with in_transaction():
+        containers = await Container.all().values()
+
+        try:
+            await Container.all().delete()
+        except Exception:
+            response.status_code = 500
+            return {"msg_code": config.msg_codes["db_error"]}
+
+        if os.path.exists(config.staticfs_data_dir):
+            shutil.rmtree(config.staticfs_data_dir)
+            os.makedirs(config.staticfs_data_dir)
+
+        for db_container in containers:
+            try:
+                await _del_cont(db_container["docker_id"])
+            except Exception:
+                pass
+
+        return {"msg_code": config.msg_codes["containers_team_stop"]}
+
+
+@router.post("/stop/{ctf_id}")
+async def stop_containers_for_ctf(ctf_id: int, response: Response, req: Request):
+    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
+        response.status_code = 401
+        return {"error": "Unauthorized"}
+
+    async with in_transaction():
+        ctf = await Problem.get_or_none(id=ctf_id)
+        if not ctf:
+            response.status_code = 404
+            return {"msg_code": config.msg_codes["ctf_not_found"]}
+
+        containers = await Container.filter(problem_id=ctf_id).values()
+
+        try:
+            await Container.filter(problem_id=ctf_id).delete()
+        except Exception:
+            response.status_code = 500
+            return {"msg_code": config.msg_codes["db_error"]}
+
+        for db_container in containers:
+            if ctf.static_files:
+                static_path = f"{config.staticfs_data_dir}/{db_container['team_id']}/{db_container['docker_id']}"
+                if os.path.exists(static_path):
+                    shutil.rmtree(static_path)
+            else:
+                try:
+                    await _del_cont(db_container["docker_id"])
+                except Exception:
+                    pass
+
+        return {"msg_code": config.msg_codes["container_stop"]}
 

@@ -11,6 +11,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${CONFIG_FILE}:/app/src/pwncore/config.py
+            - ./src:/app/src
         depends_on:
             - db
 
@@ -32,16 +33,10 @@ services:
         ports:
             - 5432:5432
 
-#     admin_db:
-#         image: nocodb/nocodb:latest
-#         environment:
-#             NC_DB: pg://db:5432?u=${POSTGRES_USER}&p=${POSTGRES_PASSWORD}&d=${POSTGRES_DB}
-#         volumes:
-#             - nc_data:/usr/app/data
-#         ports:
-#             - ${PORT_ADMIN}:8080
-#         depends_on:
-#             - db
 
-# volumes:
-#     nc_data: {}
+    admin_db:
+        image: nocodb/nocodb:latest
+        volumes:
+            - ./data:/usr/app/data
+        ports:
+            - 8001:8080
