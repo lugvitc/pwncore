@@ -1,8 +1,9 @@
 import logging
-import psutil
 from datetime import date
 
-from fastapi import APIRouter, Request, Response
+import psutil
+from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from passlib.hash import bcrypt, bcrypt_sha256
 from tortoise.transactions import atomic, in_transaction
 
@@ -58,7 +59,9 @@ async def _del_cont(id: str):
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  # Use config.admin_hash
+    if not bcrypt_sha256.verify(
+        (await req.body()).strip(), config.admin_hash
+    ):  # Use config.admin_hash
         response.status_code = 401
         return
     async with in_transaction():
@@ -89,7 +92,7 @@ async def calculate_team_coins(
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):  
+    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
         response.status_code = 401
         return
     await Problem.create(
@@ -221,7 +224,7 @@ async def get_resource_usage(response: Response, req: Request):
     cpu_per_core = psutil.cpu_percent(interval=1, percpu=True)
 
     memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
+    disk = psutil.disk_usage("/")
 
     db_containers = await Container.all().prefetch_related("team", "problem", "ports")
 
@@ -231,13 +234,19 @@ async def get_resource_usage(response: Response, req: Request):
 
     for db_container in db_containers:
         try:
-            container = await containerASD.docker_client.containers.get(db_container.docker_id)
+            container = await containerASD.docker_client.containers.get(
+                db_container.docker_id
+            )
             stats = await container.stats(stream=False)
 
-            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - \
-                       stats["precpu_stats"]["cpu_usage"]["total_usage"]
-            system_delta = stats["cpu_stats"]["system_cpu_usage"] - \
-                          stats["precpu_stats"]["system_cpu_usage"]
+            cpu_delta = (
+                stats["cpu_stats"]["cpu_usage"]["total_usage"]
+                - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            )
+            system_delta = (
+                stats["cpu_stats"]["system_cpu_usage"]
+                - stats["precpu_stats"]["system_cpu_usage"]
+            )
             cpu_usage = 0.0
             if system_delta > 0 and cpu_delta > 0:
                 cpu_count = stats["cpu_stats"].get("online_cpus", len(cpu_per_core))
@@ -261,9 +270,15 @@ async def get_resource_usage(response: Response, req: Request):
             container_info = {
                 "container_id": db_container.docker_id[:12],
                 "team_id": db_container.team_id,
-                "team_name": (await db_container.team).name if db_container.team else "Unknown",
+                "team_name": (
+                    (await db_container.team).name if db_container.team else "Unknown"
+                ),
                 "problem_id": db_container.problem_id,
-                "problem_name": (await db_container.problem).name if db_container.problem else "Unknown",
+                "problem_name": (
+                    (await db_container.problem).name
+                    if db_container.problem
+                    else "Unknown"
+                ),
                 "ports": ports,
                 "cpu_percent": round(cpu_usage, 2),
                 "memory": {
@@ -285,16 +300,26 @@ async def get_resource_usage(response: Response, req: Request):
 
         except Exception as e:
             ports = [port.port for port in await db_container.ports.all()]
-            containers_info.append({
-                "container_id": db_container.docker_id[:12],
-                "team_id": db_container.team_id,
-                "team_name": (await db_container.team).name if db_container.team else "Unknown",
-                "problem_id": db_container.problem_id,
-                "problem_name": (await db_container.problem).name if db_container.problem else "Unknown",
-                "ports": ports,
-                "status": "error",
-                "error": str(e),
-            })
+            containers_info.append(
+                {
+                    "container_id": db_container.docker_id[:12],
+                    "team_id": db_container.team_id,
+                    "team_name": (
+                        (await db_container.team).name
+                        if db_container.team
+                        else "Unknown"
+                    ),
+                    "problem_id": db_container.problem_id,
+                    "problem_name": (
+                        (await db_container.problem).name
+                        if db_container.problem
+                        else "Unknown"
+                    ),
+                    "ports": ports,
+                    "status": "error",
+                    "error": str(e),
+                }
+            )
 
     return {
         "system": {
@@ -318,7 +343,7 @@ async def list_docker_containers(response: Response, req: Request):
 
     containers = await Container.all().prefetch_related("team", "problem", "ports")
     container_list = []
-    
+
     for container in containers:
         ports = [port.port for port in container.ports]
         container_info = {
@@ -330,7 +355,7 @@ async def list_docker_containers(response: Response, req: Request):
             "ports": ports,
         }
         container_list.append(container_info)
-    
+
     return {"containers": container_list}
 
 
@@ -348,3 +373,42 @@ async def get_docker_container_log(docker_id: str, response: Response, req: Requ
         response.status_code = 404
         return {"error": f"Container not found or error retrieving logs: {str(e)}"}
 
+
+@router.get("/ban/list")
+async def get_ban_list(request: Request, response: Response) -> JSONResponse:
+    """Get banned tags list."""
+    if not bcrypt_sha256.verify(
+        (await request.body()).strip(),
+        config.admin_hash,
+    ):
+        response.status_code = 401
+        return {"error": "Unauthorized"}
+    return {"banned": config.blacklist}
+
+
+@router.post("/ban/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def ban_tag(request: Request, response: Response, team_id: int) -> None:
+    """Add the provided tag to the blacklist."""
+    if not bcrypt_sha256.verify(
+        (await request.body()).strip(),
+        config.admin_hash,
+    ):
+        response.status_code = 401
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    if team_id not in config.blacklist:
+        config.blacklist.append(team_id)
+
+
+@router.post("/unban/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unban_tag(request: Request, response: Response, team_id: int) -> None:
+    """Remove the provided tag from the blacklist."""
+    if not bcrypt_sha256.verify(
+        (await request.body()).strip(),
+        config.admin_hash,
+    ):
+        response.status_code = 401
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    try:
+        config.blacklist.remove(team_id)
+    except ValueError:
+        return

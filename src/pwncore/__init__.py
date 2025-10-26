@@ -1,9 +1,10 @@
-from contextlib import asynccontextmanager
-
 import shutil
-import aiodocker
+from contextlib import asynccontextmanager
 from logging import getLogger
-from fastapi import FastAPI
+
+import aiodocker
+import jwt
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
@@ -12,8 +13,10 @@ import pwncore.docs as docs
 import pwncore.routes as routes
 from pwncore.config import config
 from pwncore.models import Container
+from pwncore.routes.auth import JwtInfo
 
 logger = getLogger(__name__)
+
 
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
@@ -72,3 +75,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def check_blacklist(
+    request: Request,
+    call_next,  # noqa: ANN001
+):
+    """Middleware to handle bans."""
+    try:
+        token = request.headers["authorization"].split(" ")[1]  # Remove Bearer
+
+        decoded_token: JwtInfo = jwt.decode(
+            token,
+            config.jwt_secret,
+            algorithms=["HS256"],
+        )
+        team_id = decoded_token["team_id"]
+        print(decoded_token)
+        print(request.headers)
+        print(config.blacklist)
+        if team_id in config.blacklist:
+            return Response(status_code=status.HTTP_403_FORBIDDEN)
+    except KeyError:
+        print(request.headers)
+    return await call_next(request)
