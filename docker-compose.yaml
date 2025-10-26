@@ -12,7 +12,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${CONFIG_FILE}:/app/src/pwncore/config.py
-            - ./src:/app/src
+            # - ./src:/app/src
         depends_on:
             - db
 
