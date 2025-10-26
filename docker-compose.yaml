@@ -5,6 +5,7 @@ services:
             dockerfile: Dockerfile
         ports:
             - ${PORT}:8000
+            - 8081:8081
         environment:
             - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
             - WORKERS=${WORKERS}

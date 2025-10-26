@@ -19,6 +19,6 @@ WORKDIR /app/src
 WORKDIR /app/src
 
 EXPOSE 8000
-
-# Run FastAPI with Gunicorn
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "pwncore:app", "--bind", "0.0.0.0:8000", "--log-level", "debug"]
+EXPOSE 8081
+# Run both main app and admin app
+CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker pwncore:app --bind 0.0.0.0:8000 --log-level debug & uvicorn pwncore.admin_app:admin_app --host 0.0.0.0 --port 8081 & wait"]

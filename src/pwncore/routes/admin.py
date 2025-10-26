@@ -62,11 +62,6 @@ async def _del_cont(id: str):
 async def calculate_team_coins(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt_sha256.verify(
-        (await req.body()).strip(), config.admin_hash
-    ):  # Use config.admin_hash
-        response.status_code = 401
-        return
     async with in_transaction():
         logging.info("Calculating team points form pre-event CTFs:")
         team_ids = await Team.filter().values_list("id", flat=True)
@@ -95,9 +90,6 @@ async def calculate_team_coins(
 async def init_db(
     response: Response, req: Request
 ):  # Inefficient, anyways will be used only once
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return
     await Problem.create(
         name="Invisible-Incursion",
         description="Chod de tujhe se na ho paye",
@@ -219,10 +211,6 @@ async def init_db(
 
 @router.get("/resources")
 async def get_resource_usage(response: Response, req: Request):
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
-
     cpu_percent = psutil.cpu_percent(interval=1, percpu=False)
     cpu_per_core = psutil.cpu_percent(interval=1, percpu=True)
 
@@ -243,6 +231,10 @@ async def get_resource_usage(response: Response, req: Request):
                 db_container.docker_id
             )
             stats = await container.stats(stream=False)
+            
+            # Handle case where stats might be a list (take first element)
+            if isinstance(stats, list):
+                stats = stats[0] if stats else {}
 
             cpu_delta = (
                 stats["cpu_stats"]["cpu_usage"]["total_usage"]
@@ -329,10 +321,6 @@ async def get_resource_usage(response: Response, req: Request):
 
 @router.get("/docker/list")
 async def list_docker_containers(response: Response, req: Request):
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
-
     containers = await Container.all().prefetch_related("team", "problem", "ports")
     container_list = []
 
@@ -353,10 +341,6 @@ async def list_docker_containers(response: Response, req: Request):
 
 @router.get("/docker/{docker_id}/log")
 async def get_docker_container_log(docker_id: str, response: Response, req: Request):
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
-
     try:
         container = await containerASD.docker_client.containers.get(docker_id)
         logs = await container.log(stdout=True, stderr=True, follow=False)
@@ -368,10 +352,6 @@ async def get_docker_container_log(docker_id: str, response: Response, req: Requ
 
 @router.post("/stopall")
 async def stopall_containers(response: Response, req: Request):
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
-
     async with in_transaction():
         containers = await Container.all().values()
 
@@ -396,10 +376,6 @@ async def stopall_containers(response: Response, req: Request):
 
 @router.post("/stop/{ctf_id}")
 async def stop_containers_for_ctf(ctf_id: int, response: Response, req: Request):
-    if not bcrypt_sha256.verify((await req.body()).strip(), config.admin_hash):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
-
     async with in_transaction():
         ctf = await Problem.get_or_none(id=ctf_id)
         if not ctf:
@@ -427,27 +403,41 @@ async def stop_containers_for_ctf(ctf_id: int, response: Response, req: Request)
 
         return {"msg_code": config.msg_codes["container_stop"]}
 
+@router.post("/docker/stop/{docker_id}")
+async def stop_docker_container(docker_id: str, response: Response, req: Request):
+    container = await Container.get_or_none(docker_id=docker_id)
+    if not container:
+        response.status_code = 404
+        return {"error": "Container not found"}
+
+    try:
+        await Container.filter(docker_id=docker_id).delete()
+        ctf = await container.problem
+        if ctf and ctf.static_files:
+            static_path = f"{config.staticfs_data_dir}/{container.team_id}/{docker_id}"
+            if os.path.exists(static_path):
+                shutil.rmtree(static_path)
+        else:
+            try:
+                await _del_cont(docker_id)
+            except Exception:
+                pass
+    except Exception:
+        response.status_code = 500
+        return {"msg_code": config.msg_codes["db_error"]}
+
+    return {"msg_code": config.msg_codes["container_stop"]}
+
+
 @router.get("/ban/list")
 async def get_ban_list(request: Request, response: Response) -> JSONResponse:
     """Get banned tags list."""
-    if not bcrypt_sha256.verify(
-        (await request.body()).strip(),
-        config.admin_hash,
-    ):
-        response.status_code = 401
-        return {"error": "Unauthorized"}
     return {"banned": config.blacklist}
 
 
 @router.post("/ban/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def ban_tag(request: Request, response: Response, team_id: int) -> None:
     """Add the provided tag to the blacklist."""
-    if not bcrypt_sha256.verify(
-        (await request.body()).strip(),
-        config.admin_hash,
-    ):
-        response.status_code = 401
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
     if team_id not in config.blacklist:
         config.blacklist.append(team_id)
 
@@ -455,12 +445,6 @@ async def ban_tag(request: Request, response: Response, team_id: int) -> None:
 @router.post("/unban/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def unban_tag(request: Request, response: Response, team_id: int) -> None:
     """Remove the provided tag from the blacklist."""
-    if not bcrypt_sha256.verify(
-        (await request.body()).strip(),
-        config.admin_hash,
-    ):
-        response.status_code = 401
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
     try:
         config.blacklist.remove(team_id)
     except ValueError:
