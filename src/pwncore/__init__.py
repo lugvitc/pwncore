@@ -96,4 +96,6 @@ async def check_blacklist(
             return Response(status_code=status.HTTP_403_FORBIDDEN)
     except KeyError:
         pass
+    except jwt.exceptions.InvalidTokenError:
+        pass
     return await call_next(request)
