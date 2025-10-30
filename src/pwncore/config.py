@@ -43,6 +43,7 @@ msg_codes = {
     "insufficient_coins": 22,
     "user_or_email_exists": 23,
     "users_not_found": 24,
+    "no_hints_available": 25,
 }
 
 admin_hash_value = os.environ.get("PWNCORE_ADMIN_HASH", bcrypt_sha256.hash("pwncore"))

@@ -172,6 +172,11 @@ async def hint_get(ctf_id: int, response: Response, jwt: RequireJwt):
         hint = await Hint.get(problem_id=ctf_id, order=viewed_hints.order + 1)
 
     else:
+        # If there are no hints for this particular CTF, return no hints available
+        if not await Hint.exists(problem_id=ctf_id, order=0):
+            response.status_code = 403
+            return {"msg_code": config.msg_codes["no_hints_available"]}
+
         hint = await Hint.get(problem_id=ctf_id, order=0)
 
     with_points = team.coins < config.hint_penalty
