@@ -282,11 +282,14 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        if ctf.static_files:
-            shutil.rmtree(
-                f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
-            )
-            return {"msg_code": config.msg_codes["container_stop"]}
+        try:
+            if ctf.static_files:
+                shutil.rmtree(
+                    f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
+                )
+                return {"msg_code": config.msg_codes["container_stop"]}
+        except:
+            pass
 
         container = await containerASD.docker_client.containers.get(
             team_container.docker_id
