@@ -10,7 +10,7 @@ from tortoise.transactions import in_transaction
 
 import pwncore.containerASD as containerASD
 from pwncore.config import config
-from pwncore.models import Container, Ports, Problem
+from pwncore.models import Container, Ports, Problem, SolvedProblem
 from pwncore.routes.auth import RequireJwt
 
 router = APIRouter(tags=["ctf"])
@@ -40,6 +40,12 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
             response.status_code = 404
             return {"msg_code": config.msg_codes["ctf_not_found"]}
 
+        team_id = jwt["team_id"]
+        solved = await SolvedProblem.filter(team=team_id, problem=ctf_id).exists()
+        if solved:
+            response.status_code = 400
+            return {"msg_code": config.msg_codes["ctf_solved"]}
+
         if ctf.static_flag:
             existing_container = await Container.get_or_none(problem=ctf_id)
             if existing_container:
@@ -57,7 +63,6 @@ async def start_docker_container(ctf_id: int, response: Response, jwt: RequireJw
                     "ctf_id": ctf_id,
                 }
 
-        team_id = jwt["team_id"]  # From JWT
         team_container = await Container.filter(team=team_id, problem=ctf_id)
         if team_container:
             a, b = team_container[0], team_container[1:]
@@ -242,11 +247,14 @@ async def stopall_docker_container(response: Response, jwt: RequireJwt):
             shutil.rmtree(team_path)
 
         for db_container in containers:
-            container = await containerASD.docker_client.containers.get(
-                db_container["docker_id"]
-            )
-            await container.kill()
-            await container.delete()
+            try:
+                container = await containerASD.docker_client.containers.get(
+                    db_container["docker_id"]
+                )
+                await container.kill()
+                await container.delete()
+            except Exception:
+                pass
 
         return {"msg_code": config.msg_codes["containers_team_stop"]}
 
@@ -274,16 +282,25 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
             response.status_code = 500
             return {"msg_code": config.msg_codes["db_error"]}
 
-        if ctf.static_files:
-            shutil.rmtree(
-                f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
-            )
-            return {"msg_code": config.msg_codes["container_stop"]}
+        try:
+            if ctf.static_files:
+                shutil.rmtree(
+                    f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
+                )
+                return {"msg_code": config.msg_codes["container_stop"]}
+        except:
+            pass
 
         container = await containerASD.docker_client.containers.get(
             team_container.docker_id
         )
-        await container.kill()
-        await container.delete()
+        try:
+            container = await containerASD.docker_client.containers.get(
+                team_container.docker_id
+            )
+            await container.kill()
+            await container.delete()
+        except Exception:
+            pass
 
         return {"msg_code": config.msg_codes["container_stop"]}

@@ -46,7 +46,7 @@ class Problem(BaseProblem):
     hints: fields.ReverseRelation[Hint]
 
     class PydanticMeta:
-        exclude = ["image_name", "static_files", "mi", "ma", "visible"]
+        exclude = ["image_name", "static_files", "static_flag", "mi", "ma", "visible"]
 
     async def _solves(self) -> int:
         return await SolvedProblem.filter(problem=self).count()
