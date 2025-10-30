@@ -130,11 +130,14 @@ async def flag_post(
                 f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
             )
         else:
-            container = await containerASD.docker_client.containers.get(
-                team_container.docker_id
-            )
-            await container.kill()
-            await container.delete()
+            try:
+                container = await containerASD.docker_client.containers.get(
+                    team_container.docker_id
+                )
+                await container.kill()
+                await container.delete()
+            except Exception:
+                pass
 
         await SolvedProblem.create(team_id=team_id, problem_id=ctf_id, penalty=pnlt)
         create_task(update_points(req, ctf_id))
