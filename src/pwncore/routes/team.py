@@ -7,6 +7,7 @@ from tortoise.transactions import atomic
 from pwncore.config import config
 from pwncore.models import Team, User, Team_Pydantic, User_Pydantic, Container
 from pwncore.routes.auth import RequireJwt
+from pwncore.routes.admin import ADMIN_HASH
 
 # from pwncore.routes.leaderboard import gcache
 
@@ -25,6 +26,9 @@ class UserAddBody(BaseModel):
 
 class UserRemoveBody(BaseModel):
     tag: str
+
+class TableTNBody(BaseModel):
+    table_tn: int | None
 
 
 @router.get("/list")
@@ -116,3 +120,23 @@ async def get_team_containers(response: Response, jwt: RequireJwt):
         )
 
     return result
+
+@atomic()
+@router.post("/team/{id}")
+async def upsert_table_tn(id: int, data: TableTNBody, request: Request, response: Response):
+    admin_password = (await request.body()).strip()
+
+    if not bcrypt.verify(admin_password, ADMIN_HASH):
+        response.status_code = 401
+
+    team = await Team.get_or_none(id=id)
+    if not team:
+        response.status_code = 404
+
+    try:
+        team.table_tn = data.table_tn
+        await team.save()
+    except Exception:
+        response.status_code = 500
+
+    return {"msg_code": "tabletn_upserted"}
