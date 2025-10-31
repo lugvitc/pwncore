@@ -126,9 +126,12 @@ async def flag_post(
             return {"msg_code": config.msg_codes["db_error"]}
 
         if problem.static_files:
-            shutil.rmtree(
-                f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
-            )
+            try:
+                shutil.rmtree(
+                    f"{config.staticfs_data_dir}/{team_id}/{team_container.docker_id}"
+                )
+            except:
+                pass
         else:
             try:
                 container = await containerASD.docker_client.containers.get(

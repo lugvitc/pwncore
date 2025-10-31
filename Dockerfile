@@ -1,3 +1,4 @@
+
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc python3-dev
@@ -16,9 +17,8 @@ RUN poetry install
 
 WORKDIR /app/src
 
-WORKDIR /app/src
+ENV PORT=${PORT:-8000}
+ENV WORKERS=${WORKERS:-4}
+EXPOSE ${PORT}
 
-EXPOSE 8000
-EXPOSE 8081
-# Run both main app and admin app
-CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker pwncore:app --bind 0.0.0.0:8000 --log-level debug"]
+CMD ["bash", "-c", "gunicorn -w ${WORKERS} -k uvicorn.workers.UvicornWorker pwncore:app --bind 0.0.0.0:${PORT} --log-level debug"]

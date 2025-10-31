@@ -291,9 +291,6 @@ async def stop_docker_container(ctf_id: int, response: Response, jwt: RequireJwt
         except:
             pass
 
-        container = await containerASD.docker_client.containers.get(
-            team_container.docker_id
-        )
         try:
             container = await containerASD.docker_client.containers.get(
                 team_container.docker_id
